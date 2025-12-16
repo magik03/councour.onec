@@ -4,30 +4,41 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Kooora Laghouat</title>
+    
+    <!-- Styles -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Tajawal', sans-serif; }
-        /* Live Pulse Animation */
         @keyframes pulse-ring {
             0% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
             70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
             100% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
         }
-        .live-indicator {
-            animation: pulse-ring 2s infinite;
-        }
+        .live-indicator { animation: pulse-ring 2s infinite; }
     </style>
+
+    <!-- React & ReactDOM (UMD) -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel Standalone (for JSX) -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Firebase Compat SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 <script type="importmap">
 {
   "imports": {
-    "vite": "https://esm.sh/vite@^7.3.0",
-    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
     "react": "https://esm.sh/react@^19.2.3",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
     "react/": "https://esm.sh/react@^19.2.3/",
+    "firebase/": "https://esm.sh/firebase@^12.7.0/",
     "@google/genai": "https://esm.sh/@google/genai@^1.33.0",
-    "firebase/": "https://esm.sh/firebase@^12.7.0/"
+    "vite": "https://esm.sh/vite@^7.3.0",
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2"
   }
 }
 </script>
@@ -35,6 +46,468 @@
 </head>
 <body class="bg-gray-50 min-h-screen text-gray-900 selection:bg-emerald-100 selection:text-emerald-900">
     <div id="root"></div>
-    <script type="module" src="/index.tsx"></script>
+
+    <script type="text/babel">
+        // --- 1. CONFIGURATION & DATA ---
+        
+        // Firebase Config
+        const firebaseConfig = {
+          apiKey: "AIzaSyAXLSZ5OqPEOnP0DUx3w75fU2xxiVkrWcE",
+          authDomain: "koooralaghouat.firebaseapp.com",
+          projectId: "koooralaghouat",
+          storageBucket: "koooralaghouat.firebasestorage.app",
+          messagingSenderId: "84750708348",
+          appId: "1:84750708348:web:179ec7acf8fc2f357e23f9",
+          measurementId: "G-4YSP7SWPGV"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // Constants (Teams Data)
+        const LEAGUES_DATA = {
+            "الجهوي الأول (فوج أ)": [
+                { name: "ش ب عين اميناس", logo: "https://lrfouargla.com/uploads/images/logos/1(1).png" },
+                { name: "ن.ر.تقنتورين", logo: "https://lrfouargla.com/uploads/images/logos/203-1601155957.png" },
+                { name: "اتحاد الغرابة", logo: "https://lrfouargla.com/uploads/images/logos/sssx.png" },
+                { name: "م .شباب .المخادمة", logo: "https://lrfouargla.com/uploads/images/logos/sz.png" },
+                { name: "إتحاد بريان", logo: "https://lrfouargla.com/uploads/images/logos/47.png" },
+                { name: "ترجي تقديدين", logo: "https://lrfouargla.com/uploads/images/logos/133.png" },
+                { name: "و.ر.ب.الدبيلة", logo: "https://lrfouargla.com/uploads/images/logos/qqqqqq.png" },
+                { name: "نادي بوغفالة", logo: "https://lrfouargla.com/uploads/images/logos/23.png" },
+                { name: "المنظر الجميل", logo: "https://lrfouargla.com/uploads/images/logos/CSBV%20(1).png" },
+                { name: "م.ك.أمل النزلة", logo: "https://lrfouargla.com/uploads/images/logos/sss%20%E2%80%AB%E2%80%AC.png" },
+                { name: "إتحاد الرباح", logo: "https://lrfouargla.com/uploads/images/logos/73.png" },
+                { name: "شباب سيدي بوعزيز", logo: "https://lrfouargla.com/uploads/images/logos/13.png" },
+                { name: "شباب قصر الحيران", logo: "https://lrfouargla.com/uploads/images/logos/54.png" },
+                { name: "إتحاد حاسي الدلاعة", logo: "https://lrfouargla.com/uploads/images/logos/53.png" }
+            ],
+            "الجهوي الأول (فوج ب)": [
+                { name: "شباب قصر ورقلة", logo: "https://lrfouargla.com/uploads/images/logos/15826488_199664807171500_3091424271281007906_n.gif" },
+                { name: "وفاق المغير", logo: "https://lrfouargla.com/uploads/images/logos/111.png" },
+                { name: "اتحاد .ر. ب.الأغواط", logo: "https://lrfouargla.com/uploads/images/logos/IMG-20241109-WA0007.jpg" },
+                { name: "وفاق عين ماضي", logo: "https://lrfouargla.com/uploads/images/logos/125.png" },
+                { name: "أمل سوف", logo: "https://lrfouargla.com/uploads/images/logos/88.png" },
+                { name: "شباب نهقار", logo: "https://lrfouargla.com/uploads/images/logos/102.png" },
+                { name: "هلال غرداية", logo: "https://lrfouargla.com/uploads/images/logos/75.png" },
+                { name: "التضامن السوفي", logo: "https://lrfouargla.com/uploads/images/logos/72.png" },
+                { name: "إ. الرباضي المنيعي", logo: "https://lrfouargla.com/uploads/images/logos/WhatsApp%20Image%202025-10-25%20%C3%A0%2022.02.03_23b4051f.jpg" },
+                { name: "ش.أ.تمنراست", logo: "https://lrfouargla.com/uploads/images/logos/100.png" },
+                { name: "إتحاد عين البيضاء", logo: "https://lrfouargla.com/uploads/images/logos/40.png" },
+                { name: "وفاق مقر", logo: "https://lrfouargla.com/uploads/images/logos/38.png" },
+                { name: "إ.الحمادين", logo: "https://lrfouargla.com/uploads/images/logos/168-1531611858.png" },
+                { name: "نجم بوغفالة", logo: "https://lrfouargla.com/uploads/images/logos/NRNBO-02.png" }
+            ],
+            "الجهوي الثاني (فوج ج)": [
+                { name: "م .ش .الثنية غرداية", logo: "https://lrfouargla.com/uploads/images/logos/449-1634476753.png" },
+                { name: "مولودية البيضاء", logo: "https://lrfouargla.com/uploads/images/logos/46.png" },
+                { name: "رائد المنيعة", logo: "https://lrfouargla.com/uploads/images/logos/7.png" },
+                { name: "بن ناصر بن شهرة", logo: "https://lrfouargla.com/uploads/images/logos/49(1).png" },
+                { name: "إ.ضاية بن ضحوة", logo: "https://lrfouargla.com/uploads/images/logos/57(1).png" },
+                { name: "مستقبل لماضي", logo: "https://lrfouargla.com/uploads/images/logos/56.png" },
+                { name: "رائد حاسي القارة", logo: "https://lrfouargla.com/uploads/images/logos/134.png" },
+                { name: "عين سيدي علي", logo: "https://lrfouargla.com/uploads/images/logos/1528-1663416912.png" },
+                { name: "نادي الأغواط", logo: "https://lrfouargla.com/uploads/images/logos/50.png" },
+                { name: "إتحاد تاجموت", logo: "https://lrfouargla.com/uploads/images/logos/nirbt.png" },
+                { name: "اتحاد.بريدة", logo: "https://lrfouargla.com/uploads/images/logos/2174-1665949908.png" },
+                { name: "ترجي مرماد", logo: "https://lrfouargla.com/uploads/images/logos/51.png" },
+                { name: "وداد زلفانة", logo: "https://lrfouargla.com/uploads/images/logos/t%C3%A9l%C3%A9chargement%20(1).jpg" },
+                { name: "الاسماعيلي القرارة", logo: "https://lrfouargla.com/uploads/images/logos/IMG-20231119-WA0010.jpg" },
+                { name: "أمل سيدي بوزيد", logo: "https://lrfouargla.com/uploads/images/logos/49.png" },
+                { name: "اتحاد شباب تاغيت", logo: "https://lrfouargla.com/uploads/images/logos/1855-1664293222.png" }
+            ],
+            "قسم ما بين الرابطات": [
+                { name: "إتحاد النزلة", logo: "https://lirf.org.dz/uploads/images/logos/3.png" },
+                { name: "نادي تقرت", logo: "https://lirf.org.dz/uploads/images/logos/received_257439396802495.jpeg" },
+                { name: "أ متليلي الشعانبة", logo: "https://lirf.org.dz/uploads/images/logos/5.png" },
+                { name: "اتحاد الخنق", logo: "https://lirf.org.dz/uploads/images/logos/IRBKheneg.png" },
+                { name: "إتحاد الزاوية", logo: "https://lirf.org.dz/uploads/images/logos/6.png" },
+                { name: "اتحاد آفلو", logo: "https://lirf.org.dz/uploads/images/logos/407-1656244680.png" },
+                { name: "إتحاد همايسة", logo: "https://lirf.org.dz/uploads/images/logos/102.png" },
+                { name: "مشعل حاسي مسعود", logo: "https://lirf.org.dz/uploads/images/logos/13.png" },
+                { name: "شباب جامعة", logo: "https://lirf.org.dz/uploads/images/logos/39(1).png" },
+                { name: "رائد قلتةس سعد", logo: "https://lirf.org.dz/uploads/images/logos/Gueltet%20Sidi%20Saad.png" },
+                { name: "اولمبي الواد", logo: "https://lirf.org.dz/uploads/images/logos/Olympique%20El-Oued.png" },
+                { name: "أولمبيك المقرن", logo: "https://lirf.org.dz/uploads/images/logos/8.png" },
+                { name: "نجوم اليزي", logo: "https://lirf.org.dz/uploads/images/logos/16.png" },
+                { name: "إتحاد حاسي الرمل", logo: "https://lirf.org.dz/uploads/images/logos/12.png" },
+                { name: "اتحاد سوف", logo: "https://lirf.org.dz/uploads/images/logos/412-1715352850.png" },
+                { name: "اتحاد ورقلة", logo: "https://lirf.org.dz/uploads/images/logos/414-1662939264.png" }
+            ],
+            "default": [
+                { name: "فريق 1", logo: "" },
+                { name: "فريق 2", logo: "" }
+            ]
+        };
+
+        const { useState, useEffect } = React;
+
+        // --- 2. COMPONENTS ---
+
+        // Component: MatchRow (For Public List)
+        const MatchRow = ({ match }) => {
+            const isLive = match.status.includes('الشوط') && match.status !== 'نهاية الشوط الأول';
+            const isEnded = match.status === 'نهاية المباراة';
+            const [currentTime, setCurrentTime] = useState("");
+
+            useEffect(() => {
+                const calculateTime = () => {
+                    let totalSeconds = match.time * 60;
+                    if (match.isRunning && match.lastStartTime) {
+                        const diffSecs = Math.floor((Date.now() - match.lastStartTime) / 1000);
+                        totalSeconds += diffSecs;
+                    }
+                    const mm = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
+                    const ss = (totalSeconds % 60).toString().padStart(2, '0');
+                    return `${mm}:${ss}`;
+                };
+
+                setCurrentTime(calculateTime());
+                if (match.isRunning) {
+                    const interval = setInterval(() => setCurrentTime(calculateTime()), 1000);
+                    return () => clearInterval(interval);
+                }
+            }, [match.time, match.isRunning, match.lastStartTime]);
+
+            let statusColor = "text-gray-500", statusBg = "bg-gray-100", statusBorder = "border-gray-200";
+            if (isLive) { statusColor = "text-red-600"; statusBg = "bg-white"; statusBorder = "border-red-200"; }
+            else if (isEnded) { statusColor = "text-emerald-600"; statusBg = "bg-emerald-50"; statusBorder = "border-emerald-100"; }
+            else if (match.status === 'نهاية الشوط الأول') { statusColor = "text-orange-600"; statusBg = "bg-orange-50"; statusBorder = "border-orange-100"; }
+
+            return (
+                <div className="p-4 hover:bg-gray-50 transition-colors flex flex-col md:flex-row items-center justify-between gap-4 relative">
+                    <div className="flex flex-row md:flex-col items-center justify-center gap-2 md:w-24 shrink-0 order-1 md:order-1 mb-2 md:mb-0">
+                        <div className={`px-2 py-1 rounded text-[10px] font-bold border ${statusBg} ${statusColor} ${statusBorder} text-center min-w-[70px]`}>
+                            {match.status === 'لم تبدأ' ? 'Not Started' : match.status}
+                        </div>
+                        {isLive && (
+                            <div className="flex items-center gap-1 text-emerald-600">
+                                <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-sm"></span>
+                                <span className="text-sm font-mono font-black tracking-wider">{currentTime}</span>
+                            </div>
+                        )}
+                    </div>
+                    <div className="flex-1 flex items-center justify-between w-full md:w-auto px-2 order-2 md:order-2">
+                        <div className="flex-1 flex items-center justify-end gap-3 text-right">
+                            <span className="font-bold text-gray-800 text-sm md:text-base leading-tight">{match.home}</span>
+                            <img src={match.homeLogo || "https://placehold.co/40x40?text=H"} className="w-10 h-10 object-contain drop-shadow-sm" onError={(e) => (e.currentTarget.src = 'https://cdn-icons-png.flaticon.com/512/53/53283.png')} />
+                        </div>
+                        <div className="mx-4 md:mx-8 flex items-center justify-center min-w-[70px]">
+                            {match.status !== 'لم تبدأ' ? (
+                                <div className="flex items-center gap-3 text-2xl font-black text-gray-800 bg-gray-100 px-4 py-1 rounded-lg border border-gray-200">
+                                    <span>{match.scoreH}</span>
+                                    <span className="text-gray-400 text-lg font-light">-</span>
+                                    <span>{match.scoreA}</span>
+                                </div>
+                            ) : (
+                                <span className="text-gray-300 font-bold text-xl bg-gray-50 px-3 py-1 rounded">-</span>
+                            )}
+                        </div>
+                        <div className="flex-1 flex items-center justify-start gap-3 text-left">
+                            <img src={match.awayLogo || "https://placehold.co/40x40?text=A"} className="w-10 h-10 object-contain drop-shadow-sm" onError={(e) => (e.currentTarget.src = 'https://cdn-icons-png.flaticon.com/512/53/53283.png')} />
+                            <span className="font-bold text-gray-800 text-sm md:text-base leading-tight">{match.away}</span>
+                        </div>
+                    </div>
+                    <div className="hidden md:block text-xs text-gray-400 w-24 text-left order-3">
+                        {match.round ? `J-${match.round}` : ''}
+                    </div>
+                </div>
+            );
+        };
+
+        // Component: MatchListPublic
+        const MatchListPublic = ({ matches }) => {
+            if (matches.length === 0) {
+                return (
+                    <div className="flex flex-col items-center justify-center py-20 text-gray-400">
+                        <svg className="w-16 h-16 mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <p className="text-lg font-medium">لا توجد مباريات جارية حالياً</p>
+                    </div>
+                );
+            }
+            const groupedMatches = matches.reduce((acc, match) => {
+                (acc[match.league] = acc[match.league] || []).push(match);
+                return acc;
+            }, {});
+
+            return (
+                <div className="w-full max-w-4xl mx-auto space-y-6">
+                    {Object.entries(groupedMatches).map(([leagueName, leagueMatches]) => (
+                        <div key={leagueName} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                            <div className="bg-gray-50 px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <span className="w-1 h-5 bg-emerald-500 rounded-full"></span>
+                                    <h2 className="font-bold text-gray-800 text-sm md:text-base">{leagueName}</h2>
+                                </div>
+                                <span className="text-xs font-semibold text-gray-500 bg-white px-2 py-1 border rounded shadow-sm">{leagueMatches.length} مباريات</span>
+                            </div>
+                            <div className="divide-y divide-gray-100">
+                                {leagueMatches.map((m) => <MatchRow key={m.id} match={m} />)}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            );
+        };
+
+        // Component: AdminMatchCard
+        const AdminMatchCard = ({ match }) => {
+            const [scoreH, setScoreH] = useState(match.scoreH);
+            const [scoreA, setScoreA] = useState(match.scoreA);
+            const [scorersH, setScorersH] = useState(match.scorersH);
+            const [scorersA, setScorersA] = useState(match.scorersA);
+            const [status, setStatus] = useState(match.status);
+            const [editMinutes, setEditMinutes] = useState(match.time || 0);
+            const [displayTime, setDisplayTime] = useState("00:00");
+
+            useEffect(() => {
+                const calculateTime = () => {
+                    const safeTime = Number(match.time || 0);
+                    let totalSeconds = safeTime * 60;
+                    if (match.isRunning && match.lastStartTime) {
+                        const diffSecs = Math.floor((Date.now() - match.lastStartTime) / 1000);
+                        totalSeconds += diffSecs;
+                    }
+                    const mm = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
+                    const ss = (totalSeconds % 60).toString().padStart(2, '0');
+                    return `${mm}:${ss}`;
+                };
+                setDisplayTime(calculateTime());
+                if (match.isRunning) {
+                    const interval = setInterval(() => setDisplayTime(calculateTime()), 1000);
+                    return () => clearInterval(interval);
+                }
+            }, [match.time, match.isRunning, match.lastStartTime]);
+
+            const toggleTimer = async (start) => {
+                if (!match.id) return;
+                try {
+                    const updateData = start 
+                        ? { isRunning: true, lastStartTime: Date.now(), time: Number(editMinutes) }
+                        : { isRunning: false, lastStartTime: null, time: Number(editMinutes) }; 
+                    await db.collection("matches").doc(match.id).update(updateData);
+                } catch (e) { alert("خطأ في تحديث الوقت"); }
+            };
+
+            const handleSave = async () => {
+                if (!match.id) return;
+                try {
+                    let updateData = { scoreH: Number(scoreH), scoreA: Number(scoreA), scorersH, scorersA, status };
+                    if (!match.isRunning) updateData.time = Number(editMinutes);
+                    await db.collection("matches").doc(match.id).update(updateData);
+                } catch (e) { alert("خطأ"); }
+            };
+
+            const handleDelete = async () => {
+                if (window.confirm("حذف المباراة نهائياً؟")) {
+                    await db.collection("matches").doc(match.id).delete();
+                }
+            };
+
+            return (
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mb-3">
+                     <div className="bg-gray-50 px-3 py-1.5 border-b border-gray-100 text-xs text-gray-400 text-center">{match.league} (الجولة {match.round})</div>
+                    <div className="p-2 flex flex-col md:flex-row items-center gap-2">
+                        <div className="flex gap-1 md:w-auto w-full justify-center md:order-1 order-3">
+                            <button onClick={handleDelete} className="w-8 h-8 flex items-center justify-center bg-red-500 hover:bg-red-600 text-white rounded transition shadow-sm">🗑</button>
+                            <button onClick={handleSave} className="w-8 h-8 flex items-center justify-center bg-blue-500 hover:bg-blue-600 text-white rounded transition shadow-sm">💾</button>
+                        </div>
+                        <div className="flex items-center bg-gray-50 rounded border border-gray-200 px-2 py-1 gap-2 md:order-2 order-2">
+                            <span className="font-mono font-bold text-emerald-600 w-12 text-center text-sm">{displayTime}</span>
+                            <div className="flex gap-1">
+                                <button onClick={() => toggleTimer(false)} disabled={!match.isRunning} className={`w-6 h-6 flex items-center justify-center rounded text-white text-[10px] font-bold ${!match.isRunning ? 'bg-gray-300' : 'bg-orange-400 hover:bg-orange-500'}`}>||</button>
+                                <input type="number" value={editMinutes} onChange={(e) => setEditMinutes(Number(e.target.value))} className="w-8 text-center text-xs font-bold bg-white border border-gray-300 rounded h-6 outline-none" />
+                                <button onClick={() => toggleTimer(true)} disabled={match.isRunning} className={`w-6 h-6 flex items-center justify-center rounded text-white text-[10px] font-bold ${match.isRunning ? 'bg-gray-300' : 'bg-emerald-400 hover:bg-emerald-500'}`}>▶</button>
+                            </div>
+                        </div>
+                        <div className="md:order-3 order-1 w-full md:w-32">
+                            <select value={status} onChange={(e) => setStatus(e.target.value)} className="w-full h-8 text-xs border border-gray-200 rounded bg-white text-gray-700 outline-none">
+                                <option value="لم تبدأ">⭕ لم تبدأ</option>
+                                <option value="الشوط الأول">🟢 الشوط الأول</option>
+                                <option value="نهاية الشوط الأول">☕ استراحة</option>
+                                <option value="الشوط الثاني">🟢 الشوط الثاني</option>
+                                <option value="نهاية المباراة">🏁 انتهت</option>
+                            </select>
+                        </div>
+                        <div className="flex-1 flex items-center justify-between md:justify-end gap-2 md:order-4 order-1 w-full md:w-auto bg-white border md:border-none border-gray-100 p-2 md:p-0 rounded">
+                            <div className="flex items-center gap-2 justify-end flex-1 min-w-0">
+                                <span className="text-sm font-bold text-gray-800 truncate">{match.home}</span>
+                                <img src={match.homeLogo} className="w-6 h-6 object-contain" alt="" />
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <input type="number" value={scoreH} onChange={(e) => setScoreH(Number(e.target.value))} className="w-10 h-8 text-center font-bold border border-gray-300 rounded text-lg focus:border-emerald-500 outline-none bg-gray-50" />
+                                <span className="text-gray-400">-</span>
+                                <input type="number" value={scoreA} onChange={(e) => setScoreA(Number(e.target.value))} className="w-10 h-8 text-center font-bold border border-gray-300 rounded text-lg focus:border-emerald-500 outline-none bg-gray-50" />
+                            </div>
+                            <div className="flex items-center gap-2 justify-start flex-1 min-w-0">
+                                <img src={match.awayLogo} className="w-6 h-6 object-contain" alt="" />
+                                <span className="text-sm font-bold text-gray-800 truncate">{match.away}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- 3. MAIN APP ---
+
+        const App = () => {
+            const [view, setView] = useState('public');
+            const [user, setUser] = useState(null);
+            const [matches, setMatches] = useState([]);
+            const [email, setEmail] = useState('');
+            const [password, setPassword] = useState('');
+            const [league, setLeague] = useState('');
+            const [round, setRound] = useState('1');
+            const [home, setHome] = useState('');
+            const [away, setAway] = useState('');
+            const [homeLogo, setHomeLogo] = useState('');
+            const [awayLogo, setAwayLogo] = useState('');
+
+            useEffect(() => {
+                const unsubscribeAuth = auth.onAuthStateChanged(setUser);
+                const unsubscribeMatches = db.collection("matches").onSnapshot((snapshot) => {
+                    const ms = [];
+                    snapshot.forEach((doc) => ms.push({ id: doc.id, ...doc.data() }));
+                    setMatches(ms);
+                });
+                return () => { unsubscribeAuth(); unsubscribeMatches(); };
+            }, []);
+
+            const handleLogin = async (e) => {
+                e.preventDefault();
+                try { await auth.signInWithEmailAndPassword(email, password); } catch (e) { alert("خطأ في الدخول"); }
+            };
+
+            const handleTeamSelect = (isHome, teamName) => {
+                const teamData = LEAGUES_DATA[league] || LEAGUES_DATA['default'];
+                const team = teamData.find(t => t.name === teamName);
+                const logo = team ? team.logo : '';
+                if (isHome) { setHome(teamName); setHomeLogo(logo); }
+                else { setAway(teamName); setAwayLogo(logo); }
+            };
+
+            const handleAddMatch = async () => {
+                if (!league || !home || !away) return alert("الرجاء اختيار البطولة والفريقين");
+                try {
+                    await db.collection("matches").add({
+                        league, round, home, away, homeLogo, awayLogo,
+                        scoreH: 0, scoreA: 0, scorersH: "", scorersA: "",
+                        status: "لم تبدأ", time: 0, isRunning: false, lastStartTime: null
+                    });
+                    setHome(''); setAway(''); alert("تم نشر المباراة بنجاح");
+                } catch (e) { alert("Error adding match"); }
+            };
+
+            const Header = () => (
+                <header className="bg-white border-b border-emerald-100 shadow-sm sticky top-0 z-50">
+                    <div className="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <img src="https://i.top4top.io/p_3636li6n50.jpg" className="w-10 h-10 rounded-full object-cover border border-emerald-100 shadow-sm" />
+                            <div className="hidden md:block">
+                                <h1 className="font-bold text-lg leading-none text-emerald-900">Kooora Laghouat</h1>
+                                <p className="text-[10px] text-emerald-500 uppercase tracking-widest font-bold">Live Score</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <a href="https://www.facebook.com/Kooralghouat" target="_blank" className="flex items-center gap-2 bg-[#1877F2] text-white px-3 py-1.5 rounded-full text-xs font-bold hover:bg-[#166fe5] transition shadow-sm">
+                                <span>تابعنا</span>
+                            </a>
+                            <button onClick={() => setView('admin')} className="text-xs text-gray-500 hover:text-emerald-600 font-medium px-2 py-1 rounded transition">
+                                {user ? 'لوحة التحكم' : 'دخول المشرف'}
+                            </button>
+                        </div>
+                    </div>
+                </header>
+            );
+
+            if (view === 'public') {
+                return (
+                    <div className="min-h-screen bg-gray-50 pb-10">
+                        <Header />
+                        <div className="max-w-4xl mx-auto px-4 mt-6">
+                            <div className="flex items-center gap-2 mb-6 border-b border-gray-200 pb-2">
+                                <span className="w-2 h-2 rounded-full bg-red-600 animate-pulse"></span>
+                                <h2 className="text-xl font-bold text-gray-800">مباريات اليوم</h2>
+                            </div>
+                            <MatchListPublic matches={matches} />
+                        </div>
+                    </div>
+                );
+            }
+
+            if (!user) {
+                return (
+                    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4">
+                        <div className="max-w-md w-full bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                            <div className="bg-emerald-600 p-8 text-center relative overflow-hidden">
+                                <h2 className="text-2xl font-bold text-white relative z-10">تسجيل الدخول</h2>
+                            </div>
+                            <form onSubmit={handleLogin} className="p-8 space-y-4">
+                                <input type="email" placeholder="البريد الإلكتروني" className="w-full p-3 border rounded-lg" value={email} onChange={e => setEmail(e.target.value)} />
+                                <input type="password" placeholder="كلمة المرور" className="w-full p-3 border rounded-lg" value={password} onChange={e => setPassword(e.target.value)} />
+                                <button type="submit" className="w-full py-3 bg-emerald-600 text-white rounded-lg font-bold">دخول آمن</button>
+                            </form>
+                            <button onClick={() => setView('public')} className="block w-full text-center py-4 text-sm text-gray-500">عودة للموقع الرئيسي</button>
+                        </div>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="min-h-screen bg-gray-50 pb-20">
+                    <nav className="bg-white border-b border-gray-200 sticky top-0 z-40 px-6 py-3 shadow-sm">
+                        <div className="max-w-6xl mx-auto flex justify-between items-center">
+                            <h3 className="font-bold text-gray-800">لوحة الإدارة</h3>
+                            <div className="flex gap-2">
+                                <button onClick={() => setView('public')} className="px-4 py-2 text-sm font-medium">الموقع</button>
+                                <button onClick={() => auth.signOut()} className="px-4 py-2 text-sm font-bold text-white bg-red-500 rounded-lg">خروج</button>
+                            </div>
+                        </div>
+                    </nav>
+                    <div className="max-w-6xl mx-auto px-4 mt-8">
+                        <div className="bg-white rounded-lg shadow-sm border border-emerald-100 p-4 mb-8">
+                            <h4 className="text-emerald-600 font-bold mb-4">إضافة مباراة جديدة</h4>
+                            <div className="flex flex-col gap-3">
+                                <div className="flex gap-3">
+                                    <select className="flex-1 p-2 bg-gray-50 border rounded text-sm" value={league} onChange={(e) => { setLeague(e.target.value); setHome(''); setAway(''); }}>
+                                        <option value="" disabled>-- اختر البطولة --</option>
+                                        {Object.keys(LEAGUES_DATA).filter(k => k !== 'default').map(k => <option key={k} value={k}>{k}</option>)}
+                                        <option value="شرفي الأغواط">شرفي الأغواط</option>
+                                        <option value="ولائي الأغواط">ولائي الأغواط</option>
+                                        <option value="كأس الجمهورية">كأس الجمهورية 🏆</option>
+                                    </select>
+                                    <select className="w-1/3 p-2 bg-gray-50 border rounded text-sm" value={round} onChange={e => setRound(e.target.value)}>
+                                        {Array.from({length: 50}, (_, i) => i + 1).map(num => <option key={num} value={num}>الجولة {num}</option>)}
+                                    </select>
+                                </div>
+                                <div className="flex gap-3 items-end">
+                                    <select className="flex-1 p-2 bg-gray-50 border rounded text-sm" value={home} onChange={(e) => handleTeamSelect(true, e.target.value)}>
+                                        <option value="">اختر المستضيف</option>
+                                        {(LEAGUES_DATA[league] || LEAGUES_DATA['default']).map(t => <option key={t.name} value={t.name}>{t.name}</option>)}
+                                    </select>
+                                    <select className="flex-1 p-2 bg-gray-50 border rounded text-sm" value={away} onChange={(e) => handleTeamSelect(false, e.target.value)}>
+                                        <option value="">اختر الضيف</option>
+                                        {(LEAGUES_DATA[league] || LEAGUES_DATA['default']).map(t => <option key={t.name} value={t.name}>{t.name}</option>)}
+                                    </select>
+                                    <button onClick={handleAddMatch} className="w-32 py-2 bg-emerald-500 text-white rounded font-bold hover:bg-emerald-600 text-sm">نشر</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="space-y-4">
+                            {matches.map(m => <AdminMatchCard key={m.id} match={m} />)}
+                            {matches.length === 0 && <div className="text-center text-gray-400 py-10">لا توجد مباريات</div>}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+<script type="module" src="/index.tsx"></script>
 </body>
 </html>
