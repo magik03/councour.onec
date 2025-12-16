@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>أدمن - رابطة الأغواط وورقلة</title>
+    <link rel="icon" href="https://i.top4top.io/p_3636li6n50.jpg">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap');
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Tajawal', sans-serif; background: #f4f6f8; margin: 0; min-height: 100vh; padding: 10px; padding-bottom: 80px; }
+        
+        #login-screen { display: flex; flex-direction: column; height: 90vh; justify-content: center; max-width: 400px; margin: 0 auto; }
+        .logo-header { width: 80px; height: 80px; border-radius: 50%; border: 3px solid #27ae60; margin: 0 auto 15px; display: block; object-fit: cover; }
+        .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 20px; border: 1px solid #e1e4e8; }
+        
+        input, select { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 8px; font-family: 'Tajawal'; font-size: 16px; background: #fff; }
+        button { width: 100%; padding: 12px; background: #27ae60; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1rem; }
+        
+        .edit-card { background: #fff; border: 1px solid #ccc; border-radius: 10px; padding: 10px; margin-bottom: 15px; border-top: 5px solid #3498db; }
+        .section-label { font-size: 0.8rem; color: #7f8c8d; font-weight: bold; margin-bottom: 5px; margin-top: 10px; border-bottom: 1px dashed #eee; }
+        
+        .team-select-row { display: flex; align-items: center; gap: 5px; margin-bottom: 5px; }
+        .team-img-small { width: 40px; height: 40px; border-radius: 5px; object-fit: contain; border: 1px solid #eee; background: #f9f9f9; }
+        
+        .timer-controls { display: flex; gap: 5px; align-items: center; background: #f0f8ff; padding: 10px; border-radius: 8px; border: 1px solid #bcdff1; }
+        .btn-start { background: #27ae60; padding: 8px; font-size: 0.9rem; }
+        .btn-stop { background: #e74c3c; padding: 8px; font-size: 0.9rem; }
+        .time-display { font-size: 1.2rem; font-weight: bold; width: 60px; text-align: center; border: 2px solid #333; border-radius: 5px; background: #fff; color: #333; }
+
+        .score-edit-row { display: flex; justify-content: center; align-items: center; gap: 10px; background: #f8f9fa; padding: 10px; border-radius: 8px; margin: 10px 0; }
+        .score-input { width: 60px !important; text-align: center; font-size: 1.5rem; font-weight: bold; margin: 0; border: 2px solid #ddd; }
+        
+        .btns-row { display: flex; gap: 10px; margin-top: 15px; }
+        .btn-save { background: #2980b9; flex: 2; }
+        .btn-del { background: #c0392b; flex: 1; }
+    </style>
+</head>
+<body>
+
+    <div id="login-screen">
+        <div class="card" style="text-align:center;">
+            <img src="https://i.top4top.io/p_3636li6n50.jpg" class="logo-header">
+            <h3>لوحة التحكم</h3>
+            <input type="email" id="email" placeholder="البريد الإلكتروني" style="direction: ltr;">
+            <input type="password" id="password" placeholder="كلمة المرور" style="direction: ltr;">
+            <button id="btnLogin">دخول</button>
+        </div>
+    </div>
+
+    <div id="dashboard" style="display:none; max-width: 600px; margin: 0 auto;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <h3 style="margin:0;">المباريات</h3>
+            <button onclick="window.location.reload()" style="width:auto; background:#7f8c8d; padding:5px 15px; font-size:0.9rem;">تحديث</button>
+        </div>
+
+        <!-- إضافة مباراة -->
+        <div class="card" style="border: 1px solid #27ae60;">
+            <h3 style="margin-top:0; color:#27ae60; font-size:1rem;">+ نشر مباراة جديدة</h3>
+            
+            <select id="newLeague" onchange="updateClubsList()">
+                <option value="" disabled selected>-- اختر البطولة أولاً --</option>
+                <option value="الجهوي الأول (فوج أ)">الجهوي الأول (فوج أ)</option>
+                <option value="الجهوي الأول (فوج ب)">الجهوي الأول (فوج ب)</option>
+                <option value="الجهوي الثاني (فوج ج)">الجهوي الثاني (فوج ج)</option>
+                <option value="قسم ما بين الرابطات">قسم ما بين الرابطات (الجنوب الشرقي)</option>
+                <option value="شرفي الأغواط">شرفي الأغواط</option>
+                <option value="ولائي الأغواط">ولائي الأغواط</option>
+                <option value="كأس الجمهورية">كأس الجمهورية 🏆</option>
+            </select>
+            
+            <input type="text" id="newRound" placeholder="الجولة (مثال: 14)">
+            
+            <div style="display:flex; gap:10px;">
+                <select id="newHome" class="club-select"><option value="">اختر البطولة أعلاه ☝️</option></select>
+                <select id="newAway" class="club-select"><option value="">اختر البطولة أعلاه ☝️</option></select>
+            </div>
+            <button id="btnAdd">نشر المباراة</button>
+        </div>
+
+        <h3 style="margin-bottom:10px;">المباريات الجارية:</h3>
+        <div id="matches-list"></div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // ⚠️⚠️ ضع كود Firebase Config الخاص بك هنا ⚠️⚠️
+        const firebaseConfig = {
+          apiKey: "AIzaSyAXLSZ5OqPEOnP0DUx3w75fU2xxiVkrWcE",
+          authDomain: "koooralaghouat.firebaseapp.com",
+          projectId: "koooralaghouat",
+          storageBucket: "koooralaghouat.firebasestorage.app",
+          messagingSenderId: "84750708348",
+          appId: "1:84750708348:web:179ec7acf8fc2f357e23f9",
+          measurementId: "G-4YSP7SWPGV"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // ==========================================
+        // 🟢 قاعدة بيانات الأندية (كاملة)
+        // ==========================================
+        window.leaguesData = {
+            "الجهوي الأول (فوج أ)": [
+                { name: "ش ب عين اميناس", logo: "https://lrfouargla.com/uploads/images/logos/1(1).png" },
+                { name: "ن.ر.تقنتورين", logo: "https://lrfouargla.com/uploads/images/logos/203-1601155957.png" },
+                { name: "اتحاد الغرابة", logo: "https://lrfouargla.com/uploads/images/logos/sssx.png" },
+                { name: "م .شباب .المخادمة", logo: "https://lrfouargla.com/uploads/images/logos/sz.png" },
+                { name: "إتحاد بريان", logo: "https://lrfouargla.com/uploads/images/logos/47.png" },
+                { name: "ترجي تقديدين", logo: "https://lrfouargla.com/uploads/images/logos/133.png" },
+                { name: "و.ر.ب.الدبيلة", logo: "https://lrfouargla.com/uploads/images/logos/qqqqqq.png" },
+                { name: "نادي بوغفالة", logo: "https://lrfouargla.com/uploads/images/logos/23.png" },
+                { name: "المنظر الجميل", logo: "https://lrfouargla.com/uploads/images/logos/CSBV%20(1).png" },
+                { name: "م.ك.أمل النزلة", logo: "https://lrfouargla.com/uploads/images/logos/sss%20%E2%80%AB%E2%80%AC.png" },
+                { name: "إتحاد الرباح", logo: "https://lrfouargla.com/uploads/images/logos/73.png" },
+                { name: "شباب سيدي بوعزيز", logo: "https://lrfouargla.com/uploads/images/logos/13.png" },
+                { name: "شباب قصر الحيران", logo: "https://lrfouargla.com/uploads/images/logos/54.png" },
+                { name: "إتحاد حاسي الدلاعة", logo: "https://lrfouargla.com/uploads/images/logos/53.png" }
+            ],
+            
+            "الجهوي الأول (فوج ب)": [
+                { name: "شباب قصر ورقلة", logo: "https://lrfouargla.com/uploads/images/logos/15826488_199664807171500_3091424271281007906_n.gif" },
+                { name: "وفاق المغير", logo: "https://lrfouargla.com/uploads/images/logos/111.png" },
+                { name: "اتحاد .ر. ب.الأغواط", logo: "https://lrfouargla.com/uploads/images/logos/IMG-20241109-WA0007.jpg" },
+                { name: "وفاق عين ماضي", logo: "https://lrfouargla.com/uploads/images/logos/125.png" },
+                { name: "أمل سوف", logo: "https://lrfouargla.com/uploads/images/logos/88.png" },
+                { name: "شباب نهقار", logo: "https://lrfouargla.com/uploads/images/logos/102.png" },
+                { name: "هلال غرداية", logo: "https://lrfouargla.com/uploads/images/logos/75.png" },
+                { name: "التضامن السوفي", logo: "https://lrfouargla.com/uploads/images/logos/72.png" },
+                { name: "إ. الرباضي المنيعي", logo: "https://lrfouargla.com/uploads/images/logos/WhatsApp%20Image%202025-10-25%20%C3%A0%2022.02.03_23b4051f.jpg" },
+                { name: "ش.أ.تمنراست", logo: "https://lrfouargla.com/uploads/images/logos/100.png" },
+                { name: "إتحاد عين البيضاء", logo: "https://lrfouargla.com/uploads/images/logos/40.png" },
+                { name: "وفاق مقر", logo: "https://lrfouargla.com/uploads/images/logos/38.png" },
+                { name: "إ.الحمادين", logo: "https://lrfouargla.com/uploads/images/logos/168-1531611858.png" },
+                { name: "نجم بوغفالة", logo: "https://lrfouargla.com/uploads/images/logos/NRNBO-02.png" }
+            ],
+
+            "الجهوي الثاني (فوج ج)": [
+                { name: "م .ش .الثنية غرداية", logo: "https://lrfouargla.com/uploads/images/logos/449-1634476753.png" },
+                { name: "مولودية البيضاء", logo: "https://lrfouargla.com/uploads/images/logos/46.png" },
+                { name: "رائد المنيعة", logo: "https://lrfouargla.com/uploads/images/logos/7.png" },
+                { name: "بن ناصر بن شهرة", logo: "https://lrfouargla.com/uploads/images/logos/49(1).png" },
+                { name: "إ.ضاية بن ضحوة", logo: "https://lrfouargla.com/uploads/images/logos/57(1).png" },
+                { name: "مستقبل لماضي", logo: "https://lrfouargla.com/uploads/images/logos/56.png" },
+                { name: "رائد حاسي القارة", logo: "https://lrfouargla.com/uploads/images/logos/134.png" },
+                { name: "عين سيدي علي", logo: "https://lrfouargla.com/uploads/images/logos/1528-1663416912.png" },
+                { name: "نادي الأغواط", logo: "https://lrfouargla.com/uploads/images/logos/50.png" },
+                { name: "إتحاد تاجموت", logo: "https://lrfouargla.com/uploads/images/logos/nirbt.png" },
+                { name: "اتحاد.بريدة", logo: "https://lrfouargla.com/uploads/images/logos/2174-1665949908.png" },
+                { name: "ترجي مرماد", logo: "https://lrfouargla.com/uploads/images/logos/51.png" },
+                { name: "وداد زلفانة", logo: "https://lrfouargla.com/uploads/images/logos/t%C3%A9l%C3%A9chargement%20(1).jpg" },
+                { name: "الاسماعيلي القرارة", logo: "https://lrfouargla.com/uploads/images/logos/IMG-20231119-WA0010.jpg" },
+                { name: "أمل سيدي بوزيد", logo: "https://lrfouargla.com/uploads/images/logos/49.png" },
+                { name: "اتحاد شباب تاغيت", logo: "https://lrfouargla.com/uploads/images/logos/1855-1664293222.png" }
+            ],
+
+            "قسم ما بين الرابطات": [
+                { name: "إتحاد النزلة", logo: "https://lirf.org.dz/uploads/images/logos/3.png" },
+                { name: "نادي تقرت", logo: "https://lirf.org.dz/uploads/images/logos/received_257439396802495.jpeg" },
+                { name: "أ متليلي الشعانبة", logo: "https://lirf.org.dz/uploads/images/logos/5.png" },
+                { name: "اتحاد الخنق", logo: "https://lirf.org.dz/uploads/images/logos/IRBKheneg.png" },
+                { name: "إتحاد الزاوية", logo: "https://lirf.org.dz/uploads/images/logos/6.png" },
+                { name: "اتحاد آفلو", logo: "https://lirf.org.dz/uploads/images/logos/407-1656244680.png" },
+                { name: "إتحاد همايسة", logo: "https://lirf.org.dz/uploads/images/logos/102.png" },
+                { name: "مشعل حاسي مسعود", logo: "https://lirf.org.dz/uploads/images/logos/13.png" },
+                { name: "شباب جامعة", logo: "https://lirf.org.dz/uploads/images/logos/39(1).png" },
+                { name: "رائد قلتةس سعد", logo: "https://lirf.org.dz/uploads/images/logos/Gueltet%20Sidi%20Saad.png" },
+                { name: "اولمبي الواد", logo: "https://lirf.org.dz/uploads/images/logos/Olympique%20El-Oued.png" },
+                { name: "أولمبيك المقرن", logo: "https://lirf.org.dz/uploads/images/logos/8.png" },
+                { name: "نجوم اليزي", logo: "https://lirf.org.dz/uploads/images/logos/16.png" },
+                { name: "إتحاد حاسي الرمل", logo: "https://lirf.org.dz/uploads/images/logos/12.png" },
+                { name: "اتحاد سوف", logo: "https://lirf.org.dz/uploads/images/logos/412-1715352850.png" },
+                { name: "اتحاد ورقلة", logo: "https://lirf.org.dz/uploads/images/logos/414-1662939264.png" }
+            ],
+
+            "default": [
+                { name: "فريق 1", logo: "" },
+                { name: "فريق 2", logo: "" }
+            ]
+        };
+
+        // دالة تحديث قوائم الفرق
+        window.updateClubsList = () => {
+            const league = document.getElementById('newLeague').value;
+            const homeSelect = document.getElementById('newHome');
+            const awaySelect = document.getElementById('newAway');
+            
+            homeSelect.innerHTML = '<option value="">المستضيف (يمين)</option>';
+            awaySelect.innerHTML = '<option value="">الضيف (يسار)</option>';
+
+            const clubs = window.leaguesData[league] || window.leaguesData["default"];
+
+            clubs.forEach(club => {
+                const opt1 = document.createElement('option');
+                opt1.value = club.name;
+                opt1.innerText = club.name;
+                opt1.setAttribute('data-logo', club.logo);
+                homeSelect.appendChild(opt1);
+
+                const opt2 = document.createElement('option');
+                opt2.value = club.name;
+                opt2.innerText = club.name;
+                opt2.setAttribute('data-logo', club.logo);
+                awaySelect.appendChild(opt2);
+            });
+        };
+
+        const getLogoFromSelect = (selectId) => {
+            const select = document.getElementById(selectId);
+            const selectedOption = select.options[select.selectedIndex];
+            return selectedOption.getAttribute('data-logo') || 'https://cdn-icons-png.flaticon.com/512/53/53283.png';
+        };
+
+        onAuthStateChanged(auth, (user) => {
+            document.getElementById('login-screen').style.display = user ? 'none' : 'flex';
+            document.getElementById('dashboard').style.display = user ? 'block' : 'none';
+            if(user) {
+                loadMatches();
+            }
+        });
+
+        document.getElementById('btnLogin').addEventListener('click', () => {
+            signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('password').value)
+            .catch(e => alert("خطأ في الدخول"));
+        });
+
+        document.getElementById('btnAdd').addEventListener('click', async () => {
+            const league = document.getElementById('newLeague').value;
+            const round = document.getElementById('newRound').value;
+            const home = document.getElementById('newHome').value;
+            const away = document.getElementById('newAway').value;
+            
+            if(league && home && away) {
+                const homeLogo = getLogoFromSelect('newHome');
+                const awayLogo = getLogoFromSelect('newAway');
+
+                if(confirm("نشر المباراة؟")) {
+                    await addDoc(collection(db, "matches"), {
+                        league, round, home, away, 
+                        homeLogo, awayLogo,
+                        scoreH: 0, scoreA: 0, scorersH: "", scorersA: "", 
+                        status: "لم تبدأ", 
+                        time: 0, isRunning: false, lastStartTime: null
+                    });
+                    alert("تم النشر ✅");
+                }
+            } else {
+                alert("الرجاء اختيار البطولة والفريقين");
+            }
+        });
+
+        function loadMatches() {
+            onSnapshot(collection(db, "matches"), (snapshot) => {
+                const list = document.getElementById('matches-list');
+                list.innerHTML = '';
+                snapshot.forEach((d) => {
+                    const m = d.data();
+                    const id = d.id;
+                    const sel = (val) => m.status === val ? 'selected' : '';
+
+                    let displayTime = m.time;
+                    if(m.isRunning && m.lastStartTime) {
+                        const now = Date.now();
+                        const diffMins = Math.floor((now - m.lastStartTime) / 60000);
+                        displayTime = parseInt(m.time) + diffMins;
+                    }
+
+                    list.innerHTML += `
+                    <div class="edit-card">
+                        <div style="text-align:center; font-weight:bold; color:#888; margin-bottom:10px;">
+                            ${m.league} (${m.round})
+                        </div>
+
+                        <div class="section-label">الفرق (يمين: مستضيف / يسار: ضيف)</div>
+                        <div class="team-select-row">
+                            <img src="${m.homeLogo}" class="team-img-small">
+                            <input type="text" value="${m.home}" disabled style="background:#eee; font-weight:bold;">
+                        </div>
+                        
+                        <div class="score-edit-row">
+                            <input type="number" id="sH-${id}" value="${m.scoreH}" class="score-input">
+                            <span style="font-weight:bold; color:#aaa;">-</span>
+                            <input type="number" id="sA-${id}" value="${m.scoreA}" class="score-input">
+                        </div>
+
+                        <div class="team-select-row">
+                            <img src="${m.awayLogo}" class="team-img-small">
+                            <input type="text" value="${m.away}" disabled style="background:#eee; font-weight:bold;">
+                        </div>
+
+                         <input type="text" id="scH-${id}" value="${m.scorersH || ''}" placeholder="هدافي المستضيف" style="font-size:0.8rem; margin-top:5px;">
+                         <input type="text" id="scA-${id}" value="${m.scorersA || ''}" placeholder="هدافي الضيف" style="font-size:0.8rem; margin-top:5px;">
+
+                        <div class="section-label">التحكم في الوقت</div>
+                        <div class="timer-controls">
+                            <button class="btn-start" onclick="window.toggleTimer('${id}', true, ${displayTime})" ${m.isRunning ? 'disabled style="opacity:0.5"' : ''}>تشغيل ▷</button>
+                            <input type="number" id="tm-${id}" value="${displayTime}" class="time-display">
+                            <button class="btn-stop" onclick="window.toggleTimer('${id}', false, ${displayTime})" ${!m.isRunning ? 'disabled style="opacity:0.5"' : ''}>إيقاف ⏸</button>
+                        </div>
+                        
+                        <div style="margin-top:10px;">
+                            <select id="st-${id}" style="font-weight:bold;">
+                                <option value="لم تبدأ" ${sel("لم تبدأ")}>⚪ لم تبدأ</option>
+                                <option value="الشوط الأول" ${sel("الشوط الأول")}>🟢 الشوط 1</option>
+                                <option value="نهاية الشوط الأول" ${sel("نهاية الشوط الأول")}>🟠 استراحة</option>
+                                <option value="الشوط الثاني" ${sel("الشوط الثاني")}>🟢 الشوط 2</option>
+                                <option value="نهاية المباراة" ${sel("نهاية المباراة")}>⚫ انتهت</option>
+                            </select>
+                        </div>
+
+                        <div class="btns-row">
+                            <button class="btn-save" onclick="window.upd('${id}', ${m.isRunning})">حفظ النتائج 💾</button>
+                            <button class="btn-del" onclick="window.del('${id}')">حذف</button>
+                        </div>
+                    </div>`;
+                });
+            });
+        }
+
+        window.toggleTimer = async (id, start, currentTime) => {
+            const timeVal = Number(document.getElementById(`tm-${id}`).value);
+            if(start) {
+                await updateDoc(doc(db, "matches", id), {
+                    isRunning: true, lastStartTime: Date.now(), time: timeVal
+                });
+            } else {
+                await updateDoc(doc(db, "matches", id), {
+                    isRunning: false, lastStartTime: null, time: timeVal
+                });
+            }
+        };
+
+        window.upd = async (id, isRunning) => {
+            let updateData = {
+                scoreH: Number(document.getElementById(`sH-${id}`).value),
+                scoreA: Number(document.getElementById(`sA-${id}`).value),
+                scorersH: document.getElementById(`scH-${id}`).value,
+                scorersA: document.getElementById(`scA-${id}`).value,
+                status: document.getElementById(`st-${id}`).value,
+            };
+            if (!isRunning) {
+                updateData.time = Number(document.getElementById(`tm-${id}`).value);
+            }
+            await updateDoc(doc(db, "matches", id), updateData);
+            alert("تم التحديث ✅");
+        };
+        
+        window.del = async (id) => { if(confirm("حذف؟")) await deleteDoc(doc(db, "matches", id)); };
+    </script>
+</body>
+</html>
