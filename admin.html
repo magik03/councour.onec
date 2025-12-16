@@ -3,52 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>أدمن - التحكم الكامل</title>
+    <title>لوحة التحكم الاحترافية</title>
     <link rel="icon" href="https://i.top4top.io/p_3636li6n50.jpg">
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <!-- مكتبة الأيقونات -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <style>
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { font-family: 'Tajawal', sans-serif; background: #f0f2f5; margin: 0; min-height: 100vh; padding: 10px; padding-bottom: 80px; }
-        
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+        body { font-family: 'Tajawal', sans-serif; background: #f1f5f9; margin: 0; min-height: 100vh; padding: 10px; color: #1e293b; }
+
+        /* شاشة الدخول */
         #login-screen { display: flex; flex-direction: column; height: 90vh; justify-content: center; max-width: 400px; margin: 0 auto; }
-        .logo-header { width: 90px; height: 90px; border-radius: 50%; border: 3px solid #27ae60; margin: 0 auto 20px; display: block; object-fit: cover; }
-        .card { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-bottom: 20px; border: 1px solid #e1e4e8; }
+        .logo-header { width: 80px; height: 80px; border-radius: 50%; border: 3px solid #10b981; margin: 0 auto 20px; display: block; object-fit: cover; }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); border: 1px solid #e2e8f0; }
         
-        input, select { width: 100%; padding: 14px; margin-bottom: 12px; border: 1px solid #ddd; border-radius: 10px; font-family: 'Tajawal'; font-size: 16px; background: #fff; transition: 0.3s; }
-        input:focus, select:focus { border-color: #27ae60; outline: none; }
+        input, select { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-family: 'Tajawal'; font-size: 14px; background: #fff; }
+        button { width: 100%; padding: 10px; background: #10b981; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; }
         
-        button { width: 100%; padding: 14px; background: #27ae60; color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 1rem; transition: 0.2s; }
-        button:active { transform: scale(0.98); }
+        /* --- لوحة التحكم --- */
+        #dashboard { max-width: 1200px; margin: 0 auto; display: none; padding-bottom: 50px; }
         
-        .edit-card { background: #fff; border: 1px solid #d1d5db; border-radius: 12px; padding: 15px; margin-bottom: 15px; position: relative; overflow: hidden; }
-        .edit-card::before { content: ''; position: absolute; top: 0; right: 0; width: 100%; height: 6px; background: #3498db; }
+        .dashboard-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: #fff; padding: 15px; border-radius: 10px; border-right: 5px solid #10b981; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         
-        .section-label { font-size: 0.85rem; color: #6b7280; font-weight: 700; margin: 15px 0 8px; display: flex; align-items: center; gap: 5px; }
-        .team-select-row { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
-        .team-img-small { width: 45px; height: 45px; border-radius: 50%; object-fit: contain; border: 1px solid #eee; background: #fff; padding: 2px; }
-        
-        .name-input { font-weight: bold; background-color: #f9fafb !important; }
-        .logo-input { font-size: 0.8rem; color: #888; padding: 8px !important; margin-bottom: 10px; }
+        /* قسم الإضافة */
+        .add-section { background: #fff; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #e2e8f0; }
+        .add-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 10px; }
 
-        .timer-wrapper { background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px dashed #cbd5e1; display: flex; flex-direction: column; align-items: center; gap: 10px; }
-        .timer-controls { display: flex; gap: 10px; width: 100%; }
-        .btn-control { flex: 1; font-size: 0.9rem; padding: 10px; display: flex; align-items: center; justify-content: center; gap: 5px; }
-        .btn-start { background: #10b981; }
-        .btn-stop { background: #ef4444; }
-        
-        .time-display-wrapper { display: flex; align-items: center; gap: 5px; font-weight: bold; color: #333; }
-        .time-input { width: 70px !important; text-align: center; font-size: 1.3rem; margin: 0; border: 2px solid #e2e8f0; }
-        
-        .score-edit-row { display: flex; justify-content: center; align-items: center; gap: 15px; background: #f1f5f9; padding: 15px; border-radius: 12px; margin: 15px 0; }
-        .score-input { width: 60px !important; text-align: center; font-size: 1.8rem; font-weight: 800; margin: 0; border: 2px solid #cbd5e1; color: #1e293b; }
+        /* --- جدول المباريات (التصميم السطري) --- */
+        .match-row {
+            display: flex; flex-wrap: wrap; align-items: center;
+            background: #fff; border: 1px solid #e2e8f0; border-radius: 8px;
+            margin-bottom: 10px; padding: 8px 15px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            transition: 0.2s; gap: 10px;
+        }
+        .match-row:hover { border-color: #10b981; transform: translateY(-1px); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
 
-        .btns-row { display: flex; gap: 10px; margin-top: 20px; }
-        .btn-save { background: #3b82f6; flex: 2; }
-        .btn-del { background: #ef4444; flex: 1; }
+        /* تفاصيل السطر */
+        .col-info { width: 100%; font-size: 0.75rem; color: #64748b; background: #f8fafc; padding: 3px 10px; border-radius: 4px; text-align: center; margin-bottom: 5px; border: 1px dashed #cbd5e1; }
         
-        .live-indicator { display: inline-block; width: 10px; height: 10px; background: red; border-radius: 50%; animation: blink 1s infinite; margin-right: 5px; display: none; }
-        .live-indicator.active { display: inline-block; }
-        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0; } 100% { opacity: 1; } }
+        /* الفرق */
+        .col-teams { flex: 3; display: flex; align-items: center; justify-content: space-between; gap: 10px; min-width: 280px; }
+        .team-display { display: flex; align-items: center; gap: 5px; width: 45%; }
+        .team-display img { width: 30px; height: 30px; border-radius: 50%; object-fit: contain; border: 1px solid #eee; }
+        .team-display.home { justify-content: flex-start; }
+        .team-display.away { justify-content: flex-end; }
+        
+        .team-name-input { width: 100% !important; margin: 0 !important; padding: 5px !important; font-size: 0.85rem !important; border: none !important; background: transparent !important; font-weight: bold; }
+        .team-name-input:focus { background: #f0fdf4 !important; }
+        .team-name-input.right { text-align: right; }
+        .team-name-input.left { text-align: left; }
+
+        /* النتيجة */
+        .col-score { flex: 1; display: flex; align-items: center; justify-content: center; gap: 5px; min-width: 100px; background: #f1f5f9; padding: 5px; border-radius: 6px; }
+        .input-score { width: 35px !important; text-align: center; font-weight: 800; font-size: 1.1rem; padding: 2px !important; margin: 0 !important; border: 1px solid #cbd5e1 !important; height: 35px; }
+
+        /* التحكم والوقت */
+        .col-controls { flex: 3; display: flex; align-items: center; gap: 10px; justify-content: center; min-width: 300px; }
+        .status-select { width: auto !important; margin: 0 !important; padding: 5px 10px !important; font-size: 0.85rem !important; flex: 1; }
+        
+        .timer-box { display: flex; align-items: center; gap: 2px; background: #f8fafc; padding: 3px; border-radius: 6px; border: 1px solid #e2e8f0; }
+        .time-input { width: 45px !important; text-align: center; margin: 0 !important; padding: 5px !important; font-weight: bold; border: none !important; background: transparent !important; font-size: 1.1rem; }
+
+        /* الأزرار */
+        .col-actions { flex: 0.5; display: flex; justify-content: flex-end; gap: 5px; }
+        .btn-icon { width: 34px; height: 34px; padding: 0; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 1rem; color: white; border: none; cursor: pointer; }
+        
+        .btn-save { background: #3b82f6; }
+        .btn-del { background: #ef4444; }
+        .btn-play { background: #10b981; }
+        .btn-pause { background: #f59e0b; }
+        .btn-icon:hover { opacity: 0.9; }
+
+        /* تجاوب للموبايل */
+        @media (max-width: 900px) {
+            .match-row { justify-content: center; }
+            .col-teams { width: 100%; margin-bottom: 10px; order: 1; }
+            .col-score { order: 2; margin-bottom: 10px; }
+            .col-controls { width: 100%; order: 3; justify-content: space-between; margin-bottom: 10px; flex-wrap: wrap; }
+            .col-actions { width: 100%; order: 4; justify-content: stretch; }
+            .col-actions .btn-icon { flex: 1; border-radius: 4px; }
+        }
     </style>
 </head>
 <body>
@@ -56,38 +92,39 @@
     <div id="login-screen">
         <div class="card" style="text-align:center;">
             <img src="https://i.top4top.io/p_3636li6n50.jpg" class="logo-header">
-            <h3>تسجيل دخول المشرف</h3>
+            <h3>لوحة المشرف</h3>
             <input type="email" id="email" placeholder="البريد الإلكتروني" style="direction: ltr;">
             <input type="password" id="password" placeholder="كلمة المرور" style="direction: ltr;">
             <button id="btnLogin">دخول</button>
         </div>
     </div>
 
-    <div id="dashboard" style="display:none; max-width: 600px; margin: 0 auto;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-            <h3 style="margin:0; color:#1f2937;">إدارة المباريات</h3>
-            <button onclick="window.location.reload()" style="width:auto; background:#6b7280; padding:8px 20px; font-size:0.9rem;">تحديث</button>
+    <div id="dashboard">
+        <div class="dashboard-header">
+            <h3 style="margin:0">إدارة المباريات</h3>
+            <button onclick="window.location.reload()" style="width:auto; background:#64748b; font-size:0.8rem;">تحديث</button>
         </div>
 
-        <div class="card" style="border-top: 5px solid #27ae60;">
-            <h3 style="margin-top:0; color:#27ae60; font-size:1.1rem;">+ نشر مباراة جديدة</h3>
-            <select id="newLeague" onchange="updateClubsList()">
-                <option value="" disabled selected>-- اختر البطولة --</option>
-                <option value="الجهوي الأول (فوج أ)">الجهوي الأول (فوج أ)</option>
-                <option value="الجهوي الأول (فوج ب)">الجهوي الأول (فوج ب)</option>
-                <option value="الجهوي الثاني (فوج ج)">الجهوي الثاني (فوج ج)</option>
-                <option value="قسم ما بين الرابطات">قسم ما بين الرابطات</option>
-                <option value="شرفي الأغواط">شرفي الأغواط</option>
-                <option value="ولائي الأغواط">ولائي الأغواط</option>
-                <option value="كأس الجمهورية">كأس الجمهورية 🏆</option>
-            </select>
-            <input type="text" id="newRound" placeholder="الجولة (مثال: 14)">
-            
-            <div style="display:flex; gap:10px;">
-                <select id="newHome" class="club-select"><option value="">المستضيف (يمين)</option></select>
-                <select id="newAway" class="club-select"><option value="">الضيف (يسار)</option></select>
+        <div class="add-section">
+            <h4 style="margin:0 0 10px 0; color:#10b981;">+ إضافة مباراة جديدة</h4>
+            <div class="add-grid">
+                <select id="newLeague" onchange="updateClubsList()">
+                    <option value="" disabled selected>-- اختر البطولة --</option>
+                    <option value="الجهوي الأول (فوج أ)">الجهوي الأول (فوج أ)</option>
+                    <option value="الجهوي الأول (فوج ب)">الجهوي الأول (فوج ب)</option>
+                    <option value="الجهوي الثاني (فوج ج)">الجهوي الثاني (فوج ج)</option>
+                    <option value="قسم ما بين الرابطات">قسم ما بين الرابطات</option>
+                    <option value="شرفي الأغواط">شرفي الأغواط</option>
+                    <option value="ولائي الأغواط">ولائي الأغواط</option>
+                    <option value="كأس الجمهورية">كأس الجمهورية 🏆</option>
+                </select>
+                <input type="text" id="newRound" placeholder="الجولة (مثال: 14)">
             </div>
-            <button id="btnAdd">نشر المباراة</button>
+            <div class="add-grid">
+                <select id="newHome" class="club-select"><option value="">المستضيف</option></select>
+                <select id="newAway" class="club-select"><option value="">الضيف</option></select>
+            </div>
+            <button id="btnAdd" style="margin-top:10px;">نشر المباراة</button>
         </div>
 
         <div id="matches-list"></div>
@@ -190,8 +227,8 @@
             const league = document.getElementById('newLeague').value;
             const homeSelect = document.getElementById('newHome');
             const awaySelect = document.getElementById('newAway');
-            homeSelect.innerHTML = '<option value="">المستضيف (يمين)</option>';
-            awaySelect.innerHTML = '<option value="">الضيف (يسار)</option>';
+            homeSelect.innerHTML = '<option value="">المستضيف</option>';
+            awaySelect.innerHTML = '<option value="">الضيف</option>';
             const clubs = window.leaguesData[league] || window.leaguesData["default"];
             clubs.forEach(club => {
                 const opt1 = document.createElement('option'); opt1.value = club.name; opt1.innerText = club.name; opt1.setAttribute('data-logo', club.logo); homeSelect.appendChild(opt1);
@@ -250,66 +287,75 @@
                     }
                     const minutes = Math.floor(currentSeconds / 60);
 
-                    // حالة الوميض للمشرف
-                    const liveClass = m.isRunning ? 'active' : '';
+                    // تنسيق الوقت للعرض (دقائق:ثواني)
+                    const formatTime = (secs) => {
+                        const mins = Math.floor(secs / 60).toString().padStart(2, '0');
+                        const seconds = Math.floor(secs % 60).toString().padStart(2, '0');
+                        return `${mins}:${seconds}`;
+                    };
 
                     list.innerHTML += `
-                    <div class="edit-card">
-                        <div style="text-align:center; font-weight:bold; color:#6b7280; margin-bottom:10px;">${m.league}</div>
+                    <div class="match-row">
+                        <!-- معلومات البطولة -->
+                        <div class="col-info">${m.league} (${m.round})</div>
 
-                        <!-- 1. تعديل الفرق -->
-                        <div class="section-label">المستضيف (يمين)</div>
-                        <div class="team-edit-row">
-                            <img src="${m.homeLogo}" class="team-img-small">
-                            <input type="text" id="hName-${id}" value="${m.home}" class="name-input">
-                        </div>
-                        <input type="text" id="hLogo-${id}" value="${m.homeLogo}" class="logo-input" placeholder="رابط الشعار">
-                        
-                        <div class="score-edit-row">
-                            <input type="number" id="sH-${id}" value="${m.scoreH}" class="score-input">
-                            <span style="font-weight:bold; color:#aaa;">-</span>
-                            <input type="number" id="sA-${id}" value="${m.scoreA}" class="score-input">
-                        </div>
-
-                        <div class="section-label">الضيف (يسار)</div>
-                        <div class="team-edit-row">
-                            <img src="${m.awayLogo}" class="team-img-small">
-                            <input type="text" id="aName-${id}" value="${m.away}" class="name-input">
-                        </div>
-                        <input type="text" id="aLogo-${id}" value="${m.awayLogo}" class="logo-input" placeholder="رابط الشعار">
-
-                         <input type="text" id="scH-${id}" value="${m.scorersH || ''}" placeholder="هدافي المستضيف" style="font-size:0.8rem; margin-top:5px;">
-                         <input type="text" id="scA-${id}" value="${m.scorersA || ''}" placeholder="هدافي الضيف" style="font-size:0.8rem; margin-top:5px;">
-
-                        <div class="section-label"><span class="live-indicator ${liveClass}"></span> ⏱️ المؤقت (الدقائق:الثواني)</div>
-                        <div class="timer-wrapper">
-                            <div class="time-display-wrapper">
-                                <span>ضبط الدقيقة:</span>
-                                <input type="number" id="tm-set-${id}" value="${minutes}" class="time-input" placeholder="00">
+                        <!-- الفرق (سطر واحد) -->
+                        <div class="col-teams">
+                            <div class="team-display home">
+                                <img src="${m.homeLogo}">
+                                <input type="text" id="hName-${id}" value="${m.home}" class="team-name-input right">
                             </div>
-                            <div class="timer-controls">
-                                <button class="btn-control btn-start" onclick="window.toggleTimer('${id}', true, ${currentSeconds})" ${m.isRunning ? 'disabled style="opacity:0.5"' : ''}>تشغيل ▶</button>
-                                <button class="btn-control btn-stop" onclick="window.toggleTimer('${id}', false, ${currentSeconds})" ${!m.isRunning ? 'disabled style="opacity:0.5"' : ''}>إيقاف ⏸</button>
+                            
+                            <div class="col-score">
+                                <input type="number" id="sH-${id}" value="${m.scoreH}" class="input-score">
+                                <span style="font-weight:bold;">-</span>
+                                <input type="number" id="sA-${id}" value="${m.scoreA}" class="input-score">
                             </div>
-                            <div class="admin-live-timer" data-running="${m.isRunning}" data-start="${m.lastStartTime}" data-base="${m.elapsedSeconds}" style="font-weight:bold; color:#27ae60; margin-top:5px;">
-                                ${Math.floor(currentSeconds / 60).toString().padStart(2,'0')}:${Math.floor(currentSeconds % 60).toString().padStart(2,'0')}
+
+                            <div class="team-display away">
+                                <input type="text" id="aName-${id}" value="${m.away}" class="team-name-input left">
+                                <img src="${m.awayLogo}">
                             </div>
                         </div>
-                        
-                        <div style="margin-top:10px;">
-                            <select id="st-${id}" style="font-weight:bold;">
+
+                        <!-- الحالة والوقت (مدمج) -->
+                        <div class="col-controls">
+                            <select id="st-${id}" class="select-status">
                                 <option value="لم تبدأ" ${sel("لم تبدأ")}>⚪ لم تبدأ</option>
                                 <option value="الشوط الأول" ${sel("الشوط الأول")}>🟢 الشوط 1</option>
                                 <option value="نهاية الشوط الأول" ${sel("نهاية الشوط الأول")}>🟠 استراحة</option>
                                 <option value="الشوط الثاني" ${sel("الشوط الثاني")}>🟢 الشوط 2</option>
                                 <option value="نهاية المباراة" ${sel("نهاية المباراة")}>⚫ انتهت</option>
                             </select>
+
+                            <div class="timer-box">
+                                <button class="btn-icon btn-play" onclick="window.toggleTimer('${id}', true, ${currentSeconds})" ${m.isRunning ? 'disabled style="opacity:0.5"' : ''} title="تشغيل"><i class="fa-solid fa-play"></i></button>
+                                
+                                <!-- خانة تعديل الدقيقة -->
+                                <input type="number" id="tm-set-${id}" value="${minutes}" class="time-input" title="تعديل الدقيقة">
+                                
+                                <button class="btn-icon btn-pause" onclick="window.toggleTimer('${id}', false, ${currentSeconds})" ${!m.isRunning ? 'disabled style="opacity:0.5"' : ''} title="إيقاف"><i class="fa-solid fa-pause"></i></button>
+                            </div>
+                            
+                            <!-- عرض الثواني للمشرف -->
+                            <span class="admin-live-timer" data-running="${m.isRunning}" data-start="${m.lastStartTime}" data-base="${m.elapsedSeconds}" style="font-size:0.8rem; font-weight:bold; color:#10b981; min-width:40px;">
+                                ${formatTime(currentSeconds)}
+                            </span>
                         </div>
 
-                        <div class="btns-row">
-                            <button class="btn-save" onclick="window.upd('${id}', ${m.isRunning}, ${currentSeconds})">حفظ كل التعديلات</button>
-                            <button class="btn-del" onclick="window.del('${id}')">حذف</button>
+                        <!-- الأزرار -->
+                        <div class="col-actions">
+                            <button class="btn-icon btn-save" onclick="window.upd('${id}', ${m.isRunning}, ${currentSeconds})" title="حفظ"><i class="fa-solid fa-check"></i></button>
+                            <button class="btn-icon btn-del" onclick="window.del('${id}')" title="حذف"><i class="fa-solid fa-trash"></i></button>
                         </div>
+                        
+                        <!-- الهدافين (مخفي ويظهر عند الحاجة أو في سطر صغير) -->
+                        <div style="width:100%; display:flex; gap:10px; margin-top:5px;">
+                             <input type="text" id="scH-${id}" value="${m.scorersH || ''}" placeholder="هدافي المستضيف" class="input-mini">
+                             <input type="text" id="scA-${id}" value="${m.scorersA || ''}" placeholder="هدافي الضيف" class="input-mini">
+                        </div>
+                        <input type="hidden" id="hLogo-${id}" value="${m.homeLogo}">
+                        <input type="hidden" id="aLogo-${id}" value="${m.awayLogo}">
                     </div>`;
                 });
             });
@@ -343,20 +389,23 @@
         window.upd = async (id, isRunning, currentSeconds) => {
             const status = document.getElementById(`st-${id}`).value;
             let newIsRunning = isRunning;
-            let newElapsedSeconds = currentSeconds;
-
-            // ⚠️ منطق الإيقاف التلقائي عند اختيار "نهاية..." أو "استراحة"
+            
+            // ⚠️ الإيقاف التلقائي عند اختيار "نهاية" أو "استراحة"
+            let finalSeconds = currentSeconds; 
+            
             if (status.includes("نهاية") || status.includes("استراحة")) {
                 newIsRunning = false;
-                // إذا كان الوقت يمشي، يجب حفظ قيمته الحالية عند التوقف
+                // إذا كان الوقت يمشي، نوقفه ونعتمد القيمة الحالية
                 if(isRunning) {
                     const now = Date.now();
-                    // نحسب الفرق منذ آخر تشغيل ونضيفه للأساس
-                    // (ملاحظة: نحتاج لجلب آخر بيانات لتكون دقيقة 100% لكن التقدير هنا جيد)
-                    // الأفضل الاعتماد على currentSeconds المحسوبة في الـ Snapshot
+                    // (ملاحظة: للحصول على دقة 100% نعتمد على الحساب المحلي، 
+                    // لكن هنا سنستخدم القيمة المعروضة في العداد اللحظي أو نعيد الحساب)
+                    // للتبسيط والموثوقية، نأخذ القيمة المحسوبة في loadMatches ونضيف الفرق البسيط
+                    // أو نعتمد على ما هو موجود
                 }
             }
 
+            // تحديث البيانات
             let updateData = {
                 home: document.getElementById(`hName-${id}`).value,
                 away: document.getElementById(`aName-${id}`).value,
@@ -367,23 +416,38 @@
                 scorersH: document.getElementById(`scH-${id}`).value,
                 scorersA: document.getElementById(`scA-${id}`).value,
                 status: status,
-                isRunning: newIsRunning // تحديث حالة التشغيل
+                isRunning: newIsRunning
             };
             
-            // إذا كان الوقت متوقفاً (يدوياً أو بسبب الحالة)، نأخذ القيمة من خانة الدقائق
+            // إذا توقف الوقت (يدوياً أو تلقائياً)، نأخذ القيمة من خانة الدقائق (أو الثواني المحسوبة)
             if (!newIsRunning) {
                 const manualMinutes = Number(document.getElementById(`tm-set-${id}`).value);
-                updateData.elapsedSeconds = manualMinutes * 60;
-                updateData.lastStartTime = null; // تصفير وقت البدء
-            } 
-            // إذا كانت المباراة جارية وضغطنا حفظ فقط لتعديل النتيجة، يبقى الوقت كما هو
+                // إذا لم يتم تعديل الدقيقة يدوياً، نحتفظ بالثواني الدقيقة، وإلا نصفر الثواني
+                const displayedMinutes = Math.floor(currentSeconds / 60);
+                
+                if (manualMinutes !== displayedMinutes) {
+                    updateData.elapsedSeconds = manualMinutes * 60;
+                } else {
+                    // نحتفظ بالثواني الدقيقة عند الإيقاف التلقائي
+                    updateData.elapsedSeconds = currentSeconds; 
+                }
+                updateData.lastStartTime = null;
+            }
 
             await updateDoc(doc(db, "matches", id), updateData);
-            alert("تم التحديث ✅");
+            
+            // تأثير بصري للزر
+            const btn = document.querySelector(`button[onclick*="'${id}'"].btn-save`);
+            if(btn) {
+                const original = btn.innerHTML;
+                btn.innerHTML = '<i class="fa-solid fa-check-double"></i>';
+                setTimeout(() => btn.innerHTML = original, 1000);
+            }
         };
         
         window.del = async (id) => { if(confirm("حذف؟")) await deleteDoc(doc(db, "matches", id)); };
 
+        // عداد محلي للأدمن
         setInterval(() => {
             const timers = document.querySelectorAll('.admin-live-timer');
             const now = Date.now();
@@ -393,6 +457,7 @@
                     const startTime = parseInt(timer.getAttribute('data-start'));
                     const baseSeconds = parseInt(timer.getAttribute('data-base'));
                     const totalSeconds = baseSeconds + (now - startTime) / 1000;
+                    
                     const m = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
                     const s = Math.floor(totalSeconds % 60).toString().padStart(2, '0');
                     timer.innerText = `${m}:${s}`;
