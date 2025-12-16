@@ -3,15 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>لوحة التحكم الاحترافية</title>
+    <title>أدمن - إدارة المباريات</title>
     <link rel="icon" href="https://i.top4top.io/p_3636li6n50.jpg">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
-    <!-- مكتبة الأيقونات -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
-        body { font-family: 'Tajawal', sans-serif; background: #f1f5f9; margin: 0; min-height: 100vh; padding: 10px; color: #1e293b; }
+        body { font-family: 'Tajawal', sans-serif; background: #f8fafc; margin: 0; min-height: 100vh; padding: 10px; color: #334155; }
 
         /* شاشة الدخول */
         #login-screen { display: flex; flex-direction: column; height: 90vh; justify-content: center; max-width: 400px; margin: 0 auto; }
@@ -21,69 +20,69 @@
         input, select { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-family: 'Tajawal'; font-size: 14px; background: #fff; }
         button { width: 100%; padding: 10px; background: #10b981; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; }
         
-        /* --- لوحة التحكم --- */
-        #dashboard { max-width: 1200px; margin: 0 auto; display: none; padding-bottom: 50px; }
+        /* لوحة التحكم */
+        #dashboard { max-width: 1100px; margin: 0 auto; display: none; padding-bottom: 50px; }
         
-        .dashboard-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: #fff; padding: 15px; border-radius: 10px; border-right: 5px solid #10b981; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .dashboard-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: #fff; padding: 10px 15px; border-radius: 8px; border-right: 4px solid #10b981; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
         
-        /* قسم الإضافة */
-        .add-section { background: #fff; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #e2e8f0; }
-        .add-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 10px; }
+        .add-section { background: #fff; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e2e8f0; }
+        .add-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }
 
-        /* --- جدول المباريات (التصميم السطري) --- */
+        /* --- جدول المباريات (السطر الواحد) --- */
         .match-row {
             display: flex; flex-wrap: wrap; align-items: center;
             background: #fff; border: 1px solid #e2e8f0; border-radius: 8px;
-            margin-bottom: 10px; padding: 8px 15px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-            transition: 0.2s; gap: 10px;
+            margin-bottom: 8px; padding: 5px 10px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            transition: 0.2s;
         }
-        .match-row:hover { border-color: #10b981; transform: translateY(-1px); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        .match-row:hover { border-color: #10b981; transform: translateY(-1px); }
 
-        /* تفاصيل السطر */
-        .col-info { width: 100%; font-size: 0.75rem; color: #64748b; background: #f8fafc; padding: 3px 10px; border-radius: 4px; text-align: center; margin-bottom: 5px; border: 1px dashed #cbd5e1; }
+        .col-info { width: 100%; font-size: 0.75rem; color: #94a3b8; margin-bottom: 5px; border-bottom: 1px dashed #f1f5f9; padding-bottom: 2px; text-align: center; }
         
-        /* الفرق */
-        .col-teams { flex: 3; display: flex; align-items: center; justify-content: space-between; gap: 10px; min-width: 280px; }
+        .col-teams { flex: 4; display: flex; align-items: center; gap: 5px; min-width: 250px; }
         .team-display { display: flex; align-items: center; gap: 5px; width: 45%; }
-        .team-display img { width: 30px; height: 30px; border-radius: 50%; object-fit: contain; border: 1px solid #eee; }
+        .team-display img { width: 28px; height: 28px; border-radius: 50%; object-fit: contain; border: 1px solid #eee; }
         .team-display.home { justify-content: flex-start; }
         .team-display.away { justify-content: flex-end; }
         
-        .team-name-input { width: 100% !important; margin: 0 !important; padding: 5px !important; font-size: 0.85rem !important; border: none !important; background: transparent !important; font-weight: bold; }
+        .team-name-input { width: 100% !important; margin: 0 !important; padding: 5px !important; font-size: 0.8rem !important; border: none !important; background: transparent !important; font-weight: bold; }
         .team-name-input:focus { background: #f0fdf4 !important; }
         .team-name-input.right { text-align: right; }
         .team-name-input.left { text-align: left; }
 
-        /* النتيجة */
-        .col-score { flex: 1; display: flex; align-items: center; justify-content: center; gap: 5px; min-width: 100px; background: #f1f5f9; padding: 5px; border-radius: 6px; }
-        .input-score { width: 35px !important; text-align: center; font-weight: 800; font-size: 1.1rem; padding: 2px !important; margin: 0 !important; border: 1px solid #cbd5e1 !important; height: 35px; }
+        .col-score { flex: 2; display: flex; align-items: center; justify-content: center; gap: 5px; min-width: 90px; }
+        .input-score { width: 35px !important; text-align: center; font-weight: 800; font-size: 1.1rem; padding: 2px !important; margin: 0 !important; border: 1px solid #cbd5e1 !important; height: 35px; background: #f8fafc; }
 
-        /* التحكم والوقت */
-        .col-controls { flex: 3; display: flex; align-items: center; gap: 10px; justify-content: center; min-width: 300px; }
-        .status-select { width: auto !important; margin: 0 !important; padding: 5px 10px !important; font-size: 0.85rem !important; flex: 1; }
+        /* التحكم بالحالة والوقت */
+        .col-controls { flex: 3; display: flex; align-items: center; gap: 8px; justify-content: center; min-width: 320px; }
+        .status-select { width: auto !important; margin: 0 !important; padding: 5px !important; font-size: 0.8rem !important; flex: 1.5; height: 36px; cursor: pointer;}
         
-        .timer-box { display: flex; align-items: center; gap: 2px; background: #f8fafc; padding: 3px; border-radius: 6px; border: 1px solid #e2e8f0; }
-        .time-input { width: 45px !important; text-align: center; margin: 0 !important; padding: 5px !important; font-weight: bold; border: none !important; background: transparent !important; font-size: 1.1rem; }
+        /* ألوان الحالات */
+        .status-select.not-started { background: #f1f5f9; color: #64748b; }
+        .status-select.live { background: #dcfce7; color: #166534; border-color: #22c55e; }
+        .status-select.break { background: #ffedd5; color: #9a3412; border-color: #f97316; }
+        .status-select.ended { background: #1e293b; color: #fff; border-color: #0f172a; }
 
-        /* الأزرار */
-        .col-actions { flex: 0.5; display: flex; justify-content: flex-end; gap: 5px; }
-        .btn-icon { width: 34px; height: 34px; padding: 0; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 1rem; color: white; border: none; cursor: pointer; }
+        .timer-box { display: flex; align-items: center; gap: 2px; background: #f8fafc; padding: 2px; border-radius: 6px; border: 1px solid #e2e8f0; flex: 1; justify-content: center; }
+        .time-input { width: 40px !important; text-align: center; margin: 0 !important; padding: 0 !important; font-weight: bold; border: none !important; background: transparent !important; font-size: 1rem; }
+
+        .col-actions { flex: 0.5; display: flex; justify-content: flex-end; gap: 5px; min-width: 70px; }
+        .btn-icon { width: 32px; height: 32px; padding: 0; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; color: white; border: none; cursor: pointer; }
         
         .btn-save { background: #3b82f6; }
         .btn-del { background: #ef4444; }
         .btn-play { background: #10b981; }
         .btn-pause { background: #f59e0b; }
-        .btn-icon:hover { opacity: 0.9; }
 
-        /* تجاوب للموبايل */
-        @media (max-width: 900px) {
-            .match-row { justify-content: center; }
-            .col-teams { width: 100%; margin-bottom: 10px; order: 1; }
-            .col-score { order: 2; margin-bottom: 10px; }
-            .col-controls { width: 100%; order: 3; justify-content: space-between; margin-bottom: 10px; flex-wrap: wrap; }
-            .col-actions { width: 100%; order: 4; justify-content: stretch; }
-            .col-actions .btn-icon { flex: 1; border-radius: 4px; }
+        .input-mini { border: none; background: #f8fafc; text-align: center; border-radius: 4px; padding: 5px; width: 100%; font-size: 0.75rem; color: #64748b; }
+
+        @media (max-width: 768px) {
+            .match-row { padding: 10px; }
+            .col-teams { width: 100%; order: 1; margin-bottom: 5px; }
+            .col-score { width: 30%; order: 2; }
+            .col-actions { width: 70%; order: 3; }
+            .col-controls { width: 100%; order: 4; margin-top: 5px; border-top: 1px dashed #e2e8f0; padding-top: 5px; }
         }
     </style>
 </head>
@@ -118,13 +117,18 @@
                     <option value="ولائي الأغواط">ولائي الأغواط</option>
                     <option value="كأس الجمهورية">كأس الجمهورية 🏆</option>
                 </select>
-                <input type="text" id="newRound" placeholder="الجولة (مثال: 14)">
+                
+                <!-- قائمة الجولات من 1 إلى 40 -->
+                <select id="newRound">
+                    <option value="" disabled selected>-- اختر الجولة --</option>
+                    <!-- سيتم ملؤها بالجافاسكربت -->
+                </select>
             </div>
-            <div class="add-grid">
+            <div class="add-grid" style="margin-top:10px;">
                 <select id="newHome" class="club-select"><option value="">المستضيف</option></select>
                 <select id="newAway" class="club-select"><option value="">الضيف</option></select>
+                <button id="btnAdd" style="height: 42px;">نشر</button>
             </div>
-            <button id="btnAdd" style="margin-top:10px;">نشر المباراة</button>
         </div>
 
         <div id="matches-list"></div>
@@ -135,7 +139,6 @@
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getFirestore, collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // إعدادات فايربيس
         const firebaseConfig = {
           apiKey: "AIzaSyAXLSZ5OqPEOnP0DUx3w75fU2xxiVkrWcE",
           authDomain: "koooralaghouat.firebaseapp.com",
@@ -149,6 +152,15 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+
+        // تعبئة قائمة الجولات (1-40)
+        const roundSelect = document.getElementById('newRound');
+        for(let i=1; i<=40; i++) {
+            let opt = document.createElement('option');
+            opt.value = `الجولة ${i}`;
+            opt.innerText = `الجولة ${i}`;
+            roundSelect.appendChild(opt);
+        }
 
         // بيانات الأندية
         window.leaguesData = {
@@ -262,7 +274,7 @@
                     await addDoc(collection(db, "matches"), {
                         league, round, home, away, homeLogo: getLogoFromSelect('newHome'), awayLogo: getLogoFromSelect('newAway'),
                         scoreH: 0, scoreA: 0, scorersH: "", scorersA: "", 
-                        status: "لم تبدأ", 
+                        status: "المباراة لم تبدأ بعد", 
                         elapsedSeconds: 0, 
                         isRunning: false, lastStartTime: null
                     });
@@ -287,69 +299,64 @@
                     }
                     const minutes = Math.floor(currentSeconds / 60);
 
-                    // تنسيق الوقت للعرض (دقائق:ثواني)
                     const formatTime = (secs) => {
                         const mins = Math.floor(secs / 60).toString().padStart(2, '0');
                         const seconds = Math.floor(secs % 60).toString().padStart(2, '0');
                         return `${mins}:${seconds}`;
                     };
 
+                    // تلوين الحالة
+                    let statusClass = "not-started";
+                    if(m.status.includes("جاري")) statusClass = "live";
+                    if(m.status.includes("استراحة")) statusClass = "break";
+                    if(m.status.includes("انتهت")) statusClass = "ended";
+
                     list.innerHTML += `
                     <div class="match-row">
-                        <!-- معلومات البطولة -->
                         <div class="col-info">${m.league} (${m.round})</div>
 
-                        <!-- الفرق (سطر واحد) -->
                         <div class="col-teams">
                             <div class="team-display home">
                                 <img src="${m.homeLogo}">
                                 <input type="text" id="hName-${id}" value="${m.home}" class="team-name-input right">
                             </div>
-                            
                             <div class="col-score">
                                 <input type="number" id="sH-${id}" value="${m.scoreH}" class="input-score">
                                 <span style="font-weight:bold;">-</span>
                                 <input type="number" id="sA-${id}" value="${m.scoreA}" class="input-score">
                             </div>
-
                             <div class="team-display away">
                                 <input type="text" id="aName-${id}" value="${m.away}" class="team-name-input left">
                                 <img src="${m.awayLogo}">
                             </div>
                         </div>
 
-                        <!-- الحالة والوقت (مدمج) -->
                         <div class="col-controls">
-                            <select id="st-${id}" class="select-status">
-                                <option value="لم تبدأ" ${sel("لم تبدأ")}>⚪ لم تبدأ</option>
-                                <option value="الشوط الأول" ${sel("الشوط الأول")}>🟢 الشوط 1</option>
-                                <option value="نهاية الشوط الأول" ${sel("نهاية الشوط الأول")}>🟠 استراحة</option>
-                                <option value="الشوط الثاني" ${sel("الشوط الثاني")}>🟢 الشوط 2</option>
-                                <option value="نهاية المباراة" ${sel("نهاية المباراة")}>⚫ انتهت</option>
+                            <!-- القائمة المحدثة بالنصوص المطلوبة -->
+                            <select id="st-${id}" class="status-select ${statusClass}">
+                                <option value="المباراة لم تبدأ بعد" ${sel("المباراة لم تبدأ بعد")}>⚪ لم تبدأ</option>
+                                <option value="جاري الشوط الأول" ${sel("جاري الشوط الأول")}>🟢 الشوط 1</option>
+                                <option value="استراحة (نهاية الشوط الأول)" ${sel("استراحة (نهاية الشوط الأول)")}>🟠 استراحة</option>
+                                <option value="جاري الشوط الثاني" ${sel("جاري الشوط الثاني")}>🟢 الشوط 2</option>
+                                <option value="انتهت المباراة" ${sel("انتهت المباراة")}>⚫ انتهت</option>
                             </select>
 
                             <div class="timer-box">
                                 <button class="btn-icon btn-play" onclick="window.toggleTimer('${id}', true, ${currentSeconds})" ${m.isRunning ? 'disabled style="opacity:0.5"' : ''} title="تشغيل"><i class="fa-solid fa-play"></i></button>
-                                
-                                <!-- خانة تعديل الدقيقة -->
                                 <input type="number" id="tm-set-${id}" value="${minutes}" class="time-input" title="تعديل الدقيقة">
-                                
                                 <button class="btn-icon btn-pause" onclick="window.toggleTimer('${id}', false, ${currentSeconds})" ${!m.isRunning ? 'disabled style="opacity:0.5"' : ''} title="إيقاف"><i class="fa-solid fa-pause"></i></button>
                             </div>
                             
-                            <!-- عرض الثواني للمشرف -->
                             <span class="admin-live-timer" data-running="${m.isRunning}" data-start="${m.lastStartTime}" data-base="${m.elapsedSeconds}" style="font-size:0.8rem; font-weight:bold; color:#10b981; min-width:40px;">
                                 ${formatTime(currentSeconds)}
                             </span>
                         </div>
 
-                        <!-- الأزرار -->
                         <div class="col-actions">
                             <button class="btn-icon btn-save" onclick="window.upd('${id}', ${m.isRunning}, ${currentSeconds})" title="حفظ"><i class="fa-solid fa-check"></i></button>
                             <button class="btn-icon btn-del" onclick="window.del('${id}')" title="حذف"><i class="fa-solid fa-trash"></i></button>
                         </div>
                         
-                        <!-- الهدافين (مخفي ويظهر عند الحاجة أو في سطر صغير) -->
                         <div style="width:100%; display:flex; gap:10px; margin-top:5px;">
                              <input type="text" id="scH-${id}" value="${m.scorersH || ''}" placeholder="هدافي المستضيف" class="input-mini">
                              <input type="text" id="scA-${id}" value="${m.scorersA || ''}" placeholder="هدافي الضيف" class="input-mini">
@@ -365,47 +372,24 @@
             const manualMinutes = Number(document.getElementById(`tm-set-${id}`).value);
             let baseSeconds = currentTotalSeconds;
             const displayedMinutes = Math.floor(currentTotalSeconds / 60);
-            
-            // إذا عدل الأدمن الدقيقة يدوياً قبل التشغيل
-            if (manualMinutes !== displayedMinutes) {
-                baseSeconds = manualMinutes * 60;
-            }
+            if (manualMinutes !== displayedMinutes) baseSeconds = manualMinutes * 60;
 
-            if(start) {
-                await updateDoc(doc(db, "matches", id), {
-                    isRunning: true, 
-                    lastStartTime: Date.now(), 
-                    elapsedSeconds: baseSeconds 
-                });
-            } else {
-                await updateDoc(doc(db, "matches", id), {
-                    isRunning: false, 
-                    lastStartTime: null, 
-                    elapsedSeconds: baseSeconds 
-                });
-            }
+            await updateDoc(doc(db, "matches", id), {
+                isRunning: start,
+                lastStartTime: start ? Date.now() : null,
+                elapsedSeconds: baseSeconds 
+            });
         };
 
         window.upd = async (id, isRunning, currentSeconds) => {
             const status = document.getElementById(`st-${id}`).value;
             let newIsRunning = isRunning;
             
-            // ⚠️ الإيقاف التلقائي عند اختيار "نهاية" أو "استراحة"
-            let finalSeconds = currentSeconds; 
-            
-            if (status.includes("نهاية") || status.includes("استراحة")) {
+            // ⚠️ إيقاف تلقائي عند انتهاء المباراة أو الاستراحة
+            if (status.includes("انتهت") || status.includes("استراحة")) {
                 newIsRunning = false;
-                // إذا كان الوقت يمشي، نوقفه ونعتمد القيمة الحالية
-                if(isRunning) {
-                    const now = Date.now();
-                    // (ملاحظة: للحصول على دقة 100% نعتمد على الحساب المحلي، 
-                    // لكن هنا سنستخدم القيمة المعروضة في العداد اللحظي أو نعيد الحساب)
-                    // للتبسيط والموثوقية، نأخذ القيمة المحسوبة في loadMatches ونضيف الفرق البسيط
-                    // أو نعتمد على ما هو موجود
-                }
             }
 
-            // تحديث البيانات
             let updateData = {
                 home: document.getElementById(`hName-${id}`).value,
                 away: document.getElementById(`aName-${id}`).value,
@@ -419,16 +403,13 @@
                 isRunning: newIsRunning
             };
             
-            // إذا توقف الوقت (يدوياً أو تلقائياً)، نأخذ القيمة من خانة الدقائق (أو الثواني المحسوبة)
             if (!newIsRunning) {
                 const manualMinutes = Number(document.getElementById(`tm-set-${id}`).value);
-                // إذا لم يتم تعديل الدقيقة يدوياً، نحتفظ بالثواني الدقيقة، وإلا نصفر الثواني
                 const displayedMinutes = Math.floor(currentSeconds / 60);
                 
                 if (manualMinutes !== displayedMinutes) {
                     updateData.elapsedSeconds = manualMinutes * 60;
                 } else {
-                    // نحتفظ بالثواني الدقيقة عند الإيقاف التلقائي
                     updateData.elapsedSeconds = currentSeconds; 
                 }
                 updateData.lastStartTime = null;
@@ -436,18 +417,13 @@
 
             await updateDoc(doc(db, "matches", id), updateData);
             
-            // تأثير بصري للزر
+            // وميض زر الحفظ
             const btn = document.querySelector(`button[onclick*="'${id}'"].btn-save`);
-            if(btn) {
-                const original = btn.innerHTML;
-                btn.innerHTML = '<i class="fa-solid fa-check-double"></i>';
-                setTimeout(() => btn.innerHTML = original, 1000);
-            }
+            if(btn) { btn.innerHTML = '<i class="fa-solid fa-check-double"></i>'; setTimeout(() => btn.innerHTML = '<i class="fa-solid fa-check"></i>', 1000); }
         };
         
         window.del = async (id) => { if(confirm("حذف؟")) await deleteDoc(doc(db, "matches", id)); };
 
-        // عداد محلي للأدمن
         setInterval(() => {
             const timers = document.querySelectorAll('.admin-live-timer');
             const now = Date.now();
@@ -457,14 +433,12 @@
                     const startTime = parseInt(timer.getAttribute('data-start'));
                     const baseSeconds = parseInt(timer.getAttribute('data-base'));
                     const totalSeconds = baseSeconds + (now - startTime) / 1000;
-                    
                     const m = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
                     const s = Math.floor(totalSeconds % 60).toString().padStart(2, '0');
                     timer.innerText = `${m}:${s}`;
                 }
             });
         }, 1000);
-
     </script>
 </body>
 </html>
