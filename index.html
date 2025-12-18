@@ -29,7 +29,7 @@
             box-shadow: 0 1px 2px rgba(0,0,0,0.05);
         }
         .section-header {
-            background-background-78color: #f1f5f9;
+            background-color: #f1f5f9;
             padding: 0.75rem 1rem;
             border-right: 4px solid #1e293b;
             font-weight: 800;
@@ -37,36 +37,37 @@
         }
         input, select, textarea {
             border: 1px solid #cbd5e1;
-            padding: 0.5rem;
+            padding: 0.6rem;
             border-radius: 0.375rem;
             width: 100%;
             margin-top: 0.25rem;
             transition: all 0.2s;
+            font-weight: 500;
         }
         input:focus {
             outline: none;
             border-color: #1e293b;
-            box-shadow: 0 0 0 2px rgba(30, 41, 59, 0.1);
+            box-shadow: 0 0 0 3px rgba(30, 41, 59, 0.1);
         }
         .label-title {
             font-weight: 700;
             color: #1e293b;
             display: block;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
         .animate-fade-in {
-            animation: fadeIn 0.3s ease-in-out;
+            animation: fadeIn 0.4s ease-out;
         }
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(5px); }
+            from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
     </style>
 <script type="importmap">
 {
   "imports": {
-    "react": "https://esm.sh/react@^19.2.3",
-    "react/": "https://esm.sh/react@^19.2.3/"
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react": "https://esm.sh/react@^19.2.3"
   }
 }
 </script>
@@ -91,22 +92,16 @@
                 maritalStatus: '', childrenCount: '', fullAddress: '', residenceCommune: '',
                 phoneNumber: '',
                 militaryStatus: '', docRefNum: '', docIssueDate: '', docEndDate: '',
-                serviceStartDate: '', serviceEndDate: '',
                 degreeName: '', specialty: '', degreeNum: '', graduationDate: '',
                 issuingInstitution: '', trainingDuration: '', startYear: '', endYear: '',
                 degreeGrade: '', isEnsaGraduate: false, isFirstInClass: false,
                 firstInClassDocNum: '', firstInClassDocDate: '', firstInClassIssuer: '',
                 gpa: '', thesisGrade: '',
                 semesters: Array(5).fill(null).map(() => ({ s1: '', s2: '', annual: '' })),
-                otherDegreeName: '', otherDegreeSpecialty: '', otherDegreeIssuer: '',
-                otherDegreeSemesters: '', otherDegreeFromYear: '', otherDegreeToYear: '',
-                publicationType: '', publicationDate: '', journalName: '', journalIssue: '',
-                publicationLink: '',
-                expType: '', expJob: '', expInstitution: '', expApprovedDegree: '',
-                expContractNum: '', expContractDate: '', expFrom: '', expTo: '', expEndReason: '',
-                isEmployed: false, currentRank: '', firstAppointmentDate: '',
-                rankAppointmentDate: '', currentGrade: '', adminRefNum: '',
-                adminRefDate: '', signingAuthority: '', adminPhone: '', adminAddress: '',
+                otherDegreeName: '', otherDegreeIssuer: '',
+                publicationType: '', publicationLink: '',
+                expType: '', expJob: '', expInstitution: '', expFrom: '', expTo: '',
+                isEmployed: false, currentRank: '', adminPhone: '',
                 email: '', attachedDocs: []
             });
 
@@ -157,33 +152,47 @@
                 e.preventDefault();
                 setIsSubmitting(true);
                 
-                const semesterSummary = formData.semesters.map((s, i) => 
-                    `سنة ${i+1}: (س1: ${s.s1}, س2: ${s.s2}, سنوي: ${s.annual})`
-                ).join(' | ');
+                // تجميع بيانات المسار الدراسي لتقليل عدد الحقول
+                const semesterInfo = formData.semesters
+                    .map((s, i) => s.s1 || s.s2 || s.annual ? `سنة ${i+1}: [س1: ${s.s1}, س2: ${s.s2}, سنوي: ${s.annual}]` : '')
+                    .filter(txt => txt !== '')
+                    .join(' | ');
 
-                const payload = {
-                    ...formData,
-                    semesters_summary: semesterSummary,
-                    _subject: `طلب مشاركة جديد: ${formData.firstNameAr} ${formData.lastNameAr}`,
-                    _template: "table",
-                    _captcha: "false"
+                // إنشاء كائن بيانات مبسط جداً للسيرفر
+                const finalData = {
+                    "1_الاسم_واللقب": `${formData.firstNameAr} ${formData.lastNameAr}`,
+                    "2_رقم_التعريف": formData.nin,
+                    "3_الوظيفة": `${formData.requestedRank} - ${formData.directorate}`,
+                    "4_التخصص": formData.teachingSubject,
+                    "5_الهاتف": formData.phoneNumber,
+                    "6_الإيميل": formData.email,
+                    "7_المعلومات_الشخصية": `الميلاد: ${formData.birthDate} في ${formData.birthPlace} (${formData.birthState}) | العنوان: ${formData.fullAddress}`,
+                    "8_الشهادة": `${formData.degreeName} (${formData.specialty}) - جامعة: ${formData.issuingInstitution}`,
+                    "9_المسار_الدراسي": `المعدل العام: ${formData.gpa} | المذكرة: ${formData.thesisGrade} || التفاصيل: ${semesterInfo}`,
+                    "10_الخبرة_المهنية": `النوع: ${formData.expType} | الوظيفة: ${formData.expJob} في ${formData.expInstitution} | من ${formData.expFrom} إلى ${formData.expTo}`,
+                    "11_الوضعية_الحالية": formData.isEmployed ? `موظف حالياً برتبة ${formData.currentRank} - هاتف الإدارة: ${formData.adminPhone}` : "غير موظف",
+                    "12_الوثائق_المرفقة": formData.attachedDocs.join(' + '),
+                    "_subject": `طلب مشاركة جديد: ${formData.firstNameAr} ${formData.lastNameAr}`,
+                    "_template": "table",
+                    "_captcha": "false"
                 };
 
                 try {
-                    // استخدام الرمز (Token) المستخرج من الصورة لضمان التفعيل
+                    // استخدام الرمز (Token) المفعّل من الصورة
                     const response = await fetch("https://formsubmit.co/ajax/1fd22e0deb7f40328f236bd42622579f", {
                         method: "POST",
                         headers: { "Content-Type": "application/json", "Accept": "application/json" },
-                        body: JSON.stringify(payload)
+                        body: JSON.stringify(finalData)
                     });
                     
                     if (response.ok) {
                         setSubmitted(true);
                     } else {
-                        alert("حدث خطأ في الإرسال. تأكد من ضغطك على زر ACTIVATE FORM في الإيميل.");
+                        const errorData = await response.json();
+                        alert("حدث خطأ في السيرفر. يرجى التأكد من تفعيل الإيميل.");
                     }
                 } catch (error) {
-                    alert("فشل الاتصال بالخادم.");
+                    alert("فشل الاتصال بالسيرفر. يرجى المحاولة لاحقاً.");
                 } finally {
                     setIsSubmitting(false);
                 }
@@ -195,7 +204,7 @@
                         <div className="bg-white p-10 rounded-xl shadow-2xl max-w-md w-full border-t-8 border-green-500 animate-fade-in">
                             <div className="text-green-500 text-6xl mb-4">✓</div>
                             <h1 className="text-2xl font-black text-gray-800 mb-2">تم الإرسال بنجاح!</h1>
-                            <p className="text-gray-600 mb-6 font-bold">لقد تم إرسال كافة بياناتك بنجاح. شكراً لك.</p>
+                            <p className="text-gray-600 mb-6 font-bold">تم تجميع بياناتك وإرسالها في ملف واحد منظم إلى بريدك الإلكتروني.</p>
                             <button onClick={() => window.location.reload()} className="bg-gray-800 text-white px-8 py-3 rounded-lg font-black hover:bg-gray-700 transition w-full">إرسال استمارة أخرى</button>
                         </div>
                     </div>
@@ -204,45 +213,41 @@
 
             return (
                 <div className="max-w-4xl mx-auto py-10 px-4">
-                    <header className="mb-10 text-center bg-white border-2 border-black p-6 rounded-sm shadow-sm">
+                    <header className="mb-10 text-center bg-white border-2 border-black p-6 rounded-sm shadow-md">
                         <h1 className="text-3xl font-black mb-2">استمارة المعلومات الإلكترونية</h1>
                         <p className="text-xl font-bold text-gray-700">(للمشاركة في المسابقة على أساس الشهادة)</p>
-                        <div className="mt-4 inline-block px-4 py-1 border-2 border-gray-400 font-bold text-lg">د. عبد المجيد</div>
+                        <div className="mt-4 inline-block px-6 py-2 border-2 border-gray-400 font-bold text-lg bg-gray-50">د. عبد المجيد</div>
                     </header>
 
-                    <div className="mb-6 flex items-center justify-between text-sm font-bold text-gray-500 overflow-x-auto gap-4">
+                    <div className="mb-8 flex items-center justify-between text-xs md:text-sm font-bold text-gray-400 overflow-x-auto gap-2 pb-4 border-b">
                         {[1, 2, 3, 4, 5].map((s) => (
-                            <div key={s} className={`flex-1 text-center pb-2 border-b-4 transition-all duration-300 ${step >= s ? 'border-gray-800 text-gray-800' : 'border-gray-200'}`}>المرحلة {s}</div>
+                            <div key={s} className={`flex-1 text-center pb-2 border-b-4 transition-all duration-300 ${step >= s ? 'border-gray-800 text-gray-800' : 'border-gray-100'}`}>المرحلة {s}</div>
                         ))}
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-6">
                         {step === 1 && (
-                            <div className="animate-fade-in">
+                            <div className="animate-fade-in space-y-6">
                                 <div className="form-section">
                                     <h2 className="section-header">1. معلومات الوظيفة المطلوبة</h2>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div><label className="label-title">مديرية التربية لولاية</label><input type="text" name="directorate" required value={formData.directorate} onChange={handleChange} /></div>
-                                        <div><label className="label-title">الرتبة المطلوبة (ابتدائي/متوسط/ثانوي)</label><input type="text" name="requestedRank" required value={formData.requestedRank} onChange={handleChange} /></div>
-                                        <div className="md:col-span-2"><label className="label-title">مادة التدريس (بالنسبة للأساتذة)</label><input type="text" name="teachingSubject" placeholder="لغة عربية / رياضيات / ..." value={formData.teachingSubject} onChange={handleChange} /></div>
+                                        <div><label className="label-title">الرتبة المطلوبة</label><input type="text" name="requestedRank" required value={formData.requestedRank} onChange={handleChange} /></div>
+                                        <div className="md:col-span-2"><label className="label-title">مادة التدريس</label><input type="text" name="teachingSubject" placeholder="مثلاً: لغة عربية" value={formData.teachingSubject} onChange={handleChange} /></div>
                                     </div>
                                 </div>
 
                                 <div className="form-section">
                                     <h2 className="section-header">2. المعلومات الشخصية</h2>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="md:col-span-2"><label className="label-title">رقم التعريف الوطني (NIN) - 18 رقم</label><input type="text" name="nin" maxLength="18" required value={formData.nin} onChange={handleChange} /></div>
+                                        <div className="md:col-span-2"><label className="label-title">رقم التعريف الوطني (NIN)</label><input type="text" name="nin" maxLength="18" required value={formData.nin} onChange={handleChange} /></div>
                                         <div><label className="label-title">اللقب (بالعربية)</label><input type="text" name="lastNameAr" required value={formData.lastNameAr} onChange={handleChange} /></div>
                                         <div><label className="label-title">الاسم (بالعربية)</label><input type="text" name="firstNameAr" required value={formData.firstNameAr} onChange={handleChange} /></div>
                                         <div><label className="label-title">اللقب (باللاتينية)</label><input type="text" name="lastNameLat" dir="ltr" className="text-left" value={formData.lastNameLat} onChange={handleChange} /></div>
                                         <div><label className="label-title">الاسم (باللاتينية)</label><input type="text" name="firstNameLat" dir="ltr" className="text-left" value={formData.firstNameLat} onChange={handleChange} /></div>
-                                        <div><label className="label-title">ابن (اسم الأب)</label><input type="text" name="fatherName" value={formData.fatherName} onChange={handleChange} /></div>
-                                        <div><label className="label-title">و (اسم الأم)</label><input type="text" name="motherFirstName" value={formData.motherFirstName} onChange={handleChange} /></div>
-                                        <div><label className="label-title">لقب الأم</label><input type="text" name="motherLastName" value={formData.motherLastName} onChange={handleChange} /></div>
                                         <div><label className="label-title">تاريخ الميلاد</label><input type="date" name="birthDate" required value={formData.birthDate} onChange={handleChange} /></div>
                                         <div><label className="label-title">مكان الميلاد</label><input type="text" name="birthPlace" value={formData.birthPlace} onChange={handleChange} /></div>
-                                        <div><label className="label-title">الولاية</label><input type="text" name="birthState" value={formData.birthState} onChange={handleChange} /></div>
-                                        <div><label className="label-title">ولاية الازدياد</label><input type="text" name="birthOriginalState" value={formData.birthOriginalState} onChange={handleChange} /></div>
+                                        <div><label className="label-title">ولاية الازدياد</label><input type="text" name="birthState" value={formData.birthState} onChange={handleChange} /></div>
                                         <div>
                                             <label className="label-title">الجنس</label>
                                             <div className="flex gap-4 mt-2">
@@ -250,10 +255,7 @@
                                                 <label className="flex items-center gap-2 cursor-pointer font-bold"><input type="radio" name="gender" value="female" checked={formData.gender === 'female'} onChange={handleChange} /> أنثى</label>
                                             </div>
                                         </div>
-                                        <div><label className="label-title">الحالة العائلية</label><input type="text" name="maritalStatus" value={formData.maritalStatus} onChange={handleChange} /></div>
-                                        <div><label className="label-title">عدد الأولاد</label><input type="number" name="childrenCount" value={formData.childrenCount} onChange={handleChange} /></div>
                                         <div className="md:col-span-2"><label className="label-title">العنوان الشخصي الكامل</label><input type="text" name="fullAddress" value={formData.fullAddress} onChange={handleChange} /></div>
-                                        <div><label className="label-title">بلدية الإقامة</label><input type="text" name="residenceCommune" value={formData.residenceCommune} onChange={handleChange} /></div>
                                         <div><label className="label-title">رقم الهاتف</label><input type="text" name="phoneNumber" required value={formData.phoneNumber} onChange={handleChange} /></div>
                                     </div>
                                 </div>
@@ -261,76 +263,43 @@
                         )}
 
                         {step === 2 && (
-                            <div className="animate-fade-in">
-                                {formData.gender !== 'female' && (
-                                    <div className="form-section">
-                                        <h2 className="section-header">3. الوضعية تجاه الخدمة الوطنية</h2>
-                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                                            <div className="md:col-span-3 flex flex-wrap gap-6">
-                                                <label className="flex items-center gap-2 cursor-pointer font-bold"><input type="radio" name="militaryStatus" value="performed" checked={formData.militaryStatus === 'performed'} onChange={handleChange} /> مؤدى</label>
-                                                <label className="flex items-center gap-2 cursor-pointer font-bold"><input type="radio" name="militaryStatus" value="exempted" checked={formData.militaryStatus === 'exempted'} onChange={handleChange} /> معفى</label>
-                                                <label className="flex items-center gap-2 cursor-pointer font-bold"><input type="radio" name="militaryStatus" value="deferred" checked={formData.militaryStatus === 'deferred'} onChange={handleChange} /> مؤجل</label>
-                                            </div>
-                                            <div><label className="label-title">رقم مرجع الوثيقة</label><input type="text" name="docRefNum" value={formData.docRefNum} onChange={handleChange} /></div>
-                                            <div><label className="label-title">تاريخ إصدار الوثيقة</label><input type="date" name="docIssueDate" value={formData.docIssueDate} onChange={handleChange} /></div>
-                                            <div><label className="label-title">تاريخ انتهاء الوثيقة</label><input type="date" name="docEndDate" value={formData.docEndDate} onChange={handleChange} /></div>
-                                        </div>
-                                    </div>
-                                )}
-
+                            <div className="animate-fade-in space-y-6">
                                 <div className="form-section">
-                                    <h2 className="section-header">4. الشهادة والمؤهل العلمي</h2>
+                                    <h2 className="section-header">3. الشهادة والمؤهل العلمي</h2>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div><label className="label-title">تسمية الشهادة</label><input type="text" name="degreeName" required value={formData.degreeName} onChange={handleChange} /></div>
                                         <div><label className="label-title">الشعبة / التخصص</label><input type="text" name="specialty" value={formData.specialty} onChange={handleChange} /></div>
-                                        <div><label className="label-title">رقم الشهادة</label><input type="text" name="degreeNum" value={formData.degreeNum} onChange={handleChange} /></div>
-                                        <div><label className="label-title">تاريخ التخرج</label><input type="date" name="graduationDate" value={formData.graduationDate} onChange={handleChange} /></div>
-                                        <div className="md:col-span-2"><label className="label-title">المؤسسة المسلمة</label><input type="text" name="issuingInstitution" value={formData.issuingInstitution} onChange={handleChange} /></div>
-                                        <div>
-                                            <label className="label-title">مدة التكوين (5 سنوات / # سنتين)</label>
-                                            <input type="text" name="trainingDuration" placeholder="5 أو #" value={formData.trainingDuration} onChange={handleChange} />
-                                        </div>
-                                        <div className="flex gap-2">
-                                            <div className="flex-1"><label className="label-title">سنة البداية</label><input type="text" name="startYear" maxLength="4" value={formData.startYear} onChange={handleChange} /></div>
-                                            <div className="flex-1"><label className="label-title">سنة النهاية</label><input type="text" name="endYear" maxLength="4" value={formData.endYear} onChange={handleChange} /></div>
-                                        </div>
-                                        <div><label className="label-title">تقدير الشهادة</label><input type="text" name="degreeGrade" value={formData.degreeGrade} onChange={handleChange} /></div>
-                                        <div className="flex flex-col justify-center gap-2">
-                                            <label className="flex items-center gap-2 cursor-pointer font-bold"><input type="checkbox" name="isEnsaGraduate" checked={formData.isEnsaGraduate} onChange={handleChange} /> خريج مدرسة وطنية عليا</label>
-                                            <label className="flex items-center gap-2 cursor-pointer font-bold"><input type="checkbox" name="isFirstInClass" checked={formData.isFirstInClass} onChange={handleChange} /> الأول في الدفعة</label>
+                                        <div className="md:col-span-2"><label className="label-title">المؤسسة المسلمة للشهادة</label><input type="text" name="issuingInstitution" value={formData.issuingInstitution} onChange={handleChange} /></div>
+                                        <div><label className="label-title">سنة البداية</label><input type="text" name="startYear" maxLength="4" value={formData.startYear} onChange={handleChange} /></div>
+                                        <div><label className="label-title">سنة التخرج</label><input type="text" name="endYear" maxLength="4" value={formData.endYear} onChange={handleChange} /></div>
+                                        <div className="flex flex-col gap-2 pt-4">
+                                            <label className="flex items-center gap-2 cursor-pointer font-bold"><input type="checkbox" name="isFirstInClass" checked={formData.isFirstInClass} onChange={handleChange} /> هل أنت الأول في الدفعة؟</label>
                                         </div>
                                     </div>
-                                    {formData.isFirstInClass && (
-                                        <div className="mt-4 p-4 bg-gray-50 border-2 border-dashed grid grid-cols-1 md:grid-cols-3 gap-4">
-                                            <div><label className="label-title">رقم الوثيقة</label><input type="text" name="firstInClassDocNum" value={formData.firstInClassDocNum} onChange={handleChange} /></div>
-                                            <div><label className="label-title">تاريخ الإصدار</label><input type="date" name="firstInClassDocDate" value={formData.firstInClassDocDate} onChange={handleChange} /></div>
-                                            <div><label className="label-title">الجهة المسلمة</label><input type="text" name="firstInClassIssuer" value={formData.firstInClassIssuer} onChange={handleChange} /></div>
-                                        </div>
-                                    )}
                                 </div>
                             </div>
                         )}
 
                         {step === 3 && (
-                            <div className="animate-fade-in">
+                            <div className="animate-fade-in space-y-6">
                                 <div className="form-section">
-                                    <h2 className="section-header">5. تفاصيل المسار الدراسي (كشف النقاط)</h2>
+                                    <h2 className="section-header">4. تفاصيل المسار الدراسي</h2>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                                        <div><label className="label-title">المعدل العام</label><input type="text" name="gpa" value={formData.gpa} onChange={handleChange} /></div>
+                                        <div><label className="label-title">المعدل العام للمسار</label><input type="text" name="gpa" placeholder="مثلاً: 12.50" value={formData.gpa} onChange={handleChange} /></div>
                                         <div><label className="label-title">علامة مذكرة التخرج</label><input type="text" name="thesisGrade" value={formData.thesisGrade} onChange={handleChange} /></div>
                                     </div>
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full border-collapse border border-gray-400 text-center font-bold">
+                                    <div className="overflow-x-auto border rounded-lg">
+                                        <table className="w-full text-center font-bold">
                                             <thead className="bg-gray-100">
-                                                <tr><th className="border border-gray-400 p-2">السنة</th><th className="border border-gray-400 p-2">معدل السداسي 1</th><th className="border border-gray-400 p-2">معدل السداسي 2</th><th className="border border-gray-400 p-2">المعدل السنوي</th></tr>
+                                                <tr><th className="p-2 border">السنة</th><th className="p-2 border">س1</th><th className="p-2 border">س2</th><th className="p-2 border">سنوي</th></tr>
                                             </thead>
                                             <tbody>
                                                 {[1, 2, 3, 4, 5].map((y, idx) => (
                                                     <tr key={y}>
-                                                        <td className="border border-gray-400 p-2 bg-gray-50">السنة {y}</td>
-                                                        <td className="border border-gray-400 p-2"><input type="text" className="w-full border-none text-center" value={formData.semesters[idx].s1} onChange={(e) => handleSemesterChange(idx, 's1', e.target.value)} /></td>
-                                                        <td className="border border-gray-400 p-2"><input type="text" className="w-full border-none text-center" value={formData.semesters[idx].s2} onChange={(e) => handleSemesterChange(idx, 's2', e.target.value)} /></td>
-                                                        <td className="border border-gray-400 p-2"><input type="text" className="w-full border-none text-center" value={formData.semesters[idx].annual} onChange={(e) => handleSemesterChange(idx, 'annual', e.target.value)} /></td>
+                                                        <td className="p-2 border bg-gray-50">س {y}</td>
+                                                        <td className="p-2 border"><input type="text" className="w-full border-none text-center" value={formData.semesters[idx].s1} onChange={(e) => handleSemesterChange(idx, 's1', e.target.value)} /></td>
+                                                        <td className="p-2 border"><input type="text" className="w-full border-none text-center" value={formData.semesters[idx].s2} onChange={(e) => handleSemesterChange(idx, 's2', e.target.value)} /></td>
+                                                        <td className="p-2 border"><input type="text" className="w-full border-none text-center" value={formData.semesters[idx].annual} onChange={(e) => handleSemesterChange(idx, 'annual', e.target.value)} /></td>
                                                     </tr>
                                                 ))}
                                             </tbody>
@@ -341,25 +310,13 @@
                         )}
 
                         {step === 4 && (
-                            <div className="animate-fade-in">
+                            <div className="animate-fade-in space-y-6">
                                 <div className="form-section">
-                                    <h2 className="section-header">6. شهادات عليا أخرى ومنشورات</h2>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                                        <div><label className="label-title">اسم الشهادة الأخرى</label><input type="text" name="otherDegreeName" value={formData.otherDegreeName} onChange={handleChange} /></div>
-                                        <div><label className="label-title">الجهة المسلمة</label><input type="text" name="otherDegreeIssuer" value={formData.otherDegreeIssuer} onChange={handleChange} /></div>
-                                    </div>
+                                    <h2 className="section-header">5. الخبرة المهنية</h2>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div><label className="label-title">طبيعة المنشور العلمي</label><input type="text" name="publicationType" placeholder="مقال / كتاب ..." value={formData.publicationType} onChange={handleChange} /></div>
-                                        <div><label className="label-title">رابط المنشور (إن وجد)</label><input type="text" name="publicationLink" value={formData.publicationLink} onChange={handleChange} /></div>
-                                    </div>
-                                </div>
-
-                                <div className="form-section">
-                                    <h2 className="section-header">7. الخبرة المهنية بالتفصيل</h2>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="md:col-span-2"><label className="label-title">نوع الخبرة (تلقائي من المرحلة 5)</label><input type="text" name="expType" readOnly className="bg-gray-100 font-bold" value={formData.expType} /></div>
+                                        <div className="md:col-span-2"><label className="label-title">نوع الخبرة (يظهر تلقائياً عند الاختيار من الأسفل)</label><input type="text" name="expType" readOnly className="bg-gray-100 font-bold" value={formData.expType} /></div>
                                         <div><label className="label-title">الوظيفة المشغولة</label><input type="text" name="expJob" value={formData.expJob} onChange={handleChange} /></div>
-                                        <div><label className="label-title">المؤسسة / الإدارة</label><input type="text" name="expInstitution" value={formData.expInstitution} onChange={handleChange} /></div>
+                                        <div><label className="label-title">المؤسسة المستخدمة</label><input type="text" name="expInstitution" value={formData.expInstitution} onChange={handleChange} /></div>
                                         <div><label className="label-title">تاريخ البداية</label><input type="date" name="expFrom" value={formData.expFrom} onChange={handleChange} /></div>
                                         <div><label className="label-title">تاريخ النهاية</label><input type="date" name="expTo" value={formData.expTo} onChange={handleChange} /></div>
                                     </div>
@@ -368,9 +325,9 @@
                         )}
 
                         {step === 5 && (
-                            <div className="animate-fade-in">
+                            <div className="animate-fade-in space-y-6">
                                 <div className="form-section">
-                                    <h2 className="section-header">8. الحالة المهنية الحالية</h2>
+                                    <h2 className="section-header">6. الحالة المهنية الحالية</h2>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div className="md:col-span-2"><label className="flex items-center gap-2 font-bold"><input type="checkbox" name="isEmployed" checked={formData.isEmployed} onChange={handleChange} /> هل تشغل وظيفة حالياً؟</label></div>
                                         {formData.isEmployed && (
@@ -383,24 +340,21 @@
                                 </div>
 
                                 <div className="form-section">
-                                    <h2 className="section-header">9. البريد الإلكتروني للاتصال</h2>
-                                    <div><label className="label-title">بريدك الإلكتروني</label><input type="email" name="email" required value={formData.email} onChange={handleChange} /></div>
-                                </div>
-
-                                <div className="form-section">
-                                    <h2 className="section-header">10. الوثائق المرفقة وملف الخبرة</h2>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-6">
-                                        {["بطاقة الإقامة", "وثيقة الخدمة الوطنية", "ديبلوم", "كشوف النقاط", "مقالات علمية"].map(doc => (
-                                            <label key={doc} className="flex items-center gap-2 p-2 bg-gray-50 rounded border cursor-pointer font-bold"><input type="checkbox" checked={formData.attachedDocs.includes(doc)} onChange={() => handleDocToggle(doc)} /> {doc}</label>
-                                        ))}
+                                    <h2 className="section-header">7. معلومات الاتصال والوثائق</h2>
+                                    <div className="mb-4">
+                                        <label className="label-title">البريد الإلكتروني للاتصال</label>
+                                        <input type="email" name="email" required value={formData.email} onChange={handleChange} />
                                     </div>
-                                    <h3 className="font-black mb-3 text-sm text-red-700">تحديد نوع الخبرة المهنية:</h3>
+                                    <h3 className="font-black mb-3 text-sm text-red-700">تحديد نوع الخبرة والوثائق:</h3>
                                     <div className="space-y-2">
                                         {experienceOptions.map((exp, idx) => (
                                             <label key={idx} className={`flex items-start gap-2 p-2 rounded border cursor-pointer hover:bg-gray-100 transition ${formData.expType === exp ? 'bg-blue-50 border-blue-500 shadow-sm' : 'bg-gray-50'}`}>
                                                 <input type="checkbox" className="mt-1" checked={formData.attachedDocs.includes(exp)} onChange={() => handleDocToggle(exp)} />
                                                 <span className="text-xs font-bold leading-relaxed">{exp}</span>
                                             </label>
+                                        ))}
+                                        {["بطاقة الإقامة", "وثيقة الخدمة الوطنية", "ديبلوم", "كشوف النقاط"].map(doc => (
+                                            <label key={doc} className="flex items-center gap-2 p-2 bg-gray-50 rounded border cursor-pointer font-bold"><input type="checkbox" checked={formData.attachedDocs.includes(doc)} onChange={() => handleDocToggle(doc)} /> {doc}</label>
                                         ))}
                                     </div>
                                 </div>
@@ -412,13 +366,13 @@
                             {step < 5 ? (
                                 <button type="button" onClick={() => setStep(step + 1)} className="mr-auto bg-gray-800 text-white px-8 py-3 rounded-lg font-black hover:bg-gray-700">التالي</button>
                             ) : (
-                                <button type="submit" disabled={isSubmitting} className={`mr-auto px-10 py-3 rounded-lg font-black transition-all ${isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 text-white hover:bg-green-700 shadow-lg shadow-green-200'}`}>
-                                    {isSubmitting ? 'جاري الإرسال...' : 'إرسال الاستمارة النهائية'}
+                                <button type="submit" disabled={isSubmitting} className={`mr-auto px-10 py-3 rounded-lg font-black transition-all ${isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 text-white hover:bg-green-700 shadow-lg'}`}>
+                                    {isSubmitting ? 'جاري الإرسال...' : 'إرسال الطلب النهائي'}
                                 </button>
                             )}
                         </div>
                     </form>
-                    <footer className="mt-10 border-t pt-6 text-center text-gray-500 text-xs font-bold">
+                    <footer className="mt-10 border-t pt-6 text-center text-gray-400 text-xs font-bold">
                         <p>د. عبد المجيد - استمارة معلومات إلكترونية © 2024</p>
                     </footer>
                 </div>
