@@ -2,478 +2,426 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Kooora Laghouat Live</title>
-    <meta name="theme-color" content="#ffffff">
-    
-    <!-- Styles -->
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>استمارة المعلومات الإلكترونية - د. عبد المجيد</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Tajawal', sans-serif; -webkit-tap-highlight-color: transparent; }
-        @keyframes pulse-red { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-        .live-text { animation: pulse-red 1s infinite; }
-        .tabular-nums { font-variant-numeric: tabular-nums; }
-        /* إخفاء شريط التمرير */
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    </style>
-
-    <!-- React & Firebase -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+    <style>
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+        }
+        .form-section {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .section-header {
+            background-color: #f1f5f9;
+            padding: 0.75rem 1rem;
+            border-right: 4px solid #1e293b;
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+        }
+        input, select, textarea {
+            border: 1px solid #cbd5e1;
+            padding: 0.5rem;
+            border-radius: 0.375rem;
+            width: 100%;
+            margin-top: 0.25rem;
+            transition: all 0.2s;
+        }
+        input:focus {
+            outline: none;
+            border-color: #1e293b;
+            box-shadow: 0 0 0 2px rgba(30, 41, 59, 0.1);
+        }
+        .label-title {
+            font-weight: 700;
+            color: #1e293b;
+            display: block;
+            font-size: 0.9rem;
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.2.3",
+    "react/": "https://esm.sh/react@^19.2.3/"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
 </head>
-<body class="bg-slate-100 text-slate-900 pb-10">
+<body>
     <div id="root"></div>
 
     <script type="text/babel">
-        // 1. إعدادات Firebase
-        const firebaseConfig = {
-          apiKey: "AIzaSyAXLSZ5OqPEOnP0DUx3w75fU2xxiVkrWcE",
-          authDomain: "koooralaghouat.firebaseapp.com",
-          projectId: "koooralaghouat",
-          storageBucket: "koooralaghouat.firebasestorage.app",
-          messagingSenderId: "84750708348",
-          appId: "1:84750708348:web:179ec7acf8fc2f357e23f9",
-          measurementId: "G-4YSP7SWPGV"
-        };
-        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
-
-        // 2. البيانات
-        const LEAGUES_DATA = {
-             "الجهوي الأول (فوج أ)": [
-                { name: "ش ب عين اميناس", logo: "https://lrfouargla.com/uploads/images/logos/1(1).png" },
-                { name: "ن.ر.تقنتورين", logo: "https://lrfouargla.com/uploads/images/logos/203-1601155957.png" },
-                { name: "اتحاد الغرابة", logo: "https://lrfouargla.com/uploads/images/logos/sssx.png" },
-                { name: "م .شباب .المخادمة", logo: "https://lrfouargla.com/uploads/images/logos/sz.png" },
-                { name: "إتحاد بريان", logo: "https://lrfouargla.com/uploads/images/logos/47.png" },
-                { name: "ترجي تقديدين", logo: "https://lrfouargla.com/uploads/images/logos/133.png" },
-                { name: "و.ر.ب.الدبيلة", logo: "https://lrfouargla.com/uploads/images/logos/qqqqqq.png" },
-                { name: "نادي بوغفالة", logo: "https://lrfouargla.com/uploads/images/logos/23.png" },
-                { name: "المنظر الجميل", logo: "https://lrfouargla.com/uploads/images/logos/CSBV%20(1).png" },
-                { name: "م.ك.أمل النزلة", logo: "https://lrfouargla.com/uploads/images/logos/sss%20%E2%80%AB%E2%80%AC.png" },
-                { name: "إتحاد الرباح", logo: "https://lrfouargla.com/uploads/images/logos/73.png" },
-                { name: "شباب سيدي بوعزيز", logo: "https://lrfouargla.com/uploads/images/logos/13.png" },
-                { name: "شباب قصر الحيران", logo: "https://lrfouargla.com/uploads/images/logos/54.png" },
-                { name: "إتحاد حاسي الدلاعة", logo: "https://lrfouargla.com/uploads/images/logos/53.png" }
-            ],
-            "الجهوي الأول (فوج ب)": [
-                { name: "شباب قصر ورقلة", logo: "https://lrfouargla.com/uploads/images/logos/15826488_199664807171500_3091424271281007906_n.gif" },
-                { name: "وفاق المغير", logo: "https://lrfouargla.com/uploads/images/logos/111.png" },
-                { name: "اتحاد .ر. ب.الأغواط", logo: "https://lrfouargla.com/uploads/images/logos/IMG-20241109-WA0007.jpg" },
-                { name: "وفاق عين ماضي", logo: "https://lrfouargla.com/uploads/images/logos/125.png" },
-                { name: "أمل سوف", logo: "https://lrfouargla.com/uploads/images/logos/88.png" },
-                { name: "شباب نهقار", logo: "https://lrfouargla.com/uploads/images/logos/102.png" },
-                { name: "هلال غرداية", logo: "https://lrfouargla.com/uploads/images/logos/75.png" },
-                { name: "التضامن السوفي", logo: "https://lrfouargla.com/uploads/images/logos/72.png" },
-                { name: "إ. الرباضي المنيعي", logo: "https://lrfouargla.com/uploads/images/logos/WhatsApp%20Image%202025-10-25%20%C3%A0%2022.02.03_23b4051f.jpg" },
-                { name: "ش.أ.تمنراست", logo: "https://lrfouargla.com/uploads/images/logos/100.png" },
-                { name: "إتحاد عين البيضاء", logo: "https://lrfouargla.com/uploads/images/logos/40.png" },
-                { name: "وفاق مقر", logo: "https://lrfouargla.com/uploads/images/logos/38.png" },
-                { name: "إ.الحمادين", logo: "https://lrfouargla.com/uploads/images/logos/168-1531611858.png" },
-                { name: "نجم بوغفالة", logo: "https://lrfouargla.com/uploads/images/logos/NRNBO-02.png" }
-            ],
-            "الجهوي الثاني (فوج ج)": [
-                { name: "م .ش .الثنية غرداية", logo: "https://lrfouargla.com/uploads/images/logos/449-1634476753.png" },
-                { name: "مولودية البيضاء", logo: "https://lrfouargla.com/uploads/images/logos/46.png" },
-                { name: "رائد المنيعة", logo: "https://lrfouargla.com/uploads/images/logos/7.png" },
-                { name: "بن ناصر بن شهرة", logo: "https://lrfouargla.com/uploads/images/logos/49(1).png" },
-                { name: "إ.ضاية بن ضحوة", logo: "https://lrfouargla.com/uploads/images/logos/57(1).png" },
-                { name: "مستقبل لماضي", logo: "https://lrfouargla.com/uploads/images/logos/56.png" },
-                { name: "رائد حاسي القارة", logo: "https://lrfouargla.com/uploads/images/logos/134.png" },
-                { name: "عين سيدي علي", logo: "https://lrfouargla.com/uploads/images/logos/1528-1663416912.png" },
-                { name: "نادي الأغواط", logo: "https://lrfouargla.com/uploads/images/logos/50.png" },
-                { name: "إتحاد تاجموت", logo: "https://lrfouargla.com/uploads/images/logos/nirbt.png" },
-                { name: "اتحاد.بريدة", logo: "https://lrfouargla.com/uploads/images/logos/2174-1665949908.png" },
-                { name: "ترجي مرماد", logo: "https://lrfouargla.com/uploads/images/logos/51.png" },
-                { name: "وداد زلفانة", logo: "https://lrfouargla.com/uploads/images/logos/t%C3%A9l%C3%A9chargement%20(1).jpg" },
-                { name: "الاسماعيلي القرارة", logo: "https://lrfouargla.com/uploads/images/logos/IMG-20231119-WA0010.jpg" },
-                { name: "أمل سيدي بوزيد", logo: "https://lrfouargla.com/uploads/images/logos/49.png" },
-                { name: "اتحاد شباب تاغيت", logo: "https://lrfouargla.com/uploads/images/logos/1855-1664293222.png" }
-            ],
-            "قسم ما بين الرابطات": [
-                { name: "إتحاد النزلة", logo: "https://lirf.org.dz/uploads/images/logos/3.png" },
-                { name: "نادي تقرت", logo: "https://lirf.org.dz/uploads/images/logos/received_257439396802495.jpeg" },
-                { name: "أ متليلي الشعانبة", logo: "https://lirf.org.dz/uploads/images/logos/5.png" },
-                { name: "اتحاد الخنق", logo: "https://lirf.org.dz/uploads/images/logos/IRBKheneg.png" },
-                { name: "إتحاد الزاوية", logo: "https://lirf.org.dz/uploads/images/logos/6.png" },
-                { name: "اتحاد آفلو", logo: "https://lirf.org.dz/uploads/images/logos/407-1656244680.png" },
-                { name: "إتحاد همايسة", logo: "https://lirf.org.dz/uploads/images/logos/102.png" },
-                { name: "مشعل حاسي مسعود", logo: "https://lirf.org.dz/uploads/images/logos/13.png" },
-                { name: "شباب جامعة", logo: "https://lirf.org.dz/uploads/images/logos/39(1).png" },
-                { name: "رائد قلتةس سعد", logo: "https://lirf.org.dz/uploads/images/logos/Gueltet%20Sidi%20Saad.png" },
-                { name: "اولمبي الواد", logo: "https://lirf.org.dz/uploads/images/logos/Olympique%20El-Oued.png" },
-                { name: "أولمبيك المقرن", logo: "https://lirf.org.dz/uploads/images/logos/8.png" },
-                { name: "نجوم اليزي", logo: "https://lirf.org.dz/uploads/images/logos/16.png" },
-                { name: "إتحاد حاسي الرمل", logo: "https://lirf.org.dz/uploads/images/logos/12.png" },
-                { name: "اتحاد سوف", logo: "https://lirf.org.dz/uploads/images/logos/412-1715352850.png" },
-                { name: "اتحاد ورقلة", logo: "https://lirf.org.dz/uploads/images/logos/414-1662939264.png" }
-            ],
-            "default": [
-                { name: "فريق 1", logo: "" },
-                { name: "فريق 2", logo: "" }
-            ]
-        };
-
-        const { useState, useEffect } = React;
-
-        const formatMatchDate = (dateStr) => {
-            if (!dateStr) return "";
-            try {
-                const date = new Date(dateStr);
-                const days = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
-                const dayName = days[date.getDay()];
-                const day = date.getDate().toString().padStart(2, '0');
-                const month = (date.getMonth() + 1).toString().padStart(2, '0');
-                return `${dayName} ${day}/${month}`;
-            } catch (e) {
-                return dateStr;
-            }
-        };
-
-        const isMatchLive = (match) => {
-            return match.status.includes('الشوط') || match.status === 'نهاية الشوط الأول';
-        };
-
-        // --- Match Card Component ---
-        const MatchCard = ({ match }) => {
-            const isLive = isMatchLive(match);
-            const [currentTime, setCurrentTime] = useState("00:00");
-
-            useEffect(() => {
-                const calculateTime = () => {
-                    let totalSeconds = match.time * 60;
-                    if (match.isRunning && match.lastStartTime) {
-                        const diffSecs = Math.floor((Date.now() - match.lastStartTime) / 1000);
-                        totalSeconds += diffSecs;
-                    }
-                    const mm = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
-                    const ss = (totalSeconds % 60).toString().padStart(2, '0');
-                    return `${mm}:${ss}`;
-                };
-
-                if (match.isRunning) {
-                    const interval = setInterval(() => setCurrentTime(calculateTime()), 1000);
-                    return () => clearInterval(interval);
-                } else {
-                    setCurrentTime(calculateTime());
-                }
-            }, [match.time, match.isRunning, match.lastStartTime]);
-
-            const formattedDate = formatMatchDate(match.matchDate);
-            let statusStyle = "bg-slate-100 text-slate-500";
-            if (isLive) statusStyle = "bg-red-50 text-red-600 border border-red-100";
-            else if (match.status === 'نهاية المباراة') statusStyle = "bg-emerald-50 text-emerald-600 border border-emerald-100";
-
-            return (
-                <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 mb-4 relative">
-                    <div className="flex justify-between items-center mb-4 border-b border-slate-50 pb-2">
-                        <div className="flex items-center gap-2">
-                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${statusStyle}`}>
-                                {match.status}
-                            </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                             {formattedDate && (
-                                <span className="text-[10px] text-slate-500 font-bold bg-slate-50 px-2 py-0.5 rounded border border-slate-100">
-                                    {formattedDate}
-                                </span>
-                            )}
-                            <span className="bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-md text-[10px] font-bold border border-emerald-100">
-                                الجولة {match.round}
-                            </span>
-                        </div>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                        <div className="flex flex-col items-center w-[30%] gap-2">
-                            <img src={match.homeLogo} className="w-12 h-12 object-contain drop-shadow-sm" onError={(e)=>e.target.src='https://cdn-icons-png.flaticon.com/512/53/53283.png'}/>
-                            <span className="text-[11px] font-bold text-slate-800 text-center leading-tight line-clamp-2">{match.home}</span>
-                        </div>
-
-                        <div className="flex flex-col items-center w-[40%] justify-center min-h-[60px]">
-                            {isLive ? (
-                                <span className="text-red-600 font-mono font-black text-lg mb-1 live-text tabular-nums">
-                                    {currentTime}
-                                </span>
-                            ) : match.status === 'لم تبدأ' && match.matchTime ? (
-                                <div className="flex flex-col items-center mb-1 text-slate-500">
-                                    <span className="text-[10px] font-medium">التوقيت</span>
-                                    <span className="font-bold text-lg font-mono text-slate-800 tracking-wider">{match.matchTime}</span>
-                                </div>
-                            ) : null}
-                            
-                            <div className="flex items-center justify-center gap-3 bg-slate-50 px-4 py-2 rounded-xl border border-slate-100 min-w-[80px]">
-                                {match.status !== 'لم تبدأ' ? (
-                                    <>
-                                        <span className="text-2xl font-black text-slate-900">{match.scoreH}</span>
-                                        <span className="text-slate-300">-</span>
-                                        <span className="text-2xl font-black text-slate-900">{match.scoreA}</span>
-                                    </>
-                                ) : (
-                                    <span className="text-xl font-bold text-slate-300">VS</span>
-                                )}
-                            </div>
-                        </div>
-
-                        <div className="flex flex-col items-center w-[30%] gap-2">
-                            <img src={match.awayLogo} className="w-12 h-12 object-contain drop-shadow-sm" onError={(e)=>e.target.src='https://cdn-icons-png.flaticon.com/512/53/53283.png'}/>
-                            <span className="text-[11px] font-bold text-slate-800 text-center leading-tight line-clamp-2">{match.away}</span>
-                        </div>
-                    </div>
-                </div>
-            );
-        };
-
-        // --- New Match List Public with Tabs ---
-        const MatchListPublic = ({ matches }) => {
-            const [activeTab, setActiveTab] = useState('week'); // الافتراضي: مباريات الأسبوع (الكل)
-
-            // حساب عدد المباريات المباشرة للشارة (Badge)
-            const liveMatchesCount = matches.filter(m => isMatchLive(m)).length;
-
-            // تصفية المباريات حسب التبويب المختار
-            const filteredMatches = matches.filter(match => {
-                if (activeTab === 'week') return true; // عرض جميع المباريات
-                if (activeTab === 'live') return isMatchLive(match); // مباشر فقط
-                if (activeTab === 'finished') return match.status === 'نهاية المباراة'; // منتهية فقط
-                return true; 
-            });
-
-            // ترتيب المباريات: التاريخ ثم الوقت
-            const sortedMatches = [...filteredMatches].sort((a, b) => {
-                 if (a.matchDate !== b.matchDate) return (a.matchDate || '') > (b.matchDate || '') ? 1 : -1;
-                 return (a.matchTime || '') > (b.matchTime || '') ? 1 : -1;
-            });
-
-            const grouped = sortedMatches.reduce((acc, m) => {
-                (acc[m.league] = acc[m.league] || []).push(m);
-                return acc;
-            }, {});
-
-            return (
-                <div className="pb-20">
-                    {/* --- شريط التبويبات (Tabs) --- */}
-                    <div className="flex items-center justify-between gap-2 mb-6 bg-white p-1.5 rounded-xl border border-slate-200 shadow-sm overflow-x-auto no-scrollbar">
-                        
-                        {/* 1. تبويب مباريات الأسبوع (الكل) */}
-                        <button 
-                            onClick={() => setActiveTab('week')}
-                            className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition whitespace-nowrap ${activeTab === 'week' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-50'}`}
-                        >
-                            مباريات الأسبوع
-                        </button>
-
-                        {/* 2. تبويب مباشر */}
-                        <button 
-                            onClick={() => setActiveTab('live')}
-                            className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition whitespace-nowrap relative ${activeTab === 'live' ? 'bg-red-500 text-white shadow-md' : 'text-slate-600 hover:bg-slate-50'}`}
-                        >
-                            <span className={`w-2 h-2 rounded-full ${activeTab==='live' ? 'bg-white animate-pulse' : 'bg-red-500'}`}></span>
-                            مباشر
-                            {liveMatchesCount > 0 && (
-                                <span className={`absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center text-[10px] rounded-full border-2 border-white ${activeTab === 'live' ? 'bg-white text-red-600' : 'bg-red-600 text-white'}`}>
-                                    {liveMatchesCount}
-                                </span>
-                            )}
-                        </button>
-
-                         {/* 3. تبويب منتهية */}
-                        <button 
-                            onClick={() => setActiveTab('finished')}
-                            className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition whitespace-nowrap ${activeTab === 'finished' ? 'bg-slate-800 text-white shadow-md' : 'text-slate-600 hover:bg-slate-50'}`}
-                        >
-                            مباريات منتهية
-                        </button>
-                    </div>
-
-                    {/* --- عرض المباريات --- */}
-                    {sortedMatches.length === 0 ? (
-                        <div className="text-center py-20 flex flex-col items-center">
-                            <div className="bg-slate-100 p-4 rounded-full mb-3">
-                                <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-                            </div>
-                            <span className="text-slate-500 font-medium text-sm">لا توجد مباريات في هذا القسم</span>
-                        </div>
-                    ) : (
-                        Object.entries(grouped).map(([league, items]) => (
-                            <div key={league} className="mb-8">
-                                <div className="flex items-center gap-2 mb-3 px-2">
-                                    <div className="w-1 h-5 bg-emerald-500 rounded-full"></div>
-                                    <h3 className="font-bold text-slate-700 text-sm">{league}</h3>
-                                </div>
-                                {items.map(m => <MatchCard key={m.id} match={m} />)}
-                            </div>
-                        ))
-                    )}
-                </div>
-            );
-        };
-
-        // --- Admin Panel (No Changes) ---
-        const AdminPanel = ({ matches, user, setView }) => {
-            const [league, setLeague] = useState('');
-            const [home, setHome] = useState('');
-            const [away, setAway] = useState('');
-            const [round, setRound] = useState('1');
-            const [matchDate, setMatchDate] = useState('');
-            const [matchTime, setMatchTime] = useState('');
-            
-            const addMatch = async () => {
-                if(!league || !home || !away) return alert('الرجاء اختيار الفرق والبطولة');
-                const hLogo = (LEAGUES_DATA[league]||[]).find(t=>t.name===home)?.logo || '';
-                const aLogo = (LEAGUES_DATA[league]||[]).find(t=>t.name===away)?.logo || '';
-                await db.collection("matches").add({
-                    league, round, home, away, homeLogo:hLogo, awayLogo:aLogo,
-                    scoreH:0, scoreA:0, status:'لم تبدأ', matchDate, matchTime, 
-                    time:0, isRunning:false, lastStartTime:null
-                });
-                alert('تم نشر المباراة ✅');
-            };
-
-            return (
-                <div className="bg-slate-50 min-h-screen">
-                    <div className="sticky top-0 z-40 bg-white border-b border-slate-200 px-4 py-3 flex justify-between items-center shadow-sm">
-                        <span className="font-bold text-slate-700 text-sm">لوحة التحكم</span>
-                        <div className="flex gap-2">
-                            <button onClick={()=>setView('public')} className="flex items-center gap-1 bg-emerald-50 text-emerald-600 px-3 py-1.5 rounded-lg text-xs font-bold border border-emerald-100">🌍 الموقع</button>
-                            <button onClick={()=>auth.signOut()} className="flex items-center gap-1 bg-red-50 text-red-600 px-3 py-1.5 rounded-lg text-xs font-bold border border-red-100">🚪 خروج</button>
-                        </div>
-                    </div>
-
-                    <div className="p-4 pb-24">
-                        <div className="bg-white p-4 rounded-xl shadow-sm mb-6 border border-emerald-100">
-                            <h3 className="font-bold text-emerald-800 mb-3 text-sm">إضافة مباراة جديدة</h3>
-                            <div className="space-y-3">
-                                <div className="flex gap-2">
-                                    <select className="flex-[2] p-3 bg-slate-50 rounded-lg text-sm border focus:border-emerald-500 outline-none" onChange={e=>setLeague(e.target.value)}>
-                                        <option value="">اختر البطولة</option>
-                                        {Object.keys(LEAGUES_DATA).filter(k=>k!=='default').map(k=><option key={k} value={k}>{k}</option>)}
-                                    </select>
-                                    <select className="flex-1 p-3 bg-slate-50 rounded-lg text-sm border" onChange={e=>setRound(e.target.value)}>
-                                        {[...Array(30)].map((_,i)=><option key={i} value={i+1}>ج-{i+1}</option>)}
-                                    </select>
-                                </div>
-                                <div className="flex gap-2">
-                                    <div className="flex-1">
-                                        <label className="text-[10px] text-slate-400 font-bold block mb-1 mr-1">التاريخ</label>
-                                        <input type="date" className="w-full p-2 bg-slate-50 rounded-lg text-sm border font-sans" onChange={e=>setMatchDate(e.target.value)} />
-                                    </div>
-                                    <div className="flex-1">
-                                        <label className="text-[10px] text-slate-400 font-bold block mb-1 mr-1">الساعة</label>
-                                        <input type="time" className="w-full p-2 bg-slate-50 rounded-lg text-sm border font-sans" onChange={e=>setMatchTime(e.target.value)} />
-                                    </div>
-                                </div>
-                                <div className="flex gap-2">
-                                    <select className="flex-1 p-3 bg-slate-50 rounded-lg text-sm border" onChange={e=>setHome(e.target.value)}>
-                                        <option>المستضيف</option>
-                                        {(LEAGUES_DATA[league]||[]).map(t=><option key={t.name} value={t.name}>{t.name}</option>)}
-                                    </select>
-                                    <select className="flex-1 p-3 bg-slate-50 rounded-lg text-sm border" onChange={e=>setAway(e.target.value)}>
-                                        <option>الضيف</option>
-                                        {(LEAGUES_DATA[league]||[]).map(t=><option key={t.name} value={t.name}>{t.name}</option>)}
-                                    </select>
-                                </div>
-                                <button onClick={addMatch} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-lg font-bold shadow-md shadow-emerald-200 transition">نشر المباراة</button>
-                            </div>
-                        </div>
-                        
-                        <div className="space-y-4">
-                            {matches.map(m => (
-                                <div key={m.id} className="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-                                    <div className="flex justify-between items-center text-xs text-slate-500 mb-2 border-b border-slate-50 pb-2">
-                                        <span className="truncate w-1/3">{m.league}</span>
-                                        <span className="font-bold text-slate-700 flex items-center gap-1">
-                                            {formatMatchDate(m.matchDate)} 
-                                            {m.matchTime && <span className="bg-slate-100 px-1 rounded">{m.matchTime}</span>}
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center justify-between gap-2 mb-3">
-                                        <span className="text-[10px] font-bold w-16 text-center line-clamp-2">{m.home}</span>
-                                        <div className="flex gap-1 items-center">
-                                            <input type="number" className="w-12 h-10 bg-slate-100 text-center font-bold rounded-lg text-lg" value={m.scoreH} onChange={e=>db.collection("matches").doc(m.id).update({scoreH:Number(e.target.value)})}/>
-                                            <span className="text-slate-300">-</span>
-                                            <input type="number" className="w-12 h-10 bg-slate-100 text-center font-bold rounded-lg text-lg" value={m.scoreA} onChange={e=>db.collection("matches").doc(m.id).update({scoreA:Number(e.target.value)})}/>
-                                        </div>
-                                        <span className="text-[10px] font-bold w-16 text-center line-clamp-2">{m.away}</span>
-                                    </div>
-                                    <div className="flex flex-col gap-2">
-                                        <div className="flex gap-2">
-                                            <select className="flex-1 bg-slate-50 text-xs p-2 rounded border" value={m.status} onChange={e=>db.collection("matches").doc(m.id).update({status:e.target.value})}>
-                                                <option>لم تبدأ</option><option>الشوط الأول</option><option>نهاية الشوط الأول</option><option>الشوط الثاني</option><option>نهاية المباراة</option>
-                                            </select>
-                                            <button onClick={()=>db.collection("matches").doc(m.id).delete()} className="bg-red-50 text-red-500 px-3 rounded border border-red-100 hover:bg-red-100">🗑</button>
-                                        </div>
-                                        <div className="flex items-center gap-2 bg-slate-50 p-2 rounded-lg border border-slate-100">
-                                            <button onClick={()=>db.collection("matches").doc(m.id).update({isRunning:!m.isRunning, lastStartTime: m.isRunning ? null : Date.now()})} className={`w-8 h-8 flex items-center justify-center rounded-full text-white font-bold shadow-sm ${m.isRunning?'bg-orange-500':'bg-emerald-500'}`}>
-                                                {m.isRunning ? '||' : '▶'}
-                                            </button>
-                                            <input type="number" className="flex-1 text-center text-xs bg-white border rounded py-2 font-bold" placeholder="الدقيقة" value={m.time} onChange={(e)=>db.collection("matches").doc(m.id).update({time:Number(e.target.value)})}/>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            );
-        };
+        const { useState } = React;
 
         const App = () => {
-            const [view, setView] = useState('public');
-            const [user, setUser] = useState(null);
-            const [matches, setMatches] = useState([]);
-            const [email, setEmail] = useState('');
-            const [password, setPassword] = useState('');
+            const [step, setStep] = useState(1);
+            const [isSubmitting, setIsSubmitting] = useState(false);
+            const [submitted, setSubmitted] = useState(false);
 
-            useEffect(() => {
-                auth.onAuthStateChanged(setUser);
-                return db.collection("matches").onSnapshot(s => {
-                    const ms = s.docs.map(d => ({id:d.id, ...d.data()}));
-                    setMatches(ms);
+            const [formData, setFormData] = useState({
+                directorate: '', requestedRank: '', teachingSubject: '',
+                nin: '', lastNameAr: '', firstNameAr: '', lastNameLat: '', firstNameLat: '',
+                fatherName: '', motherFirstName: '', motherLastName: '', birthDate: '',
+                birthPlace: '', birthState: '', birthOriginalState: '', gender: '',
+                maritalStatus: '', childrenCount: '', fullAddress: '', residenceCommune: '',
+                phoneNumber: '',
+                militaryStatus: '', docRefNum: '', docIssueDate: '', docEndDate: '',
+                serviceStartDate: '', serviceEndDate: '',
+                degreeName: '', specialty: '', degreeNum: '', graduationDate: '',
+                issuingInstitution: '', trainingDuration: '', startYear: '', endYear: '',
+                degreeGrade: '', isEnsaGraduate: false, isFirstInClass: false,
+                firstInClassDocNum: '', firstInClassDocDate: '', firstInClassIssuer: '',
+                gpa: '', thesisGrade: '',
+                semesters: Array(5).fill(null).map(() => ({ s1: '', s2: '', annual: '' })),
+                otherDegreeName: '', otherDegreeSpecialty: '', otherDegreeIssuer: '',
+                otherDegreeSemesters: '', otherDegreeFromYear: '', otherDegreeToYear: '',
+                publicationType: '', publicationDate: '', journalName: '', journalIssue: '',
+                publicationLink: '',
+                expType: '', expJob: '', expInstitution: '', expApprovedDegree: '',
+                expContractNum: '', expContractDate: '', expFrom: '', expTo: '', expEndReason: '',
+                isEmployed: false, currentRank: '', firstAppointmentDate: '',
+                rankAppointmentDate: '', currentGrade: '', adminRefNum: '',
+                adminRefDate: '', signingAuthority: '', adminPhone: '', adminAddress: '',
+                email: '', attachedDocs: []
+            });
+
+            const experienceOptions = [
+                "1. خبرة مهنية في قطاع التربية الوطنية (ممضاة من مدير التربية).",
+                "2. خبرة مهنية في إدارة عمومية أخرى تضمن مهام التدريس.",
+                "3. خبرة مهنية في المؤسسات التابعة لقطاع التربية الوطنية في منصب مختلف.",
+                "4. خبرة مهنية في الإدارات العمومية الأخرى تضمن مهام التدريس في منصب مختلف.",
+                "5. خبرة مهنية مثبتة قانونًا في المؤسسات الخاصة للتربية والتعليم."
+            ];
+
+            const handleChange = (e) => {
+                const { name, value, type, checked } = e.target;
+                setFormData(prev => ({ 
+                    ...prev, 
+                    [name]: type === 'checkbox' ? checked : value 
+                }));
+            };
+
+            const handleSemesterChange = (index, field, value) => {
+                const newSemesters = [...formData.semesters];
+                newSemesters[index] = { ...newSemesters[index], [field]: value };
+                setFormData(prev => ({ ...prev, semesters: newSemesters }));
+            };
+
+            const handleDocToggle = (doc) => {
+                setFormData(prev => {
+                    const isSelected = prev.attachedDocs.includes(doc);
+                    const docs = isSelected
+                        ? prev.attachedDocs.filter(d => d !== doc)
+                        : [...prev.attachedDocs, doc];
+                    
+                    let newExpType = prev.expType;
+                    if (experienceOptions.includes(doc)) {
+                        if (!isSelected) {
+                            newExpType = doc;
+                        } else if (prev.expType === doc) {
+                            const remainingExps = docs.filter(d => experienceOptions.includes(d));
+                            newExpType = remainingExps.length > 0 ? remainingExps[0] : '';
+                        }
+                    }
+
+                    return { ...prev, attachedDocs: docs, expType: newExpType };
                 });
-            }, []);
+            };
 
-            if(view==='login' && !user) return (
-                <div className="h-screen flex items-center justify-center p-6 bg-white">
-                    <form onSubmit={e=>{e.preventDefault(); auth.signInWithEmailAndPassword(email,password).then(()=>setView('admin'))}} className="w-full max-w-sm space-y-4">
-                        <h2 className="text-2xl font-bold text-center text-emerald-800">Admin Login</h2>
-                        <input className="w-full p-3 bg-slate-50 rounded-lg border" type="email" placeholder="Email" onChange={e=>setEmail(e.target.value)}/>
-                        <input className="w-full p-3 bg-slate-50 rounded-lg border" type="password" placeholder="Password" onChange={e=>setPassword(e.target.value)}/>
-                        <button className="w-full bg-emerald-600 text-white py-3 rounded-lg font-bold">دخول</button>
-                        <button type="button" onClick={()=>setView('public')} className="w-full text-sm text-slate-400">عودة</button>
-                    </form>
-                </div>
-            );
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                setIsSubmitting(true);
+                
+                // تحويل بيانات الفصول الدراسية إلى نص مقروء لإرساله في الإيميل
+                const semesterSummary = formData.semesters.map((s, i) => 
+                    `سنة ${i+1}: (س1: ${s.s1}, س2: ${s.s2}, سنوي: ${s.annual})`
+                ).join(' | ');
 
-            return (
-                <div>
-                    {view==='admin' && user ? <AdminPanel matches={matches} user={user} setView={setView}/> : 
-                    <div>
-                        <div className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-100 px-4 h-14 flex items-center justify-between">
-                            <h1 className="font-bold text-emerald-800 tracking-tight">Kooora Laghouat</h1>
-                             {/* زر الفيسبوك + زر الأدمن */}
-                            <div className="flex gap-2">
-                                <a href="https://www.facebook.com/Kooralghouat" target="_blank" className="bg-blue-600 p-2 rounded-full text-white">
-                                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-                                </a>
-                                <button onClick={()=>setView(user?'admin':'login')} className="bg-slate-100 p-2 rounded-full text-slate-500">
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                                </button>
-                            </div>
-                        </div>
-                        <div className="max-w-md mx-auto px-4 mt-6">
-                            <MatchListPublic matches={matches}/>
+                const payload = {
+                    ...formData,
+                    semesters_summary: semesterSummary,
+                    _subject: `طلب مشاركة جديد: ${formData.firstNameAr} ${formData.lastNameAr}`,
+                    _template: "table",
+                    _captcha: "false" // لتعطيل صفحة التحقق وضمان الإرسال المباشر
+                };
+
+                try {
+                    const response = await fetch("https://formsubmit.co/ajax/ksarinfo.impr@gmail.com", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json", "Accept": "application/json" },
+                        body: JSON.stringify(payload)
+                    });
+                    
+                    if (response.ok) {
+                        setSubmitted(true);
+                    } else {
+                        alert("حدث خطأ في الإرسال. تأكد من تفعيل خدمة FormSubmit من بريدك أولاً.");
+                    }
+                } catch (error) {
+                    alert("فشل الاتصال بالخادم. يرجى التحقق من الإنترنت.");
+                } finally {
+                    setIsSubmitting(false);
+                }
+            };
+
+            if (submitted) {
+                return (
+                    <div className="min-h-screen flex items-center justify-center p-6 text-center">
+                        <div className="bg-white p-10 rounded-xl shadow-2xl max-w-md w-full border-t-8 border-green-500 animate-fade-in">
+                            <div className="text-green-500 text-6xl mb-4">✓</div>
+                            <h1 className="text-2xl font-black text-gray-800 mb-2">تم الإرسال بنجاح!</h1>
+                            <p className="text-gray-600 mb-6 font-bold">لقد تم إرسال كافة بياناتك إلى البريد الإلكتروني المخصص بنجاح.</p>
+                            <button onClick={() => window.location.reload()} className="bg-gray-800 text-white px-8 py-3 rounded-lg font-black hover:bg-gray-700 transition w-full">إرسال استمارة أخرى</button>
                         </div>
                     </div>
-                    }
+                );
+            }
+
+            return (
+                <div className="max-w-4xl mx-auto py-10 px-4">
+                    <header className="mb-10 text-center bg-white border-2 border-black p-6 rounded-sm shadow-sm">
+                        <h1 className="text-3xl font-black mb-2">استمارة المعلومات الإلكترونية</h1>
+                        <p className="text-xl font-bold text-gray-700">(للمشاركة في المسابقة على أساس الشهادة)</p>
+                        <div className="mt-4 inline-block px-4 py-1 border-2 border-gray-400 font-bold text-lg">د. عبد المجيد</div>
+                    </header>
+
+                    <div className="mb-6 flex items-center justify-between text-sm font-bold text-gray-500 overflow-x-auto gap-4">
+                        {[1, 2, 3, 4, 5].map((s) => (
+                            <div key={s} className={`flex-1 text-center pb-2 border-b-4 transition-all duration-300 ${step >= s ? 'border-gray-800 text-gray-800' : 'border-gray-200'}`}>المرحلة {s}</div>
+                        ))}
+                    </div>
+
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        {step === 1 && (
+                            <div className="animate-fade-in">
+                                <div className="form-section">
+                                    <h2 className="section-header">1. معلومات الوظيفة المطلوبة</h2>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div><label className="label-title">مديرية التربية لولاية</label><input type="text" name="directorate" required value={formData.directorate} onChange={handleChange} /></div>
+                                        <div><label className="label-title">الرتبة المطلوبة (ابتدائي/متوسط/ثانوي)</label><input type="text" name="requestedRank" required value={formData.requestedRank} onChange={handleChange} /></div>
+                                        <div className="md:col-span-2"><label className="label-title">مادة التدريس (بالنسبة للأساتذة)</label><input type="text" name="teachingSubject" placeholder="لغة عربية / رياضيات / ..." value={formData.teachingSubject} onChange={handleChange} /></div>
+                                    </div>
+                                </div>
+
+                                <div className="form-section">
+                                    <h2 className="section-header">2. المعلومات الشخصية</h2>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="md:col-span-2"><label className="label-title">رقم التعريف الوطني (NIN) - 18 رقم</label><input type="text" name="nin" maxLength="18" required value={formData.nin} onChange={handleChange} /></div>
+                                        <div><label className="label-title">اللقب (بالعربية)</label><input type="text" name="lastNameAr" required value={formData.lastNameAr} onChange={handleChange} /></div>
+                                        <div><label className="label-title">الاسم (بالعربية)</label><input type="text" name="firstNameAr" required value={formData.firstNameAr} onChange={handleChange} /></div>
+                                        <div><label className="label-title">اللقب (باللاتينية)</label><input type="text" name="lastNameLat" dir="ltr" className="text-left" value={formData.lastNameLat} onChange={handleChange} /></div>
+                                        <div><label className="label-title">الاسم (باللاتينية)</label><input type="text" name="firstNameLat" dir="ltr" className="text-left" value={formData.firstNameLat} onChange={handleChange} /></div>
+                                        <div><label className="label-title">ابن (اسم الأب)</label><input type="text" name="fatherName" value={formData.fatherName} onChange={handleChange} /></div>
+                                        <div><label className="label-title">و (اسم الأم)</label><input type="text" name="motherFirstName" value={formData.motherFirstName} onChange={handleChange} /></div>
+                                        <div><label className="label-title">لقب الأم</label><input type="text" name="motherLastName" value={formData.motherLastName} onChange={handleChange} /></div>
+                                        <div><label className="label-title">تاريخ الميلاد</label><input type="date" name="birthDate" required value={formData.birthDate} onChange={handleChange} /></div>
+                                        <div><label className="label-title">مكان الميلاد</label><input type="text" name="birthPlace" value={formData.birthPlace} onChange={handleChange} /></div>
+                                        <div><label className="label-title">الولاية</label><input type="text" name="birthState" value={formData.birthState} onChange={handleChange} /></div>
+                                        <div><label className="label-title">ولاية الازدياد</label><input type="text" name="birthOriginalState" value={formData.birthOriginalState} onChange={handleChange} /></div>
+                                        <div>
+                                            <label className="label-title">الجنس</label>
+                                            <div className="flex gap-4 mt-2">
+                                                <label className="flex items-center gap-2 cursor-pointer font-bold"><input type="radio" name="gender" value="male" checked={formData.gender === 'male'} onChange={handleChange} /> ذكر</label>
+                                                <label className="flex items-center gap-2 cursor-pointer font-bold"><input type="radio" name="gender" value="female" checked={formData.gender === 'female'} onChange={handleChange} /> أنثى</label>
+                                            </div>
+                                        </div>
+                                        <div><label className="label-title">الحالة العائلية</label><input type="text" name="maritalStatus" value={formData.maritalStatus} onChange={handleChange} /></div>
+                                        <div><label className="label-title">عدد الأولاد</label><input type="number" name="childrenCount" value={formData.childrenCount} onChange={handleChange} /></div>
+                                        <div className="md:col-span-2"><label className="label-title">العنوان الشخصي الكامل</label><input type="text" name="fullAddress" value={formData.fullAddress} onChange={handleChange} /></div>
+                                        <div><label className="label-title">بلدية الإقامة</label><input type="text" name="residenceCommune" value={formData.residenceCommune} onChange={handleChange} /></div>
+                                        <div><label className="label-title">رقم الهاتف</label><input type="text" name="phoneNumber" required value={formData.phoneNumber} onChange={handleChange} /></div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {step === 2 && (
+                            <div className="animate-fade-in">
+                                {formData.gender !== 'female' && (
+                                    <div className="form-section">
+                                        <h2 className="section-header">3. الوضعية تجاه الخدمة الوطنية</h2>
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                            <div className="md:col-span-3 flex flex-wrap gap-6">
+                                                <label className="flex items-center gap-2 cursor-pointer font-bold"><input type="radio" name="militaryStatus" value="performed" checked={formData.militaryStatus === 'performed'} onChange={handleChange} /> مؤدى</label>
+                                                <label className="flex items-center gap-2 cursor-pointer font-bold"><input type="radio" name="militaryStatus" value="exempted" checked={formData.militaryStatus === 'exempted'} onChange={handleChange} /> معفى</label>
+                                                <label className="flex items-center gap-2 cursor-pointer font-bold"><input type="radio" name="militaryStatus" value="deferred" checked={formData.militaryStatus === 'deferred'} onChange={handleChange} /> مؤجل</label>
+                                            </div>
+                                            <div><label className="label-title">رقم مرجع الوثيقة</label><input type="text" name="docRefNum" value={formData.docRefNum} onChange={handleChange} /></div>
+                                            <div><label className="label-title">تاريخ إصدار الوثيقة</label><input type="date" name="docIssueDate" value={formData.docIssueDate} onChange={handleChange} /></div>
+                                            <div><label className="label-title">تاريخ انتهاء الوثيقة</label><input type="date" name="docEndDate" value={formData.docEndDate} onChange={handleChange} /></div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div className="form-section">
+                                    <h2 className="section-header">4. الشهادة والمؤهل العلمي</h2>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div><label className="label-title">تسمية الشهادة</label><input type="text" name="degreeName" required value={formData.degreeName} onChange={handleChange} /></div>
+                                        <div><label className="label-title">الشعبة / التخصص</label><input type="text" name="specialty" value={formData.specialty} onChange={handleChange} /></div>
+                                        <div><label className="label-title">رقم الشهادة</label><input type="text" name="degreeNum" value={formData.degreeNum} onChange={handleChange} /></div>
+                                        <div><label className="label-title">تاريخ التخرج</label><input type="date" name="graduationDate" value={formData.graduationDate} onChange={handleChange} /></div>
+                                        <div className="md:col-span-2"><label className="label-title">المؤسسة المسلمة</label><input type="text" name="issuingInstitution" value={formData.issuingInstitution} onChange={handleChange} /></div>
+                                        <div>
+                                            <label className="label-title">مدة التكوين (5 سنوات / # سنتين)</label>
+                                            <input type="text" name="trainingDuration" placeholder="5 أو #" value={formData.trainingDuration} onChange={handleChange} />
+                                            <p className="text-xs text-gray-500 font-bold mt-1">5 = خمس سنوات | # = سنتين فقط</p>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <div className="flex-1"><label className="label-title">سنة البداية</label><input type="text" name="startYear" maxLength="4" value={formData.startYear} onChange={handleChange} /></div>
+                                            <div className="flex-1"><label className="label-title">سنة النهاية</label><input type="text" name="endYear" maxLength="4" value={formData.endYear} onChange={handleChange} /></div>
+                                        </div>
+                                        <div><label className="label-title">تقدير الشهادة</label><input type="text" name="degreeGrade" value={formData.degreeGrade} onChange={handleChange} /></div>
+                                        <div className="flex flex-col justify-center gap-2">
+                                            <label className="flex items-center gap-2 cursor-pointer font-bold"><input type="checkbox" name="isEnsaGraduate" checked={formData.isEnsaGraduate} onChange={handleChange} /> خريج مدرسة وطنية عليا</label>
+                                            <label className="flex items-center gap-2 cursor-pointer font-bold"><input type="checkbox" name="isFirstInClass" checked={formData.isFirstInClass} onChange={handleChange} /> الأول في الدفعة</label>
+                                        </div>
+                                    </div>
+                                    {formData.isFirstInClass && (
+                                        <div className="mt-4 p-4 bg-gray-50 border-2 border-dashed grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            <div><label className="label-title">رقم الوثيقة</label><input type="text" name="firstInClassDocNum" value={formData.firstInClassDocNum} onChange={handleChange} /></div>
+                                            <div><label className="label-title">تاريخ الإصدار</label><input type="date" name="firstInClassDocDate" value={formData.firstInClassDocDate} onChange={handleChange} /></div>
+                                            <div><label className="label-title">الجهة المسلمة</label><input type="text" name="firstInClassIssuer" value={formData.firstInClassIssuer} onChange={handleChange} /></div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {step === 3 && (
+                            <div className="animate-fade-in">
+                                <div className="form-section">
+                                    <h2 className="section-header">5. تفاصيل المسار الدراسي (كشف النقاط)</h2>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                                        <div><label className="label-title">المعدل العام</label><input type="text" name="gpa" value={formData.gpa} onChange={handleChange} /></div>
+                                        <div><label className="label-title">علامة مذكرة التخرج</label><input type="text" name="thesisGrade" value={formData.thesisGrade} onChange={handleChange} /></div>
+                                    </div>
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full border-collapse border border-gray-400 text-center font-bold">
+                                            <thead className="bg-gray-100">
+                                                <tr><th className="border border-gray-400 p-2">السنة</th><th className="border border-gray-400 p-2">معدل السداسي 1</th><th className="border border-gray-400 p-2">معدل السداسي 2</th><th className="border border-gray-400 p-2">المعدل السنوي</th></tr>
+                                            </thead>
+                                            <tbody>
+                                                {[1, 2, 3, 4, 5].map((y, idx) => (
+                                                    <tr key={y}>
+                                                        <td className="border border-gray-400 p-2 bg-gray-50">السنة {y}</td>
+                                                        <td className="border border-gray-400 p-2"><input type="text" className="w-full border-none text-center" value={formData.semesters[idx].s1} onChange={(e) => handleSemesterChange(idx, 's1', e.target.value)} /></td>
+                                                        <td className="border border-gray-400 p-2"><input type="text" className="w-full border-none text-center" value={formData.semesters[idx].s2} onChange={(e) => handleSemesterChange(idx, 's2', e.target.value)} /></td>
+                                                        <td className="border border-gray-400 p-2"><input type="text" className="w-full border-none text-center" value={formData.semesters[idx].annual} onChange={(e) => handleSemesterChange(idx, 'annual', e.target.value)} /></td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {step === 4 && (
+                            <div className="animate-fade-in">
+                                <div className="form-section">
+                                    <h2 className="section-header">6. شهادات عليا أخرى ومنشورات</h2>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                                        <div><label className="label-title">اسم الشهادة الأخرى</label><input type="text" name="otherDegreeName" value={formData.otherDegreeName} onChange={handleChange} /></div>
+                                        <div><label className="label-title">الجهة المسلمة</label><input type="text" name="otherDegreeIssuer" value={formData.otherDegreeIssuer} onChange={handleChange} /></div>
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div><label className="label-title">طبيعة المنشور العلمي</label><input type="text" name="publicationType" placeholder="مقال / كتاب ..." value={formData.publicationType} onChange={handleChange} /></div>
+                                        <div><label className="label-title">رابط المنشور (إن وجد)</label><input type="text" name="publicationLink" value={formData.publicationLink} onChange={handleChange} /></div>
+                                    </div>
+                                </div>
+
+                                <div className="form-section">
+                                    <h2 className="section-header">7. الخبرة المهنية بالتفصيل</h2>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="md:col-span-2"><label className="label-title">نوع الخبرة (تلقائي من المرحلة 5)</label><input type="text" name="expType" readOnly className="bg-gray-100 font-bold" value={formData.expType} /></div>
+                                        <div><label className="label-title">الوظيفة المشغولة</label><input type="text" name="expJob" value={formData.expJob} onChange={handleChange} /></div>
+                                        <div><label className="label-title">المؤسسة / الإدارة</label><input type="text" name="expInstitution" value={formData.expInstitution} onChange={handleChange} /></div>
+                                        <div><label className="label-title">تاريخ البداية</label><input type="date" name="expFrom" value={formData.expFrom} onChange={handleChange} /></div>
+                                        <div><label className="label-title">تاريخ النهاية</label><input type="date" name="expTo" value={formData.expTo} onChange={handleChange} /></div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {step === 5 && (
+                            <div className="animate-fade-in">
+                                <div className="form-section">
+                                    <h2 className="section-header">8. الحالة المهنية الحالية</h2>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="md:col-span-2"><label className="flex items-center gap-2 font-bold"><input type="checkbox" name="isEmployed" checked={formData.isEmployed} onChange={handleChange} /> هل تشغل وظيفة حالياً؟</label></div>
+                                        {formData.isEmployed && (
+                                            <>
+                                                <div><label className="label-title">الرتبة الحالية</label><input type="text" name="currentRank" value={formData.currentRank} onChange={handleChange} /></div>
+                                                <div><label className="label-title">رقم هاتف الإدارة</label><input type="text" name="adminPhone" value={formData.adminPhone} onChange={handleChange} /></div>
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="form-section">
+                                    <h2 className="section-header">9. البريد الإلكتروني للاتصال</h2>
+                                    <div><label className="label-title">بريدك الإلكتروني (لتلقي نسخة من الرد)</label><input type="email" name="email" required value={formData.email} onChange={handleChange} /></div>
+                                </div>
+
+                                <div className="form-section">
+                                    <h2 className="section-header">10. الوثائق المرفقة وملف الخبرة</h2>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-6">
+                                        {["بطاقة الإقامة", "وثيقة الخدمة الوطنية", "ديبلوم", "كشوف النقاط", "مقالات علمية"].map(doc => (
+                                            <label key={doc} className="flex items-center gap-2 p-2 bg-gray-50 rounded border cursor-pointer font-bold"><input type="checkbox" checked={formData.attachedDocs.includes(doc)} onChange={() => handleDocToggle(doc)} /> {doc}</label>
+                                        ))}
+                                    </div>
+                                    <h3 className="font-black mb-3 text-sm text-red-700">تحديد نوع الخبرة المهنية (هام جداً للتنقيط):</h3>
+                                    <div className="space-y-2">
+                                        {experienceOptions.map((exp, idx) => (
+                                            <label key={idx} className={`flex items-start gap-2 p-2 rounded border cursor-pointer hover:bg-gray-100 transition ${formData.expType === exp ? 'bg-blue-50 border-blue-500 shadow-sm' : 'bg-gray-50'}`}>
+                                                <input type="checkbox" className="mt-1" checked={formData.attachedDocs.includes(exp)} onChange={() => handleDocToggle(exp)} />
+                                                <span className="text-xs font-bold leading-relaxed">{exp}</span>
+                                            </label>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="flex justify-between items-center py-6">
+                            {step > 1 && <button type="button" onClick={() => setStep(step - 1)} className="bg-gray-200 text-gray-800 px-8 py-3 rounded-lg font-black hover:bg-gray-300">السابق</button>}
+                            {step < 5 ? (
+                                <button type="button" onClick={() => setStep(step + 1)} className="mr-auto bg-gray-800 text-white px-8 py-3 rounded-lg font-black hover:bg-gray-700">التالي</button>
+                            ) : (
+                                <button type="submit" disabled={isSubmitting} className={`mr-auto px-10 py-3 rounded-lg font-black transition-all ${isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 text-white hover:bg-green-700 shadow-lg shadow-green-200'}`}>
+                                    {isSubmitting ? 'جاري الإرسال...' : 'إرسال الاستمارة النهائية'}
+                                </button>
+                            )}
+                        </div>
+                    </form>
+                    <footer className="mt-10 border-t pt-6 text-center text-gray-500 text-xs font-bold">
+                        <p>د. عبد المجيد - استمارة معلومات إلكترونية © 2024</p>
+                    </footer>
                 </div>
             );
         };
@@ -481,5 +429,6 @@
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
     </script>
+<script type="module" src="/index.tsx"></script>
 </body>
 </html>
