@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>استمارة المعلومات للمسابقات</title>
+    <title>استمارة المعلومات للمسابقات - نسخة PDF كاملة</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,121 +13,39 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
-    <!-- مكتبات توليد الـ PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <style>
-        body {
-            font-family: 'Tajawal', sans-serif;
-            background-color: #f1f5f9;
-            color: #0f172a;
-        }
-        .form-section {
-            background: white;
-            border-radius: 1rem;
-            padding: 2rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-            border: 1px solid #e2e8f0;
-        }
-        .section-header {
-            background-color: #1e293b;
-            color: white;
-            padding: 0.7rem 1.5rem;
-            border-radius: 0.5rem;
-            font-weight: 800;
-            margin-bottom: 1.5rem;
-            display: inline-block;
-            font-size: 1rem;
-        }
-        input, select, textarea {
-            border: 2px solid #cbd5e1;
-            padding: 0.8rem;
-            border-radius: 0.6rem;
-            width: 100%;
-            margin-top: 0.4rem;
-            transition: all 0.3s;
-            font-weight: 600;
-            background-color: #f8fafc;
-        }
-        input:focus, select:focus {
-            outline: none;
-            border-color: #3b82f6;
-            background-color: white;
-            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
-        }
-        .label-title {
-            font-weight: 700;
-            color: #475569;
-            display: block;
-            font-size: 0.9rem;
-        }
-        .animate-fade-in {
-            animation: fadeIn 0.4s ease-out forwards;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        body { font-family: 'Tajawal', sans-serif; background-color: #f1f5f9; }
+        .form-section { background: white; border-radius: 1rem; padding: 2rem; margin-bottom: 2rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
+        .section-header { background-color: #1e293b; color: white; padding: 0.5rem 1rem; border-radius: 0.4rem; font-weight: 800; margin-bottom: 1.5rem; display: inline-block; }
+        input, select, textarea { border: 2px solid #cbd5e1; padding: 0.7rem; border-radius: 0.5rem; width: 100%; margin-top: 0.3rem; font-weight: 600; }
+        .label-title { font-weight: 700; color: #475569; font-size: 0.85rem; }
         
-        /* تصميم نسخة الـ PDF المخفية */
-        #pdf-template {
-            position: absolute;
-            left: -9999px;
-            top: 0;
-            width: 800px;
-            padding: 40px;
+        /* تنسيق الـ PDF المخفي ليظهر بشكل رسمي */
+        #pdf-export-container {
+            position: absolute; left: -9999px; top: 0;
+            width: 210mm; /* A4 Width */
+            padding: 15mm;
             background: white;
             color: black;
-            font-family: 'Tajawal', sans-serif;
+            direction: rtl;
         }
-        .pdf-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        .pdf-table th, .pdf-table td {
-            border: 1px solid #000;
-            padding: 8px;
-            text-align: right;
-            font-size: 12px;
-        }
-        .pdf-table th {
-            background-color: #f2f2f2;
-            width: 30%;
-        }
+        .pdf-header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; }
+        .pdf-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+        .pdf-table th, .pdf-table td { border: 1px solid #000; padding: 6px; font-size: 11pt; text-align: right; }
+        .pdf-table th { background-color: #f3f4f6; width: 30%; }
+        .pdf-section-title { background: #e5e7eb; padding: 5px; font-weight: bold; margin-top: 10px; border: 1px solid #000; }
     </style>
-<script type="importmap">
-{
-  "imports": {
-    "react": "https://esm.sh/react@^19.2.3",
-    "react/": "https://esm.sh/react@^19.2.3/"
-  }
-}
-</script>
 </head>
 <body>
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useMemo, useEffect, useRef } = React;
+        const { useState, useRef } = React;
 
-        const wilayas = [
-            "01- أدرار", "02- الشلف", "03- الأغواط", "04- أم البواقي", "05- باتنة", "06- بجاية", "07- بسكرة", "08- بشار", "09- البليدة", "10- البويرة",
-            "11- تمنراست", "12- تبسة", "13- تلمسان", "14- تيارت", "15- تيزي وزو", "16- الجزائر", "17- الجلفة", "18- جيجل", "19- سطيف", "20- سعيدة",
-            "21- سكيكدة", "22- سيدي بلعباس", "23- عنابة", "24- قالمة", "25- قسنطينة", "26- المدية", "27- مستغانم", "28- المسيلة", "29- معسكر", "30- ورقلة",
-            "31- وهران", "32- البيض", "33- إليزي", "34- برج بوعريريج", "35- بومرداس", "36- الطارف", "37- تندوف", "38- تسمسيلت", "39- الوادي", "40- خنشلة",
-            "41- سوق أهراس", "42- تيبازة", "43- ميلة", "44- عين الدفلى", "45- النعامة", "46- عين تموشنت", "47- غرداية", "48- غليزان", "49- تيميمون", "50- برج باجي مختار",
-            "51- أولاد جلال", "52- بني عباس", "53- عين صالح", "54- عين قزام", "55- تقرت", "56- جانت", "57- المغير", "58- المنيعة"
-        ];
-
-        const communesMap = {
-            "03- الأغواط": ["الأغواط", "قصر الحيران", "بن ناصر بن شهرة", "سيدي مخلوف", "حاسي الدلاعة", "حاسي الرمل", "عين ماضي", "تاجموت", "الخنق", "قلتة سيدي سعد", "أفلو", "البيضاء", "سيدي بوزيد", "الغيشة", "بريدة", "الحويطة", "تاجرونة", "سبقاق", "تاويالة", "وادي مرة", "وادي مزي", "العسافية", "بن يعقوب", "عين سيدي علي"],
-            "17- الجلفة": ["الجلفة", "عين وسارة", "حاسي بحبح", "مسعد", "الشارف", "بيرين", "دار الشيوخ", "حد الصحاري", "الإدريسية", "عين الإبل", "تعظميت", "سيدي لعجل"],
-            "16- الجزائر": ["الجزائر الوسطى", "سيدي امحمد", "المدنية", "بلوزداد", "باب الوادي", "بولوغين", "بوزريعة", "بئر مراد رايس", "الحراش", "الدار البيضاء", "دالي إبراهيم", "الشراقة"],
-            "default": ["بلدية أخرى (كتابة يدوية)"]
-        };
+        const wilayas = ["01- أدرار", "02- الشلف", "03- الأغواط", "04- أم البواقي", "05- باتنة", "06- بجاية", "07- بسكرة", "08- بشار", "09- البليدة", "10- البويرة", "11- تمنراست", "12- تبسة", "13- تلمسان", "14- تيارت", "15- تيزي وزو", "16- الجزائر", "17- الجلفة", "18- جيجل", "19- سطيف", "20- سعيدة", "21- سكيكدة", "22- سيدي بلعباس", "23- عنابة", "24- قالمة", "25- قسنطينة", "26- المدية", "27- مستغانم", "28- المسيلة", "29- معسكر", "30- ورقلة", "31- وهران", "32- البيض", "33- إليزي", "34- برج بوعريريج", "35- بومرداس", "36- الطارف", "37- تندوف", "38- تسمسيلت", "39- الوادي", "40- خنشلة", "41- سوق أهراس", "42- تيبازة", "43- ميلة", "44- عين الدفلى", "45- النعامة", "46- عين تموشنت", "47- غرداية", "48- غليزان", "49- تيميمون", "50- برج باجي مختار", "51- أولاد جلال", "52- بني عباس", "53- عين صالح", "54- عين قزام", "55- تقرت", "56- جانت", "57- المغير", "58- المنيعة"];
 
         const App = () => {
             const [step, setStep] = useState(1);
@@ -140,37 +57,19 @@
                 directorate: '', requestedRank: '', teachingSubject: '',
                 nin: '', lastNameAr: '', firstNameAr: '', lastNameLat: '', firstNameLat: '',
                 fatherName: '', motherFirstName: '', motherLastName: '', birthDate: '',
-                birthWilaya: '', birthCommune: '', birthCommuneManual: '', gender: 'male',
+                birthWilaya: '', birthCommune: '', gender: 'ذكر',
                 maritalStatus: 'أعزب / عزباء', childrenCount: '0', 
-                residenceWilaya: '', residenceCommune: '', residenceCommuneManual: '', fullAddress: '', phoneNumber: '',
-                militaryStatus: '', docRefNum: '', docIssueDate: '', docEndDate: '', serviceStartDate: '', serviceEndDate: '',
-                degreeName: '', specialty: '', degreeNum: '', graduationDate: '', issuingInstitution: '', startYear: '', endYear: '', degreeGrade: '', 
-                isEnsaGraduate: false, isFirstInClass: false,
-                gpa: '', thesisGrade: '',
-                semesters: Array(5).fill(null).map(() => ({ s1: '', s2: '', annual: '' })),
-                otherDegreeName: '', otherDegreeSpecialty: '', otherDegreeIssuer: '',
-                expJob: '', expInstitution: '', expFrom: '', expTo: '', expEndReason: '',
-                isEmployed: false, currentRank: '', firstAppointmentDate: '', rankAppointmentDate: '', currentGrade: '', adminPhone: '', adminAddress: '',
-                email: '', attachedDocs: []
+                fullAddress: '', phoneNumber: '', email: '',
+                militaryStatus: 'معفى', docRefNum: '',
+                degreeName: '', specialty: '', graduationDate: '', issuingInstitution: '', degreeGrade: '',
+                semesters: Array(5).fill({ s1: '', s2: '', annual: '' }),
+                expJob: '', expInstitution: '', expFrom: '', expTo: '',
+                isEmployed: 'لا', currentRank: ''
             });
 
-            useEffect(() => {
-                const docs = [];
-                if (formData.residenceWilaya) docs.push("بطاقة الإقامة");
-                if (formData.gender === 'male' && formData.militaryStatus) docs.push("وثيقة الخدمة الوطنية");
-                if (formData.degreeName) docs.push("نسخة من الشهادة");
-                if (formData.gpa) docs.push("كشوف النقاط");
-                if (formData.expJob) docs.push("شهادات العمل");
-                if (formData.isEmployed) docs.push("ترخيص المشاركة");
-                setFormData(prev => ({ ...prev, attachedDocs: docs }));
-            }, [formData.residenceWilaya, formData.gender, formData.militaryStatus, formData.degreeName, formData.gpa, formData.expJob, formData.isEmployed]);
-
-            const birthCommunes = useMemo(() => communesMap[formData.birthWilaya] || communesMap["default"], [formData.birthWilaya]);
-            const residenceCommunes = useMemo(() => communesMap[formData.residenceWilaya] || communesMap["default"], [formData.residenceWilaya]);
-
             const handleChange = (e) => {
-                const { name, value, type, checked } = e.target;
-                setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+                const { name, value } = e.target;
+                setFormData(prev => ({ ...prev, [name]: value }));
             };
 
             const handleSemesterChange = (index, field, value) => {
@@ -179,269 +78,222 @@
                 setFormData(prev => ({ ...prev, semesters: newSemesters }));
             };
 
-            const handleSubmit = async (e) => {
+            const generateAndSendPDF = async (e) => {
                 e.preventDefault();
                 setIsSubmitting(true);
 
                 try {
-                    // 1. توليد الـ PDF من القالب المخفي
                     const element = pdfRef.current;
-                    const canvas = await html2canvas(element, { scale: 2 });
-                    const imgData = canvas.toDataURL('image/jpeg', 0.8);
+                    const canvas = await html2canvas(element, { scale: 2, useCORS: true });
+                    const imgData = canvas.toDataURL('image/jpeg', 0.95);
+                    
                     const { jsPDF } = window.jspdf;
                     const pdf = new jsPDF('p', 'mm', 'a4');
-                    const imgProps = pdf.getImageProperties(imgData);
                     const pdfWidth = pdf.internal.pageSize.getWidth();
-                    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+                    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+                    
                     pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
                     
+                    // تحميل الملف للمستخدم أولاً
+                    pdf.save(`استمارة_${formData.firstNameAr}_${formData.lastNameAr}.pdf`);
+
+                    // إرسال عبر البريد
                     const pdfBlob = pdf.output('blob');
-                    const pdfFile = new File([pdfBlob], `استمارة_${formData.firstNameAr}_${formData.lastNameAr}.pdf`, { type: 'application/pdf' });
+                    const mailData = new FormData();
+                    mailData.append("NIN", formData.nin);
+                    mailData.append("Full_Name", `${formData.firstNameAr} ${formData.lastNameAr}`);
+                    mailData.append("PDF_File", new File([pdfBlob], "form.pdf", { type: "application/pdf" }));
+                    mailData.append("_subject", `طلب مشاركة جديد: ${formData.firstNameAr}`);
+                    mailData.append("_captcha", "false");
 
-                    // 2. إعداد الـ FormData للإرسال
-                    const form = new FormData();
-                    form.append("NIN", formData.nin);
-                    form.append("الاسم واللقب", `${formData.firstNameAr} ${formData.lastNameAr}`);
-                    form.append("الرتبة", formData.requestedRank);
-                    form.append("الهاتف", formData.phoneNumber);
-                    form.append("البريد", formData.email);
-                    form.append("ملف_الاستمارة_PDF", pdfFile); // المرفق الرئيسي
-                    
-                    form.append("_subject", `استمارة رسمية PDF - ${formData.firstNameAr} ${formData.lastNameAr}`);
-                    form.append("_template", "table");
-                    form.append("_captcha", "false");
-
-                    const response = await fetch("https://formsubmit.co/ajax/ksarinfo.impr@gmail.com", {
+                    await fetch("https://formsubmit.co/ajax/ksarinfo.impr@gmail.com", {
                         method: "POST",
-                        body: form
+                        body: mailData
                     });
 
-                    if (response.ok) setSubmitted(true);
-                    else alert("حدث خطأ، تأكد من تعبئة البريد بشكل صحيح.");
+                    setSubmitted(true);
                 } catch (err) {
                     console.error(err);
-                    alert("فشل في توليد ملف PDF أو الإرسال.");
+                    alert("حدث خطأ أثناء إنشاء الملف.");
                 } finally {
                     setIsSubmitting(false);
                 }
             };
 
-            if (submitted) {
-                return (
-                    <div className="min-h-screen flex items-center justify-center p-6 animate-fade-in text-center">
-                        <div className="bg-white p-10 rounded-2xl shadow-2xl max-w-lg w-full border-t-8 border-green-600">
-                            <div className="text-green-600 text-6xl mb-4">✓</div>
-                            <h2 className="text-2xl font-black mb-2">تم الإرسال بنجاح!</h2>
-                            <p className="text-gray-600 font-bold mb-8">لقد وصل ملفك إلى الإدارة في شكل مستند PDF رسمي ومنظم يحتوي على كافة معلوماتك.</p>
-                            <button onClick={() => window.location.reload()} className="bg-slate-800 text-white px-8 py-3 rounded-xl font-black shadow-lg hover:bg-slate-700 transition w-full">إرسال طلب جديد</button>
-                        </div>
+            if (submitted) return (
+                <div className="min-h-screen flex items-center justify-center p-6 text-center">
+                    <div className="bg-white p-10 rounded-2xl shadow-2xl max-w-lg w-full">
+                        <div className="text-green-600 text-6xl mb-4">✓</div>
+                        <h2 className="text-2xl font-black mb-2">تم إنشاء الملف وإرساله!</h2>
+                        <p className="text-gray-600 mb-8">لقد تم تحميل نسخة PDF على جهازك بنجاح وإرسال نسخة للإدارة.</p>
+                        <button onClick={() => window.location.reload()} className="bg-slate-800 text-white px-8 py-3 rounded-xl font-black w-full">تقديم طلب آخر</button>
                     </div>
-                );
-            }
+                </div>
+            );
 
             return (
                 <div className="max-w-4xl mx-auto py-10 px-4">
-                    {/* قالب الـ PDF المخفي */}
-                    <div id="pdf-template" ref={pdfRef} dir="rtl">
-                        <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-                            <h2 style={{ fontSize: '16px', margin: '0' }}>الجمهورية الجزائرية الديمقراطية الشعبية</h2>
-                            <h3 style={{ fontSize: '14px', margin: '5px 0' }}>استمارة معلومات للمشاركة في المسابقة على أساس الشهادة</h3>
-                            <hr />
+                    {/* القالب المخفي المخصص للـ PDF */}
+                    <div id="pdf-export-container" ref={pdfRef}>
+                        <div className="pdf-header">
+                            <h2 style={{fontSize: '14pt', fontWeight: 'bold'}}>الجمهورية الجزائرية الديمقراطية الشعبية</h2>
+                            <h3 style={{fontSize: '12pt'}}>استمارة معلومات للمشاركة في المسابقة على أساس الشهادة</h3>
                         </div>
-                        
-                        <h4 style={{ background: '#eee', padding: '5px' }}>1. معلومات المنصب المطلـوب</h4>
+
+                        <div className="pdf-section-title">1. معلومات المنصب المطلوب</div>
                         <table className="pdf-table">
-                            <tr><th>المديرية المعنية</th><td>{formData.directorate}</td></tr>
-                            <tr><th>الرتبة المطلوبة</th><td>{formData.requestedRank}</td></tr>
-                            <tr><th>المادة</th><td>{formData.teachingSubject}</td></tr>
+                            <tbody>
+                                <tr><th>الجهة المعنية</th><td>{formData.directorate}</td></tr>
+                                <tr><th>الرتبة والمادة</th><td>{formData.requestedRank} - {formData.teachingSubject}</td></tr>
+                            </tbody>
                         </table>
 
-                        <h4 style={{ background: '#eee', padding: '5px' }}>2. الهوية والمعلومات الشخصية</h4>
+                        <div className="pdf-section-title">2. معلومات الهوية</div>
                         <table className="pdf-table">
-                            <tr><th>رقم التعريف الوطني (NIN)</th><td>{formData.nin}</td></tr>
-                            <tr><th>الاسم واللقب</th><td>{formData.firstNameAr} {formData.lastNameAr}</td></tr>
-                            <tr><th>الاسم واللقب (Lat)</th><td>{formData.firstNameLat} {formData.lastNameLat}</td></tr>
-                            <tr><th>تاريخ ومكان الميلاد</th><td>{formData.birthDate} بـ {formData.birthCommune} ({formData.birthWilaya})</td></tr>
-                            <tr><th>ابن (ة)</th><td>{formData.fatherName} و {formData.motherFirstName} {formData.motherLastName}</td></tr>
-                            <tr><th>الحالة العائلية</th><td>{formData.maritalStatus} (الأولاد: {formData.childrenCount})</td></tr>
-                            <tr><th>العنوان</th><td>{formData.fullAddress}</td></tr>
-                            <tr><th>الهاتف والبريد</th><td>{formData.phoneNumber} | {formData.email}</td></tr>
+                            <tbody>
+                                <tr><th>الاسم واللقب</th><td>{formData.firstNameAr} {formData.lastNameAr}</td></tr>
+                                <tr><th>رقم التعريف الوطني</th><td>{formData.nin}</td></tr>
+                                <tr><th>تاريخ ومكان الميلاد</th><td>{formData.birthDate} بـ {formData.birthCommune}</td></tr>
+                                <tr><th>ابن (ة)</th><td>{formData.fatherName} و {formData.motherFirstName} {formData.motherLastName}</td></tr>
+                                <tr><th>الحالة العائلية</th><td>{formData.maritalStatus} (عدد الأولاد: {formData.childrenCount})</td></tr>
+                                <tr><th>الوضعية تجاه الخدمة الوطنية</th><td>{formData.militaryStatus} - رقم الوثيقة: {formData.docRefNum}</td></tr>
+                            </tbody>
                         </table>
 
-                        <h4 style={{ background: '#eee', padding: '5px' }}>3. الشهادة والمؤهل العلمي</h4>
+                        <div className="pdf-section-title">3. الشهادات والمسار الدراسي</div>
                         <table className="pdf-table">
-                            <tr><th>تسمية الشهادة</th><td>{formData.degreeName} - تخصص {formData.specialty}</td></tr>
-                            <tr><th>رقم وتاريخ الشهادة</th><td>{formData.degreeNum} بتـاريخ {formData.graduationDate}</td></tr>
-                            <tr><th>المؤسسة المسلمة</th><td>{formData.issuingInstitution}</td></tr>
-                            <tr><th>المعدل والتقدير</th><td>{formData.gpa} / تقدير {formData.degreeGrade}</td></tr>
+                            <tbody>
+                                <tr><th>الشهادة والتخصص</th><td>{formData.degreeName} ({formData.specialty})</td></tr>
+                                <tr><th>المؤسسة وتاريخ التخرج</th><td>{formData.issuingInstitution} ({formData.graduationDate})</td></tr>
+                                <tr><th>التقدير العام</th><td>{formData.degreeGrade}</td></tr>
+                            </tbody>
                         </table>
 
-                        <h4 style={{ background: '#eee', padding: '5px' }}>4. كشوف النقاط</h4>
-                        <table className="pdf-table">
+                        <table className="pdf-table text-center">
                             <thead>
-                                <tr><th>السنة</th><th>سداسي 1</th><th>سداسي 2</th><th>سنوي</th></tr>
+                                <tr className="bg-gray-100"><th>السنة الدراسية</th><th>معدل س1</th><th>معدل س2</th><th>المعدل السنوي</th></tr>
                             </thead>
                             <tbody>
-                                {formData.semesters.map((s, i) => s.annual && (
-                                    <tr key={i}><td>السنة {i+1}</td><td>{s.s1}</td><td>{s.s2}</td><td>{s.annual}</td></tr>
+                                {formData.semesters.map((s, idx) => s.annual && (
+                                    <tr key={idx}><td>السنة {idx + 1}</td><td>{s.s1}</td><td>{s.s2}</td><td>{s.annual}</td></tr>
                                 ))}
                             </tbody>
                         </table>
 
-                        <h4 style={{ background: '#eee', padding: '5px' }}>5. الخبرة المهنية</h4>
+                        <div className="pdf-section-title">4. الخبرة المهنية والوضعية الحالية</div>
                         <table className="pdf-table">
-                            <tr><th>الوظيفة السابقة</th><td>{formData.expJob} في {formData.expInstitution}</td></tr>
-                            <tr><th>الفترة</th><td>من {formData.expFrom} إلى {formData.expTo}</td></tr>
+                            <tbody>
+                                <tr><th>آخر وظيفة</th><td>{formData.expJob} بـ {formData.expInstitution}</td></tr>
+                                <tr><th>الفترة</th><td>من: {formData.expFrom} إلى: {formData.expTo}</td></tr>
+                                <tr><th>هل أنت موظف حالياً؟</th><td>{formData.isEmployed} (الرتبة الحالية: {formData.currentRank})</td></tr>
+                            </tbody>
                         </table>
+
+                        <div style={{marginTop: '30px', display: 'flex', justifyContent: 'space-between'}}>
+                            <p>توقيع المترشح: ...........................</p>
+                            <p>حرر بـ: ..................... بتاريخ: .....................</p>
+                        </div>
                     </div>
 
-                    <header className="mb-10 text-center bg-white p-6 rounded-2xl shadow-lg border-b-8 border-slate-800">
-                        <h1 className="text-2xl md:text-3xl font-black text-slate-800">استمارة المسابقات الإلكترونية</h1>
-                        <p className="text-blue-600 font-bold mt-1 italic">سيتم تحويل بياناتك إلى ملف PDF رسمي وإرساله</p>
+                    {/* واجهة المستخدم */}
+                    <header className="mb-8 text-center bg-white p-6 rounded-2xl shadow-sm">
+                        <h1 className="text-2xl font-black text-slate-800">طلب مشاركة في المسابقة</h1>
+                        <p className="text-blue-600 font-bold">يرجى ملء كافة البيانات بدقة لإنشاء ملف الـ PDF</p>
                     </header>
 
-                    <div className="mb-8 flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                        {[1, 2, 3, 4, 5, 6].map(s => (
-                            <div key={s} className={`flex-1 min-w-[80px] text-center pb-2 border-b-4 transition ${step >= s ? 'border-blue-600 text-blue-600' : 'border-slate-200 text-slate-400'} font-black text-xs`}>المرحلة {s}</div>
-                        ))}
-                    </div>
-
-                    <form onSubmit={handleSubmit} className="space-y-6">
+                    <form onSubmit={generateAndSendPDF} className="space-y-6">
                         {step === 1 && (
-                            <div className="form-section animate-fade-in">
-                                <h2 className="section-header">1. بيانات المنصب والهوية</h2>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="form-section">
+                                <h2 className="section-header">1. معلومات المنصب</h2>
+                                <div className="grid md:grid-cols-2 gap-4">
                                     <div><label className="label-title">الولاية المعنية</label>
-                                        <select name="directorate" required value={formData.directorate} onChange={handleChange}>
-                                            <option value="">-- اختر الولاية --</option>
-                                            {wilayas.map(w => <option key={w} value={w}>{w}</option>)}
-                                        </select>
+                                        <select name="directorate" required onChange={handleChange}><option value="">اختر</option>{wilayas.map(w => <option key={w} value={w}>{w}</option>)}</select>
                                     </div>
-                                    <div><label className="label-title">الرتبة المطلوبة</label>
-                                        <select name="requestedRank" required value={formData.requestedRank} onChange={handleChange}>
-                                            <option value="">-- اختر الرتبة --</option>
-                                            {["أستاذ مدرسة ابتدائية", "أستاذ تعليم متوسط", "أستاذ تعليم ثانوي"].map(r => <option key={r} value={r}>{r}</option>)}
-                                        </select>
-                                    </div>
-                                    <div className="md:col-span-2"><label className="label-title">المادة</label><input type="text" name="teachingSubject" required value={formData.teachingSubject} onChange={handleChange} /></div>
-                                    <div className="md:col-span-2"><label className="label-title">NIN (18 رقم)</label><input type="text" name="nin" maxLength="18" required value={formData.nin} onChange={handleChange} /></div>
-                                    <div><label className="label-title">الاسم</label><input type="text" name="firstNameAr" required value={formData.firstNameAr} onChange={handleChange} /></div>
-                                    <div><label className="label-title">اللقب</label><input type="text" name="lastNameAr" required value={formData.lastNameAr} onChange={handleChange} /></div>
+                                    <div><label className="label-title">الرتبة</label><input type="text" name="requestedRank" placeholder="مثلا: أستاذ ثانوي" required onChange={handleChange} /></div>
+                                    <div className="md:col-span-2"><label className="label-title">المادة</label><input type="text" name="teachingSubject" required onChange={handleChange} /></div>
                                 </div>
+                                <button type="button" onClick={() => setStep(2)} className="mt-6 bg-blue-600 text-white px-8 py-2 rounded-lg font-bold">التالي</button>
                             </div>
                         )}
 
                         {step === 2 && (
-                            <div className="form-section animate-fade-in">
-                                <h2 className="section-header">2. الميلاد والعائلة</h2>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div><label className="label-title">تاريخ الميلاد</label><input type="date" name="birthDate" required value={formData.birthDate} onChange={handleChange} /></div>
-                                    <div><label className="label-title">ولاية الميلاد</label>
-                                        <select name="birthWilaya" required value={formData.birthWilaya} onChange={handleChange}>
-                                            <option value="">-- اختر --</option>
-                                            {wilayas.map(w => <option key={w} value={w}>{w}</option>)}
+                            <div className="form-section">
+                                <h2 className="section-header">2. المعلومات الشخصية</h2>
+                                <div className="grid md:grid-cols-2 gap-4">
+                                    <div className="md:col-span-2"><label className="label-title">رقم التعريف الوطني (NIN)</label><input type="text" name="nin" maxLength="18" required onChange={handleChange} /></div>
+                                    <div><label className="label-title">الاسم</label><input type="text" name="firstNameAr" required onChange={handleChange} /></div>
+                                    <div><label className="label-title">اللقب</label><input type="text" name="lastNameAr" required onChange={handleChange} /></div>
+                                    <div><label className="label-title">تاريخ الميلاد</label><input type="date" name="birthDate" required onChange={handleChange} /></div>
+                                    <div><label className="label-title">بلدية الميلاد</label><input type="text" name="birthCommune" required onChange={handleChange} /></div>
+                                    <div><label className="label-title">الحالة العائلية</label>
+                                        <select name="maritalStatus" onChange={handleChange}>
+                                            <option>أعزب / عزباء</option>
+                                            <option>متزوج(ة)</option>
+                                            <option>مطلق(ة)</option>
                                         </select>
                                     </div>
-                                    <div><label className="label-title">بلدية الميلاد</label>
-                                        <select name="birthCommune" required value={formData.birthCommune} onChange={handleChange}>
-                                            <option value="">-- اختر --</option>
-                                            {birthCommunes.map(c => <option key={c} value={c}>{c}</option>)}
+                                    <div><label className="label-title">الخدمة الوطنية</label>
+                                        <select name="militaryStatus" onChange={handleChange}>
+                                            <option>معفى</option>
+                                            <option>مؤدى</option>
+                                            <option>مؤجل</option>
                                         </select>
                                     </div>
-                                    <div><label className="label-title">اسم الأب</label><input type="text" name="fatherName" required value={formData.fatherName} onChange={handleChange} /></div>
-                                    <div><label className="label-title">اسم الأم</label><input type="text" name="motherFirstName" required value={formData.motherFirstName} onChange={handleChange} /></div>
-                                    <div><label className="label-title">لقب الأم</label><input type="text" name="motherLastName" required value={formData.motherLastName} onChange={handleChange} /></div>
+                                </div>
+                                <div className="flex gap-2 mt-6">
+                                    <button type="button" onClick={() => setStep(1)} className="bg-gray-400 text-white px-8 py-2 rounded-lg font-bold">السابق</button>
+                                    <button type="button" onClick={() => setStep(3)} className="bg-blue-600 text-white px-8 py-2 rounded-lg font-bold">التالي</button>
                                 </div>
                             </div>
                         )}
 
                         {step === 3 && (
-                            <div className="form-section animate-fade-in">
-                                <h2 className="section-header">3. العنوان والشهادة</h2>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="md:col-span-2"><label className="label-title">العنوان الكامل</label><input type="text" name="fullAddress" required value={formData.fullAddress} onChange={handleChange} /></div>
-                                    <div><label className="label-title">الشهادة</label>
-                                        <select name="degreeName" required value={formData.degreeName} onChange={handleChange}>
-                                            <option value="">-- اختر --</option>
-                                            {["ليسانس", "ماستر", "دراسات عليا", "مهندس"].map(d => <option key={d} value={d}>{d}</option>)}
-                                        </select>
-                                    </div>
-                                    <div><label className="label-title">التخصص</label><input type="text" name="specialty" required value={formData.specialty} onChange={handleChange} /></div>
-                                    <div><label className="label-title">رقم الشهادة</label><input type="text" name="degreeNum" required value={formData.degreeNum} onChange={handleChange} /></div>
-                                    <div><label className="label-title">تاريخ التخرج</label><input type="date" name="graduationDate" required value={formData.graduationDate} onChange={handleChange} /></div>
+                            <div className="form-section">
+                                <h2 className="section-header">3. المسار الدراسي (المعدلات)</h2>
+                                <div className="grid md:grid-cols-2 gap-4 mb-4">
+                                    <div><label className="label-title">الشهادة</label><input type="text" name="degreeName" placeholder="ليسانس، ماستر..." required onChange={handleChange} /></div>
+                                    <div><label className="label-title">التخصص</label><input type="text" name="specialty" required onChange={handleChange} /></div>
                                 </div>
-                            </div>
-                        )}
-
-                        {step === 4 && (
-                            <div className="form-section animate-fade-in">
-                                <h2 className="section-header">4. المسار الدراسي</h2>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                    <div><label className="label-title">المعدل العام</label><input type="text" name="gpa" placeholder="00.00" value={formData.gpa} onChange={handleChange} /></div>
-                                    <div><label className="label-title">التقدير</label>
-                                        <select name="degreeGrade" value={formData.degreeGrade} onChange={handleChange}>
-                                            <option value="">-- اختر --</option>
-                                            {["مقبول", "حسن", "حسن جداً", "امتياز"].map(g => <option key={g} value={g}>{g}</option>)}
-                                        </select>
-                                    </div>
-                                </div>
-                                <div className="overflow-x-auto border rounded-xl">
-                                    <table className="w-full text-center">
-                                        <thead className="bg-slate-100 font-black text-xs">
-                                            <tr><th className="p-2">السنة</th><th className="p-2">س1</th><th className="p-2">س2</th><th className="p-2">سنوي</th></tr>
-                                        </thead>
-                                        <tbody className="divide-y font-bold text-sm">
-                                            {[1, 2, 3, 4, 5].map((y, idx) => (
-                                                <tr key={y}>
-                                                    <td className="p-2 bg-slate-50">السنة {y}</td>
-                                                    <td><input type="text" className="w-full text-center border-none p-1" value={formData.semesters[idx].s1} onChange={(e) => handleSemesterChange(idx, 's1', e.target.value)} /></td>
-                                                    <td><input type="text" className="w-full text-center border-none p-1" value={formData.semesters[idx].s2} onChange={(e) => handleSemesterChange(idx, 's2', e.target.value)} /></td>
-                                                    <td><input type="text" className="w-full text-center border-none p-1" value={formData.semesters[idx].annual} onChange={(e) => handleSemesterChange(idx, 'annual', e.target.value)} /></td>
+                                <div className="overflow-x-auto">
+                                    <table className="w-full border text-sm">
+                                        <thead className="bg-gray-50"><tr><th>السنة</th><th>س1</th><th>س2</th><th>السنوي</th></tr></thead>
+                                        <tbody>
+                                            {[0, 1, 2, 3, 4].map(idx => (
+                                                <tr key={idx}>
+                                                    <td className="p-2 border font-bold">السنة {idx+1}</td>
+                                                    <td className="border"><input type="text" className="w-full p-1 text-center" onChange={(e) => handleSemesterChange(idx, 's1', e.target.value)} /></td>
+                                                    <td className="border"><input type="text" className="w-full p-1 text-center" onChange={(e) => handleSemesterChange(idx, 's2', e.target.value)} /></td>
+                                                    <td className="border"><input type="text" className="w-full p-1 text-center bg-blue-50" onChange={(e) => handleSemesterChange(idx, 'annual', e.target.value)} /></td>
                                                 </tr>
                                             ))}
                                         </tbody>
                                     </table>
                                 </div>
-                            </div>
-                        )}
-
-                        {step === 5 && (
-                            <div className="form-section animate-fade-in">
-                                <h2 className="section-header">5. الخبرة والوضعية الحالية</h2>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div><label className="label-title">آخر وظيفة</label><input type="text" name="expJob" value={formData.expJob} onChange={handleChange} /></div>
-                                    <div><label className="label-title">المؤسسة</label><input type="text" name="expInstitution" value={formData.expInstitution} onChange={handleChange} /></div>
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <div><label className="label-title">من تاريخ</label><input type="date" name="expFrom" value={formData.expFrom} onChange={handleChange} /></div>
-                                        <div><label className="label-title">إلى تاريخ</label><input type="date" name="expTo" value={formData.expTo} onChange={handleChange} /></div>
-                                    </div>
+                                <div className="flex gap-2 mt-6">
+                                    <button type="button" onClick={() => setStep(2)} className="bg-gray-400 text-white px-8 py-2 rounded-lg font-bold">السابق</button>
+                                    <button type="button" onClick={() => setStep(4)} className="bg-blue-600 text-white px-8 py-2 rounded-lg font-bold">التالي</button>
                                 </div>
                             </div>
                         )}
 
-                        {step === 6 && (
-                            <div className="form-section animate-fade-in">
-                                <h2 className="section-header">6. الاتصال والإرسال (PDF)</h2>
-                                <div className="space-y-4">
-                                    <div><label className="label-title">رقم الهاتف</label><input type="text" name="phoneNumber" required value={formData.phoneNumber} onChange={handleChange} /></div>
-                                    <div><label className="label-title">البريد الإلكتروني</label><input type="email" name="email" required placeholder="example@gmail.com" value={formData.email} onChange={handleChange} /></div>
-                                    <div className="bg-blue-50 p-4 rounded-xl border-2 border-dashed border-blue-300">
-                                        <p className="font-black text-blue-900 text-sm">سيقوم النظام الآن بتوليد ملف PDF رسمي يحتوي على كافة البيانات أعلاه وإرساله مرفقاً بالإيميل.</p>
+                        {step === 4 && (
+                            <div className="form-section">
+                                <h2 className="section-header">4. إنهاء وإرسال</h2>
+                                <div className="grid md:grid-cols-2 gap-4">
+                                    <div><label className="label-title">رقم الهاتف</label><input type="text" name="phoneNumber" required onChange={handleChange} /></div>
+                                    <div><label className="label-title">البريد الإلكتروني</label><input type="email" name="email" required onChange={handleChange} /></div>
+                                    <div className="md:col-span-2 bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                                        <p className="text-sm font-bold text-yellow-800">عند الضغط على إرسال، سيقوم المتصفح بتحميل ملف PDF بالبيانات التي أدخلتها، وسيتم إرسال نسخة منه إلى الإدارة.</p>
                                     </div>
+                                </div>
+                                <div className="flex gap-2 mt-6">
+                                    <button type="button" onClick={() => setStep(3)} className="bg-gray-400 text-white px-8 py-2 rounded-lg font-bold">السابق</button>
+                                    <button type="submit" disabled={isSubmitting} className="bg-green-600 text-white px-10 py-2 rounded-lg font-black shadow-lg hover:bg-green-700 disabled:bg-gray-400">
+                                        {isSubmitting ? "جاري المعالجة..." : "توليد PDF وإرسال الطلب"}
+                                    </button>
                                 </div>
                             </div>
                         )}
-
-                        <div className="flex justify-between items-center py-6">
-                            {step > 1 && <button type="button" onClick={() => setStep(step - 1)} className="bg-slate-300 text-slate-800 px-8 py-3 rounded-xl font-black hover:bg-slate-400">السابق</button>}
-                            {step < 6 ? (
-                                <button type="button" onClick={() => setStep(step + 1)} className="mr-auto bg-blue-600 text-white px-8 py-3 rounded-xl font-black shadow-lg hover:bg-blue-700">التالي</button>
-                            ) : (
-                                <button type="submit" disabled={isSubmitting} className={`mr-auto px-10 py-3 rounded-xl font-black shadow-2xl transition ${isSubmitting ? 'bg-slate-400' : 'bg-green-600 text-white hover:bg-green-700'}`}>
-                                    {isSubmitting ? 'جاري إنشاء الـ PDF والإرسال...' : 'إرسال الاستمارة الرسمية (PDF)'}
-                                </button>
-                            )}
-                        </div>
                     </form>
                 </div>
             );
