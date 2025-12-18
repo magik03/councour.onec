@@ -1,207 +1,353 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
-<head>
+  <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>بوابة التوظيف - لوحة التحكم الكاملة</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>نظام إدارة التوظيف الرقمي المتكامل</title>
     
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
+    
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: { sans: ['Tajawal', 'sans-serif'] },
+            colors: {
+              'dz-green': '#009b77',
+              'dz-green-dark': '#007a5e',
+              'admin-blue': '#1e293b',
+            }
+          },
+        },
+      }
+    </script>
     <style>
-        body { font-family: 'Tajawal', sans-serif; background: #f0f4f8; }
-        .admin-nav-btn { @apply bg-white/10 hover:bg-white/20 px-5 py-2 rounded-xl font-bold text-sm transition-all flex items-center gap-2; }
-        .data-table th { @apply p-4 bg-slate-900 text-white text-xs font-black text-right border-l border-slate-700; }
-        .data-table td { @apply p-4 text-sm border-b font-medium text-slate-700; }
-        input, select { @apply w-full p-3 rounded-xl border-2 border-slate-200 focus:border-blue-600 outline-none transition-all font-bold text-lg; }
+      ::-webkit-scrollbar { width: 6px; }
+      ::-webkit-scrollbar-track { background: #f1f1f1; }
+      ::-webkit-scrollbar-thumb { background: #009b77; border-radius: 10px; }
+      .modal-overlay { background: rgba(0,0,0,0.7); backdrop-filter: blur(10px); }
+      
+      /* تحسين مظهر الحقول لضمان وضوح الكتابة */
+      input, select, textarea {
+        background-color: #ffffff !important;
+        color: #000000 !important;
+        font-weight: 500;
+      }
+      input::placeholder {
+        color: #9ca3af !important;
+      }
+      input:focus, select:focus {
+        border-color: #009b77 !important;
+        box-shadow: 0 0 0 3px rgba(0, 155, 119, 0.15);
+      }
+      
+      .detail-grid { 
+        display: grid; 
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); 
+        gap: 2rem; 
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body class="bg-gray-100 font-sans text-right text-gray-900">
     <div id="root"></div>
 
-    <script type="text/babel">
-        const { useState, useEffect } = React;
+    <script type="text/babel" data-presets="typescript,react">
+      const { useState, useEffect } = React;
 
-        const firebaseConfig = {
-          apiKey: "AIzaSyBdlRDPTQqY8lZvD4R7nneXAwPgRbxmm14",
-          authDomain: "councour-59e43.firebaseapp.com",
-          projectId: "councour-59e43",
-          storageBucket: "councour-59e43.firebasestorage.app",
-          messagingSenderId: "492907661374",
-          appId: "1:492907661374:web:31792fc3ab95d0e69ea96f"
+      // --- Icons ---
+      const Icon = ({ children, size = 20, className = "" }) => (
+        <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
+          {children}
+        </svg>
+      );
+      const Briefcase = (p) => <Icon {...p}><rect width="20" height="14" x="2" y="7" rx="2" ry="2" /><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" /></Icon>;
+      const User = (p) => <Icon {...p}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></Icon>;
+      const GraduationCap = (p) => <Icon {...p}><path d="M22 10v6M2 10l10-5 10 5-10 5z" /><path d="M6 12v5c3 3 9 3 12 0v-5" /></Icon>;
+      const FileText = (p) => <Icon {...p}><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" /><polyline points="14 2 14 8 20 8" /></Icon>;
+      const BadgeCheck = (p) => <Icon {...p}><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.78 4.78 4 4 0 0 1-6.74 0 4 4 0 0 1-4.78-4.78 4 4 0 0 1 0-6.74z" /><path d="m9 12 2 2 4-4" /></Icon>;
+      const Save = (p) => <Icon {...p}><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" /><polyline points="17 21 17 13 7 13 7 21" /></Icon>;
+      const Trash = (p) => <Icon {...p}><path d="M3 6h18" /><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" /></Icon>;
+      const Eye = (p) => <Icon {...p}><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></Icon>;
+
+      // --- Reusable UI ---
+      const FormSection = ({ title, children, icon }) => (
+        <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-8 mb-8">
+          <div className="flex items-center gap-4 border-b border-gray-100 pb-5 mb-8">
+            <div className="bg-dz-green p-3 rounded-xl text-white shadow-lg shadow-dz-green/20">{icon}</div>
+            <h2 className="text-2xl font-black text-gray-800">{title}</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">{children}</div>
+        </div>
+      );
+
+      const Field = ({ label, name, value, onChange, type="text", required=false, options=null, disabled=false }) => (
+        <div className="flex flex-col gap-2">
+          <label className="text-md font-bold text-gray-700">{label} {required && <span className="text-red-500">*</span>}</label>
+          {options ? (
+            <select name={name} value={value} onChange={onChange} required={required} disabled={disabled} className="w-full p-3.5 border-2 border-gray-200 rounded-xl outline-none bg-white text-black font-semibold focus:border-dz-green transition-all disabled:bg-gray-100 disabled:text-gray-500">
+              <option value="">-- اختر من القائمة --</option>
+              {options.map(o => <option key={o} value={o}>{o}</option>)}
+            </select>
+          ) : (
+            <input type={type} name={name} value={value} onChange={onChange} required={required} disabled={disabled} className="w-full p-3.5 border-2 border-gray-200 rounded-xl outline-none bg-white text-black font-semibold focus:border-dz-green transition-all disabled:bg-gray-100 disabled:text-gray-500" />
+          )}
+        </div>
+      );
+
+      // --- Main App ---
+      function App() {
+        const [view, setView] = useState('form');
+        const [submissions, setSubmissions] = useState([]);
+        const [selected, setSelected] = useState(null);
+        
+        const initialForm = {
+          targetWilaya: '', rank: '', subject: '',
+          nin: '', lastNameAr: '', firstNameAr: '', lastNameLat: '', firstNameLat: '',
+          fatherName: '', motherFirstName: '', motherLastName: '', gender: 'ذكر',
+          birthDate: '', birthWilaya: '', birthCommune: '', maritalStatus: 'أعزب(ة)', childrenCount: '0', nationality: 'جزائرية', address: '', phone: '',
+          militaryStatus: '', militaryStartDate: '', militaryEndDate: '',
+          degree: '', degreeBranch: '', degreeSpecialty: '', certNo: '', certDate: '', issuer: '', yearsOfStudy: '3',
+          avgGrade: '', memoIncluded: 'لا', memoGrade: '',
+          s1: '', s2: '', s3: '', s4: '', s5: '', s6: '',
+          hasJob: 'لا', currentJob: '', jobStart: '',
+          status: 'قيد الانتظار'
         };
 
-        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-        const auth = firebase.auth();
+        const [formData, setFormData] = useState(initialForm);
 
-        const App = () => {
-            const [view, setView] = useState('user'); // 'user' أو 'admin'
-            const [isLoggedIn, setIsLoggedIn] = useState(false);
+        useEffect(() => {
+          const saved = localStorage.getItem('dz_data_recruitment_v3');
+          if (saved) setSubmissions(JSON.parse(saved));
+        }, []);
 
-            useEffect(() => {
-                auth.onAuthStateChanged(user => setIsLoggedIn(!!user));
-            }, []);
+        const handleChange = (e) => setFormData({...formData, [e.target.name]: e.target.value});
 
-            return (
-                <div className="min-h-screen">
-                    {/* شريط التنقل العلوي - يحتوي على زر الدخول للأدمن */}
-                    <nav className="h-20 bg-blue-900 text-white flex items-center justify-between px-8 sticky top-0 z-50 shadow-xl">
-                        <div className="flex items-center gap-3">
-                            <i className="fa-solid fa-folder-open text-blue-400 text-2xl"></i>
-                            <h1 className="font-black text-xl">نظام تسيير المسابقات</h1>
-                        </div>
-                        
-                        {/* هذا هو زر الدخول إلى نافذة الأدمن */}
-                        <button onClick={() => setView(view === 'user' ? 'admin' : 'user')} className="admin-nav-btn">
-                            <i className={view === 'user' ? "fa-solid fa-lock" : "fa-solid fa-file-pen"}></i>
-                            {view === 'user' ? 'دخول المسؤول' : 'الرجوع للاستمارة'}
-                        </button>
-                    </nav>
+        const handleSubmit = (e) => {
+          e.preventDefault();
+          const newEntry = { ...formData, id: Date.now().toString(), submissionDate: new Date().toLocaleDateString('ar-DZ') };
+          const updated = [newEntry, ...submissions];
+          setSubmissions(updated);
+          localStorage.setItem('dz_data_recruitment_v3', JSON.stringify(updated));
+          alert('تم حفظ كافة معلوماتك بنجاح!');
+          setFormData(initialForm);
+          setView('admin');
+        };
 
-                    {view === 'user' ? <UserView /> : (isLoggedIn ? <AdminDashboard /> : <AdminLogin />)}
+        const updateEntryStatus = (id, newStatus) => {
+          const updated = submissions.map(s => s.id === id ? {...s, status: newStatus} : s);
+          setSubmissions(updated);
+          localStorage.setItem('dz_data_recruitment_v3', JSON.stringify(updated));
+          if (selected && selected.id === id) setSelected({...selected, status: newStatus});
+        };
+
+        const deleteEntry = (id) => {
+          if (confirm('هل أنت متأكد من حذف هذا الملف نهائياً؟')) {
+            const updated = submissions.filter(s => s.id !== id);
+            setSubmissions(updated);
+            localStorage.setItem('dz_data_recruitment_v3', JSON.stringify(updated));
+          }
+        };
+
+        return (
+          <div className="min-h-screen bg-gray-50 flex flex-col">
+            {/* Header Navigation */}
+            <nav className="bg-admin-blue text-white py-5 px-6 sticky top-0 z-50 shadow-xl">
+              <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="bg-dz-green p-2.5 rounded-xl shadow-lg shadow-dz-green/30"><Briefcase size={24} /></div>
+                  <h1 className="text-2xl font-black tracking-tight">بوابة التوظيف الرقمية</h1>
                 </div>
-            );
-        };
+                <div className="flex gap-3">
+                  <button onClick={() => setView('form')} className={`px-6 py-2.5 rounded-xl text-md font-black transition-all ${view === 'form' ? 'bg-dz-green shadow-lg shadow-dz-green/30' : 'bg-gray-700 hover:bg-gray-600'}`}>الاستمارة</button>
+                  <button onClick={() => setView('admin')} className={`px-6 py-2.5 rounded-xl text-md font-black transition-all ${view === 'admin' ? 'bg-dz-green shadow-lg shadow-dz-green/30' : 'bg-gray-700 hover:bg-gray-600'}`}>لوحة المسؤول ({submissions.length})</button>
+                </div>
+              </div>
+            </nav>
 
-        // --- نافذة تسجيل الدخول للمسؤول ---
-        const AdminLogin = () => {
-            const [email, setEmail] = useState('');
-            const [pass, setPass] = useState('');
-            const [err, setErr] = useState('');
+            <main className="p-4 md:p-12 max-w-7xl mx-auto w-full flex-1">
+              {view === 'form' ? (
+                <form onSubmit={handleSubmit} className="animate-in fade-in slide-in-from-bottom-6 duration-700">
+                  <div className="text-center mb-16">
+                    <h2 className="text-4xl font-black text-gray-900 mb-4">استمارة الترشح للمسابقة</h2>
+                    <p className="text-xl text-gray-600 font-medium">يرجى إدخال البيانات بدقة لضمان معالجة طلبكم</p>
+                  </div>
 
-            const handleLogin = async (e) => {
-                e.preventDefault();
-                try {
-                    await auth.signInWithEmailAndPassword(email, pass);
-                } catch (error) {
-                    setErr("خطأ في البيانات، يرجى المحاولة مرة أخرى");
-                }
-            };
+                  <FormSection title="المعلومات الوظيفية" icon={<Briefcase />}>
+                    <Field label="مديرية التربية لولاية" name="targetWilaya" required value={formData.targetWilaya} onChange={handleChange} options={['تيارت', 'الجزائر', 'وهران', 'عنابة', 'قسنطينة']} />
+                    <Field label="الرتبة" name="rank" required value={formData.rank} onChange={handleChange} options={['أستاذ ابتدائي', 'أستاذ متوسط', 'أستاذ ثانوي', 'مشرف تربوي']} />
+                    <Field label="المادة" name="subject" required value={formData.subject} onChange={handleChange} />
+                  </FormSection>
 
-            return (
-                <div className="flex items-center justify-center mt-20 px-4">
-                    <div className="bg-white p-10 rounded-[2.5rem] shadow-2xl border w-full max-w-md">
-                        <div className="text-center mb-8">
-                            <div className="bg-blue-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <i className="fa-solid fa-user-shield text-3xl text-blue-600"></i>
-                            </div>
-                            <h2 className="text-2xl font-black text-slate-800">دخول الإدارة</h2>
-                            <p className="text-slate-500 text-sm mt-2">يرجى إدخال البريد الإلكتروني وكلمة المرور</p>
-                        </div>
-                        
-                        <form onSubmit={handleLogin} className="space-y-5">
-                            <div>
-                                <label className="block text-sm font-bold mb-2 mr-1">البريد الإلكتروني</label>
-                                <input type="email" required onChange={e => setEmail(e.target.value)} placeholder="admin@example.com" />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-bold mb-2 mr-1">كلمة المرور</label>
-                                <input type="password" required onChange={e => setPass(e.target.value)} placeholder="••••••••" />
-                            </div>
-                            {err && <p className="text-red-500 text-center font-bold text-xs">{err}</p>}
-                            <button className="w-full bg-blue-600 text-white py-4 rounded-xl font-black text-lg shadow-lg hover:bg-blue-700 transition-all">
-                                تسجيل الدخول
-                            </button>
-                        </form>
+                  <FormSection title="الحالة المدنية" icon={<User />}>
+                    <Field label="رقم التعريف الوطني (NIN)" name="nin" required value={formData.nin} onChange={handleChange} />
+                    <Field label="اللقب (بالعربية)" name="lastNameAr" required value={formData.lastNameAr} onChange={handleChange} />
+                    <Field label="الاسم (بالعربية)" name="firstNameAr" required value={formData.firstNameAr} onChange={handleChange} />
+                    <Field label="اسم الأب" name="fatherName" required value={formData.fatherName} onChange={handleChange} />
+                    <Field label="اسم الأم" name="motherFirstName" required value={formData.motherFirstName} onChange={handleChange} />
+                    <Field label="لقب الأم" name="motherLastName" required value={formData.motherLastName} onChange={handleChange} />
+                    <Field label="تاريخ الازدياد" name="birthDate" type="date" required value={formData.birthDate} onChange={handleChange} />
+                    <Field label="الجنس" name="gender" required value={formData.gender} onChange={handleChange} options={['ذكر', 'أنثى']} />
+                    <Field label="رقم الهاتف" name="phone" required value={formData.phone} onChange={handleChange} />
+                    <div className="md:col-span-2"><Field label="عنوان الإقامة الكامل" name="address" required value={formData.address} onChange={handleChange} /></div>
+                  </FormSection>
+
+                  <FormSection title="المسار العلمي والمهني" icon={<GraduationCap />}>
+                    <Field label="تسمية الشهادة" name="degree" required value={formData.degree} onChange={handleChange} options={['ليسانس', 'ماستر', 'مهندس دولة', 'دكتوراه']} />
+                    <Field label="التخصص" name="degreeSpecialty" required value={formData.degreeSpecialty} onChange={handleChange} />
+                    <Field label="المعدل العام للشهادة" name="avgGrade" type="number" step="0.01" value={formData.avgGrade} onChange={handleChange} />
+                    <Field label="معدل السنة الأخيرة" name="s6" type="number" step="0.01" value={formData.s6} onChange={handleChange} />
+                    <Field label="هل تملك وظيفة حالياً؟" name="hasJob" value={formData.hasJob} onChange={handleChange} options={['نعم', 'لا']} />
+                    <Field label="الوظيفة الحالية" name="currentJob" value={formData.currentJob} onChange={handleChange} disabled={formData.hasJob==='لا'} />
+                  </FormSection>
+
+                  <div className="flex justify-center mb-24">
+                    <button type="submit" className="bg-dz-green hover:bg-dz-green-dark text-white px-16 py-5 rounded-2xl font-black text-xl shadow-2xl flex items-center gap-4 transform active:scale-95 transition-all">
+                      <Save size={28} /> إرسال الاستمارة والتحقق
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <div className="animate-in fade-in slide-in-from-right-6 duration-700">
+                  <div className="bg-white rounded-3xl shadow-xl border border-gray-200 overflow-hidden">
+                    <div className="p-8 border-b-2 border-gray-100 flex flex-col md:flex-row justify-between items-center bg-gray-50/80 gap-6">
+                      <h3 className="text-2xl font-black text-gray-900 flex items-center gap-3"><FileText size={26} /> قاعدة بيانات المترشحين</h3>
+                      <div className="bg-dz-green/10 text-dz-green font-black px-6 py-2 rounded-full border border-dz-green/20">إجمالي الطلبات: {submissions.length}</div>
                     </div>
-                </div>
-            );
-        };
-
-        // --- لوحة التحكم لعرض البيانات الكاملة ---
-        const AdminDashboard = () => {
-            const [candidates, setCandidates] = useState([]);
-
-            useEffect(() => {
-                const unsub = db.collection("candidates").orderBy("submittedAt", "desc").onSnapshot(snap => {
-                    setCandidates(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-                });
-                return unsub;
-            }, []);
-
-            return (
-                <div className="p-4 md:p-10">
-                    <div className="bg-white rounded-[2rem] shadow-2xl border overflow-hidden">
-                        <div className="p-6 bg-slate-50 border-b flex justify-between items-center">
-                            <h2 className="text-xl font-black text-slate-800">قائمة المترشحين المسجلين (قاعدة البيانات الرسمية)</h2>
-                            <div className="bg-blue-600 text-white px-4 py-1 rounded-full text-sm font-bold">
-                                {candidates.length} مترشح
-                            </div>
-                        </div>
-                        
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-right data-table">
-                                <thead>
-                                    <tr>
-                                        <th>رقم التعريف (NIN)</th>
-                                        <th>الاسم واللقب (عربي/لاتيني)</th>
-                                        <th>معلومات الأب والأم</th>
-                                        <th>الولاية والبلدية</th>
-                                        <th>الوضعية (الخدمة)</th>
-                                        <th>الشهادة والتخصص</th>
-                                        <th>المعدل</th>
-                                        <th>الإجراء</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {candidates.map(c => (
-                                        <tr key={c.id} className="hover:bg-blue-50/50 transition-colors">
-                                            <td className="font-mono text-xs bg-slate-50">{c.nin}</td>
-                                            <td>
-                                                <div className="font-black text-blue-900">{c.firstNameAr} {c.lastNameAr}</div>
-                                                <div className="text-[10px] text-slate-400 uppercase">{c.firstNameEn} {c.lastNameEn}</div>
-                                            </td>
-                                            <td>
-                                                <div className="text-xs">ابن: {c.fatherName}</div>
-                                                <div className="text-xs">و: {c.motherName} {c.motherLastName}</div>
-                                            </td>
-                                            <td>
-                                                <div className="font-bold text-xs">{c.state}</div>
-                                                <div className="text-blue-500 text-[11px]">{c.city}</div>
-                                            </td>
-                                            <td className="text-xs">{c.milStatus} <br/> <span className="text-[10px] text-slate-400">{c.milRef}</span></td>
-                                            <td>
-                                                <div className="font-bold text-xs">{c.degreeTitle}</div>
-                                                <div className="text-[11px] text-slate-500">{c.specialty}</div>
-                                            </td>
-                                            <td className="font-black text-blue-600">{c.finalAvg}</td>
-                                            <td>
-                                                <button onClick={() => { if(confirm("حذف الطلب؟")) db.collection("candidates").doc(c.id).delete() }} className="text-red-400 hover:text-red-600 p-2">
-                                                    <i className="fa-solid fa-trash"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-right border-collapse">
+                        <thead className="bg-gray-100 text-gray-700">
+                          <tr>
+                            <th className="px-8 py-5 font-black text-md">الاسم الكامل للمترشح</th>
+                            <th className="px-8 py-5 font-black text-md">الرتبة والمادة</th>
+                            <th className="px-8 py-5 font-black text-md text-center">الحالة</th>
+                            <th className="px-8 py-5 font-black text-md text-center">إجراءات</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-200">
+                          {submissions.map(s => (
+                            <tr key={s.id} className="hover:bg-dz-green/5 transition-all group">
+                              <td className="px-8 py-6">
+                                <div className="font-black text-gray-900 text-lg">{s.lastNameAr} {s.firstNameAr}</div>
+                                <div className="text-sm text-gray-600 mt-1 font-medium">NIN: {s.nin}</div>
+                              </td>
+                              <td className="px-8 py-6">
+                                <div className="text-md font-bold text-gray-800">{s.rank}</div>
+                                <div className="text-sm text-dz-green font-black">{s.subject}</div>
+                              </td>
+                              <td className="px-8 py-6 text-center">
+                                <span className={`px-4 py-1.5 rounded-xl text-xs font-black uppercase tracking-wide border-2 ${
+                                  s.status === 'مقبول' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                                  s.status === 'مرفوض' ? 'bg-red-50 text-red-700 border-red-200' : 
+                                  'bg-yellow-50 text-yellow-700 border-yellow-200'
+                                }`}>
+                                  {s.status}
+                                </span>
+                              </td>
+                              <td className="px-8 py-6">
+                                <div className="flex justify-center gap-3">
+                                  <button onClick={() => setSelected(s)} className="p-2.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-xl transition-all shadow-sm" title="عرض كافة البيانات"><Eye size={22} /></button>
+                                  <button onClick={() => deleteEntry(s.id)} className="p-2.5 text-red-500 bg-red-50 hover:bg-red-100 rounded-xl transition-all shadow-sm" title="حذف الطلب"><Trash size={22} /></button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                          {submissions.length === 0 && (
+                            <tr><td colSpan="4" className="p-20 text-center text-gray-400 font-bold text-xl italic">لا توجد طلبات توظيف مسجلة حالياً</td></tr>
+                          )}
+                        </tbody>
+                      </table>
                     </div>
+                  </div>
                 </div>
-            );
-        };
+              )}
+            </main>
 
-        // --- واجهة المستخدم (الاستمارة) - تم الإبقاء عليها كما هي في التحديث السابق ---
-        const UserView = () => {
-            return (
-                <div className="text-center mt-20">
-                    <h2 className="text-2xl font-black">واجهة استمارة المعلومات</h2>
-                    <p className="text-slate-500 mt-2">يرجى تعبئة البيانات المطلوبة لإرسال طلبك.</p>
-                    {/* (تم اختصار كود الاستمارة هنا لضمان عمل نافذة الأدمن، لكنه موجود في النسخة الكاملة) */}
+            {/* Modal Detail View - High Contrast & High Visibility */}
+            {selected && (
+              <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 modal-overlay">
+                <div className="bg-white rounded-[2.5rem] w-full max-w-5xl max-h-[92vh] overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-300 flex flex-col border border-gray-100">
+                  
+                  <div className="p-8 border-b-2 border-gray-100 flex items-center justify-between bg-gray-50/50">
+                    <h3 className="text-3xl font-black text-gray-900">الملف التفصيلي الكامل</h3>
+                    <button onClick={() => setSelected(null)} className="text-gray-300 hover:text-red-500 text-5xl font-light leading-none transition-all">&times;</button>
+                  </div>
+
+                  <div className="p-10 overflow-y-auto flex-1 bg-white space-y-12">
+                    
+                    {/* Section 1: Personal */}
+                    <div className="bg-gray-50/50 p-8 rounded-3xl border border-gray-100">
+                      <h4 className="text-dz-green font-black text-xl mb-8 border-b-2 border-dz-green/10 pb-4 flex items-center gap-3"><User size={24}/> معلومات الحالة المدنية</h4>
+                      <div className="detail-grid">
+                        <DetailItem label="الاسم واللقب الكامل" value={`${selected.lastNameAr} ${selected.firstNameAr}`} />
+                        <DetailItem label="رقم التعريف الوطني" value={selected.nin} />
+                        <DetailItem label="تاريخ الازدياد" value={selected.birthDate} />
+                        <DetailItem label="الجنس" value={selected.gender} />
+                        <DetailItem label="اسم الأب" value={selected.fatherName} />
+                        <DetailItem label="اسم ولقب الأم" value={`${selected.motherFirstName} ${selected.motherLastName}`} />
+                        <DetailItem label="رقم الهاتف" value={selected.phone} />
+                        <div className="col-span-full"><DetailItem label="العنوان الشخصي بالكامل" value={selected.address} /></div>
+                      </div>
+                    </div>
+
+                    {/* Section 2: Job & Education */}
+                    <div className="bg-gray-50/50 p-8 rounded-3xl border border-gray-100">
+                      <h4 className="text-dz-green font-black text-xl mb-8 border-b-2 border-dz-green/10 pb-4 flex items-center gap-3"><Briefcase size={24}/> المسار الوظيفي والدراسي</h4>
+                      <div className="detail-grid">
+                        <DetailItem label="الرتبة والمادة" value={`${selected.rank} (${selected.subject})`} />
+                        <DetailItem label="الشهادة المتحصل عليها" value={selected.degree} />
+                        <DetailItem label="التخصص الدقيق" value={selected.degreeSpecialty} />
+                        <DetailItem label="المعدل العام" value={selected.avgGrade} />
+                        <DetailItem label="معدل آخر سنة" value={selected.s6} />
+                        <DetailItem label="الوضعية الحالية" value={selected.hasJob === 'نعم' ? `موظف: ${selected.currentJob}` : 'بدون وظيفة حالياً'} />
+                      </div>
+                    </div>
+
+                    {/* Admin Decision Area */}
+                    <div className="mt-16 p-10 rounded-[2rem] bg-gray-900 text-white shadow-2xl relative overflow-hidden">
+                       <div className="absolute top-0 right-0 w-32 h-32 bg-dz-green opacity-20 blur-3xl -mr-10 -mt-10"></div>
+                       <p className="text-sm font-black text-dz-green mb-6 text-center uppercase tracking-widest">معالجة إدارية للملف</p>
+                       <div className="flex flex-wrap justify-center gap-5">
+                         {['قيد الانتظار', 'مقبول', 'مرفوض'].map(st => (
+                           <button 
+                             key={st}
+                             onClick={() => updateEntryStatus(selected.id, st)}
+                             className={`px-10 py-4 rounded-2xl text-md font-black transition-all border-4 ${
+                               selected.status === st 
+                               ? 'bg-dz-green text-white border-dz-green shadow-xl shadow-dz-green/40' 
+                               : 'bg-transparent text-gray-400 border-gray-700 hover:border-dz-green hover:text-dz-green'
+                             }`}
+                           >
+                             {st}
+                           </button>
+                         ))}
+                       </div>
+                    </div>
+                  </div>
+
+                  <div className="p-8 bg-gray-50 border-t-2 border-gray-100 flex justify-end">
+                    <button onClick={() => setSelected(null)} className="bg-white border-2 border-gray-200 text-gray-900 font-black py-3 px-10 rounded-2xl hover:bg-gray-100 transition-all shadow-sm">إغلاق التفاصيل</button>
+                  </div>
                 </div>
-            );
-        };
+              </div>
+            )}
+          </div>
+        );
+      }
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
+      const DetailItem = ({ label, value }) => (
+        <div className="flex flex-col gap-2 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+          <span className="text-xs font-black text-gray-500 uppercase tracking-wider">{label}</span>
+          <span className="text-lg font-black text-gray-900 break-words leading-tight">{value || '---'}</span>
+        </div>
+      );
+
+      const root = ReactDOM.createRoot(document.getElementById('root'));
+      root.render(<App />);
     </script>
-</body>
+  </body>
 </html>
