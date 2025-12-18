@@ -3,10 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>نظام إدارة التوظيف الرقمي المتكامل</title>
+    <title>نظام التوظيف الرقمي المتكامل</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
     
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
@@ -18,319 +18,542 @@
           extend: {
             fontFamily: { sans: ['Tajawal', 'sans-serif'] },
             colors: {
-              'dz-green': '#009b77',
-              'dz-green-dark': '#007a5e',
-              'admin-blue': '#1e293b',
+              'dz-green': '#008568',
+              'dz-green-dark': '#006b54',
+              'admin-blue': '#0f172a',
             }
           },
         },
       }
     </script>
     <style>
-      ::-webkit-scrollbar { width: 6px; }
-      ::-webkit-scrollbar-track { background: #f1f1f1; }
-      ::-webkit-scrollbar-thumb { background: #009b77; border-radius: 10px; }
-      .modal-overlay { background: rgba(0,0,0,0.7); backdrop-filter: blur(10px); }
+      ::-webkit-scrollbar { width: 10px; }
+      ::-webkit-scrollbar-track { background: #f8fafc; }
+      ::-webkit-scrollbar-thumb { background: #008568; border-radius: 5px; }
       
-      /* تحسين مظهر الحقول لضمان وضوح الكتابة */
+      .modal-overlay { background: rgba(2, 6, 23, 0.9); backdrop-filter: blur(8px); }
+      
       input, select, textarea {
         background-color: #ffffff !important;
         color: #000000 !important;
-        font-weight: 500;
-      }
-      input::placeholder {
-        color: #9ca3af !important;
-      }
-      input:focus, select:focus {
-        border-color: #009b77 !important;
-        box-shadow: 0 0 0 3px rgba(0, 155, 119, 0.15);
+        font-weight: 700 !important;
+        border: 2px solid #cbd5e1 !important;
       }
       
-      .detail-grid { 
-        display: grid; 
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); 
-        gap: 2rem; 
+      input:focus, select:focus {
+        border-color: #008568 !important;
+        box-shadow: 0 0 0 4px rgba(0, 133, 104, 0.1);
+      }
+
+      label {
+        color: #1e293b !important;
+        font-weight: 800 !important;
+        margin-bottom: 0.5rem;
+      }
+
+      .detail-card {
+        background: #f8fafc;
+        border-radius: 1rem;
+        padding: 1.25rem;
+        border: 2px solid #e2e8f0;
+      }
+      
+      .detail-label {
+        font-size: 0.85rem;
+        font-weight: 900;
+        color: #475569;
+        display: block;
+        margin-bottom: 0.35rem;
+        border-bottom: 1px solid #e2e8f0;
+        padding-bottom: 0.25rem;
+      }
+      
+      .detail-value {
+        font-size: 1.1rem;
+        font-weight: 900;
+        color: #000000;
+      }
+
+      .admin-panel-dark {
+        background: #0f172a;
+        color: #ffffff;
+      }
+      
+      .year-strip {
+        background: #ffffff;
+        border: 2px solid #f1f5f9;
+        border-right: 6px solid #008568;
+        padding: 1.5rem;
+        border-radius: 1.5rem;
+        margin-bottom: 1rem;
       }
     </style>
   </head>
-  <body class="bg-gray-100 font-sans text-right text-gray-900">
+  <body class="bg-slate-100 font-sans text-right text-slate-900 leading-relaxed">
     <div id="root"></div>
 
     <script type="text/babel" data-presets="typescript,react">
-      const { useState, useEffect } = React;
+      const { useState, useEffect, useMemo } = React;
 
-      // --- Icons ---
+      const WILAYAS = [
+        "01 أدرار", "02 الشلف", "03 الأغواط", "04 أم البواقي", "05 باتنة", "06 بجاية", "07 بسكرة", "08 بشار", 
+        "09 البليدة", "10 البويرة", "11 تمنراست", "12 تبسة", "13 تلمسان", "14 تيارت", "15 تيزي وزو", "16 الجزائر", 
+        "17 الجلفة", "18 جيجل", "19 سطيف", "20 سعيدة", "21 سكيكدة", "22 سيدي بلعباس", "23 عنابة", "24 قالمة", 
+        "25 قسنطينة", "26 المدية", "27 مستغانم", "28 المسيلة", "29 معسكر", "30 ورقلة", "31 وهران", "32 البيض", 
+        "33 إليزي", "34 برج بوعريريج", "35 بومرداس", "36 الطارف", "37 تندوف", "38 تيسمسيلت", "39 الوادي", "40 خنشلة", 
+        "41 سوق أهراس", "42 تيبازة", "43 ميلة", "44 عين الدفلى", "45 النعامة", "46 عين تموشنت", "47 غرداية", "48 غليزان", 
+        "49 تميمون", "50 برج باجي مختار", "51 أولاد جلال", "52 بني عباس", "53 عين صالح", "54 عين قزام", "55 تقرت", 
+        "56 جانت", "57 المغير", "58 المنيعة"
+      ];
+
       const Icon = ({ children, size = 20, className = "" }) => (
         <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
           {children}
         </svg>
       );
-      const Briefcase = (p) => <Icon {...p}><rect width="20" height="14" x="2" y="7" rx="2" ry="2" /><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" /></Icon>;
+      const Briefcase = (p) => <Icon {...p}><rect width="20" height="14" x="2" y="7" rx="2" ry="2" /><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2-2v16" /></Icon>;
       const User = (p) => <Icon {...p}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></Icon>;
       const GraduationCap = (p) => <Icon {...p}><path d="M22 10v6M2 10l10-5 10 5-10 5z" /><path d="M6 12v5c3 3 9 3 12 0v-5" /></Icon>;
-      const FileText = (p) => <Icon {...p}><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" /><polyline points="14 2 14 8 20 8" /></Icon>;
-      const BadgeCheck = (p) => <Icon {...p}><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.78 4.78 4 4 0 0 1-6.74 0 4 4 0 0 1-4.78-4.78 4 4 0 0 1 0-6.74z" /><path d="m9 12 2 2 4-4" /></Icon>;
       const Save = (p) => <Icon {...p}><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" /><polyline points="17 21 17 13 7 13 7 21" /></Icon>;
-      const Trash = (p) => <Icon {...p}><path d="M3 6h18" /><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" /></Icon>;
       const Eye = (p) => <Icon {...p}><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></Icon>;
+      const Trash = (p) => <Icon {...p}><path d="M3 6h18" /><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" /></Icon>;
+      const MapPin = (p) => <Icon {...p}><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></Icon>;
 
-      // --- Reusable UI ---
-      const FormSection = ({ title, children, icon }) => (
-        <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-8 mb-8">
-          <div className="flex items-center gap-4 border-b border-gray-100 pb-5 mb-8">
-            <div className="bg-dz-green p-3 rounded-xl text-white shadow-lg shadow-dz-green/20">{icon}</div>
-            <h2 className="text-2xl font-black text-gray-800">{title}</h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">{children}</div>
-        </div>
-      );
-
-      const Field = ({ label, name, value, onChange, type="text", required=false, options=null, disabled=false }) => (
-        <div className="flex flex-col gap-2">
-          <label className="text-md font-bold text-gray-700">{label} {required && <span className="text-red-500">*</span>}</label>
+      const InputField = ({ label, name, value, onChange, type="text", required=false, options=null, maxLength=null, placeholder="", step="any" }) => (
+        <div className="flex flex-col mb-4">
+          <label htmlFor={name} className="text-sm font-black text-slate-700">{label} {required && <span className="text-red-600">*</span>}</label>
           {options ? (
-            <select name={name} value={value} onChange={onChange} required={required} disabled={disabled} className="w-full p-3.5 border-2 border-gray-200 rounded-xl outline-none bg-white text-black font-semibold focus:border-dz-green transition-all disabled:bg-gray-100 disabled:text-gray-500">
+            <select name={name} id={name} value={value} onChange={onChange} required={required} className="p-4 rounded-xl shadow-sm outline-none border-2 border-slate-200">
               <option value="">-- اختر من القائمة --</option>
               {options.map(o => <option key={o} value={o}>{o}</option>)}
             </select>
           ) : (
-            <input type={type} name={name} value={value} onChange={onChange} required={required} disabled={disabled} className="w-full p-3.5 border-2 border-gray-200 rounded-xl outline-none bg-white text-black font-semibold focus:border-dz-green transition-all disabled:bg-gray-100 disabled:text-gray-500" />
+            <input 
+              type={type} 
+              name={name} 
+              id={name} 
+              value={value} 
+              onChange={onChange} 
+              required={required} 
+              maxLength={maxLength}
+              placeholder={placeholder}
+              step={step}
+              className="p-4 rounded-xl shadow-sm outline-none border-2 border-slate-200" 
+            />
           )}
         </div>
       );
 
-      // --- Main App ---
-      function App() {
+      const FormCard = ({ title, icon, children }) => (
+        <div className="bg-white rounded-[2rem] border-2 border-slate-200 p-8 mb-10 shadow-sm">
+          <div className="flex items-center gap-4 mb-8 border-b-2 border-slate-50 pb-5">
+            <div className="bg-dz-green p-3 rounded-2xl text-white shadow-lg shadow-dz-green/20">{icon}</div>
+            <h2 className="text-2xl font-black text-slate-800">{title}</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">{children}</div>
+        </div>
+      );
+
+      const App = () => {
         const [view, setView] = useState('form');
         const [submissions, setSubmissions] = useState([]);
         const [selected, setSelected] = useState(null);
-        
+
         const initialForm = {
-          targetWilaya: '', rank: '', subject: '',
+          wilaya: '', rank: '', teachingSubject: '',
           nin: '', lastNameAr: '', firstNameAr: '', lastNameLat: '', firstNameLat: '',
-          fatherName: '', motherFirstName: '', motherLastName: '', gender: 'ذكر',
-          birthDate: '', birthWilaya: '', birthCommune: '', maritalStatus: 'أعزب(ة)', childrenCount: '0', nationality: 'جزائرية', address: '', phone: '',
-          militaryStatus: '', militaryStartDate: '', militaryEndDate: '',
-          degree: '', degreeBranch: '', degreeSpecialty: '', certNo: '', certDate: '', issuer: '', yearsOfStudy: '3',
-          avgGrade: '', memoIncluded: 'لا', memoGrade: '',
-          s1: '', s2: '', s3: '', s4: '', s5: '', s6: '',
-          hasJob: 'لا', currentJob: '', jobStart: '',
+          fatherName: '', motherFirstName: '', motherLastName: '', 
+          birthDate: '', birthWilaya: '', birthCommune: '', gender: 'ذكر', maritalStatus: 'أعزب(ة)', childrenCount: '0',
+          residenceWilaya: '', residenceCommune: '', address: '', phone: '', email: '',
+          degree: '', degreeSpecialty: '', certNumber: '', gradDate: '', issuingInstitution: '',
+          startYear: '', endYear: '', degreeMention: '', isHigherSchoolGrad: 'لا', isFirstInBatch: 'لا',
+          batchDocRef: '', batchDocDate: '', batchDocIssuer: '',
+          avgGrade: '', gradMark: '', 
+          academicYears: {}, // Stores Year1: {sem1: '', sem2: '', annual: ''}
+          militaryStatus: '', militaryDocRef: '', militaryIssueDate: '', militaryExpiryDate: '', militaryStartDate: '', militaryEndDate: '',
+          hasJob: 'لا', currentJob: '',
           status: 'قيد الانتظار'
         };
 
         const [formData, setFormData] = useState(initialForm);
 
+        // Calculate dynamic years based on input
+        const academicYearsCount = useMemo(() => {
+          const s = parseInt(formData.startYear);
+          const e = parseInt(formData.endYear);
+          if (s && e && e > s) {
+            const diff = e - s;
+            return Math.min(Math.max(diff, 1), 7); // Clamped between 1 and 7 years for safety
+          }
+          return 0;
+        }, [formData.startYear, formData.endYear]);
+
         useEffect(() => {
-          const saved = localStorage.getItem('dz_data_recruitment_v3');
+          const saved = localStorage.getItem('dz_recruitment_v11_final');
           if (saved) setSubmissions(JSON.parse(saved));
         }, []);
 
-        const handleChange = (e) => setFormData({...formData, [e.target.name]: e.target.value});
+        const handleChange = (e) => {
+          const { name, value } = e.target;
+          
+          if (name === 'nin') {
+            const onlyNums = value.replace(/[^0-9]/g, '');
+            if (onlyNums.length <= 18) {
+              setFormData({ ...formData, [name]: onlyNums });
+            }
+            return;
+          }
+
+          if (name === 'phone') {
+            const onlyNums = value.replace(/[^0-9]/g, '');
+            if (onlyNums.length <= 10) {
+              setFormData({ ...formData, [name]: onlyNums });
+            }
+            return;
+          }
+          
+          setFormData({ ...formData, [name]: value });
+        };
+
+        const handleAcademicYearChange = (yearIndex, field, value) => {
+          setFormData(prev => ({
+            ...prev,
+            academicYears: {
+              ...prev.academicYears,
+              [`Year${yearIndex}`]: {
+                ...(prev.academicYears[`Year${yearIndex}`] || { sem1: '', sem2: '', annual: '' }),
+                [field]: value
+              }
+            }
+          }));
+        };
 
         const handleSubmit = (e) => {
           e.preventDefault();
-          const newEntry = { ...formData, id: Date.now().toString(), submissionDate: new Date().toLocaleDateString('ar-DZ') };
+          const newEntry = { 
+            ...formData, 
+            id: Date.now().toString(), 
+            submissionDate: new Date().toLocaleString('ar-DZ') 
+          };
           const updated = [newEntry, ...submissions];
           setSubmissions(updated);
-          localStorage.setItem('dz_data_recruitment_v3', JSON.stringify(updated));
-          alert('تم حفظ كافة معلوماتك بنجاح!');
+          localStorage.setItem('dz_recruitment_v11_final', JSON.stringify(updated));
+          alert('تم حفظ وإرسال ملفكم بنجاح!');
           setFormData(initialForm);
           setView('admin');
         };
 
-        const updateEntryStatus = (id, newStatus) => {
-          const updated = submissions.map(s => s.id === id ? {...s, status: newStatus} : s);
+        const updateStatus = (id, s) => {
+          const updated = submissions.map(item => item.id === id ? {...item, status: s} : item);
           setSubmissions(updated);
-          localStorage.setItem('dz_data_recruitment_v3', JSON.stringify(updated));
-          if (selected && selected.id === id) setSelected({...selected, status: newStatus});
+          localStorage.setItem('dz_recruitment_v11_final', JSON.stringify(updated));
+          if (selected && selected.id === id) setSelected({...selected, status: s});
         };
 
         const deleteEntry = (id) => {
           if (confirm('هل أنت متأكد من حذف هذا الملف نهائياً؟')) {
-            const updated = submissions.filter(s => s.id !== id);
+            const updated = submissions.filter(item => item.id !== id);
             setSubmissions(updated);
-            localStorage.setItem('dz_data_recruitment_v3', JSON.stringify(updated));
+            localStorage.setItem('dz_recruitment_v11_final', JSON.stringify(updated));
           }
         };
 
         return (
-          <div className="min-h-screen bg-gray-50 flex flex-col">
-            {/* Header Navigation */}
-            <nav className="bg-admin-blue text-white py-5 px-6 sticky top-0 z-50 shadow-xl">
-              <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+          <div className="min-h-screen flex flex-col">
+            <header className="admin-panel-dark text-white sticky top-0 z-50 p-6 shadow-2xl">
+              <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
                 <div className="flex items-center gap-4">
-                  <div className="bg-dz-green p-2.5 rounded-xl shadow-lg shadow-dz-green/30"><Briefcase size={24} /></div>
-                  <h1 className="text-2xl font-black tracking-tight">بوابة التوظيف الرقمية</h1>
+                  <div className="bg-dz-green p-2.5 rounded-xl shadow-lg"><Briefcase size={24}/></div>
+                  <h1 className="text-2xl font-black tracking-tight">بوابة التربية والتوظيف الرقمية</h1>
                 </div>
-                <div className="flex gap-3">
-                  <button onClick={() => setView('form')} className={`px-6 py-2.5 rounded-xl text-md font-black transition-all ${view === 'form' ? 'bg-dz-green shadow-lg shadow-dz-green/30' : 'bg-gray-700 hover:bg-gray-600'}`}>الاستمارة</button>
-                  <button onClick={() => setView('admin')} className={`px-6 py-2.5 rounded-xl text-md font-black transition-all ${view === 'admin' ? 'bg-dz-green shadow-lg shadow-dz-green/30' : 'bg-gray-700 hover:bg-gray-600'}`}>لوحة المسؤول ({submissions.length})</button>
+                <div className="flex bg-slate-800 p-2 rounded-2xl gap-3">
+                  <button onClick={() => setView('form')} className={`px-8 py-3 rounded-xl font-black text-sm transition-all ${view === 'form' ? 'bg-dz-green shadow-xl' : 'hover:bg-slate-700'}`}>الاستمارة</button>
+                  <button onClick={() => setView('admin')} className={`px-8 py-3 rounded-xl font-black text-sm transition-all ${view === 'admin' ? 'bg-dz-green shadow-xl' : 'hover:bg-slate-700'}`}>لوحة المسؤول ({submissions.length})</button>
                 </div>
               </div>
-            </nav>
+            </header>
 
-            <main className="p-4 md:p-12 max-w-7xl mx-auto w-full flex-1">
+            <main className="max-w-7xl mx-auto w-full p-4 md:p-12">
               {view === 'form' ? (
-                <form onSubmit={handleSubmit} className="animate-in fade-in slide-in-from-bottom-6 duration-700">
+                <form onSubmit={handleSubmit} className="animate-in fade-in duration-700">
                   <div className="text-center mb-16">
-                    <h2 className="text-4xl font-black text-gray-900 mb-4">استمارة الترشح للمسابقة</h2>
-                    <p className="text-xl text-gray-600 font-medium">يرجى إدخال البيانات بدقة لضمان معالجة طلبكم</p>
+                    <h1 className="text-5xl font-black text-slate-900 mb-4">بطاقة معلومات المترشح</h1>
+                    <p className="text-xl text-slate-600 font-bold">يرجى إدخال البيانات بدقة متناهية لتفادي رفض الملف</p>
                   </div>
 
-                  <FormSection title="المعلومات الوظيفية" icon={<Briefcase />}>
-                    <Field label="مديرية التربية لولاية" name="targetWilaya" required value={formData.targetWilaya} onChange={handleChange} options={['تيارت', 'الجزائر', 'وهران', 'عنابة', 'قسنطينة']} />
-                    <Field label="الرتبة" name="rank" required value={formData.rank} onChange={handleChange} options={['أستاذ ابتدائي', 'أستاذ متوسط', 'أستاذ ثانوي', 'مشرف تربوي']} />
-                    <Field label="المادة" name="subject" required value={formData.subject} onChange={handleChange} />
-                  </FormSection>
+                  <FormCard title="معلومات التعيين" icon={<Briefcase />}>
+                    <InputField label="مديرية التربية لولاية" name="wilaya" required value={formData.wilaya} onChange={handleChange} options={WILAYAS} />
+                    <InputField label="الرتبة المراد الالتحاق بها" name="rank" required value={formData.rank} onChange={handleChange} options={['أستاذ ابتدائي', 'أستاذ متوسط', 'أستاذ ثانوي', 'مشرف تربية']} />
+                    <InputField label="مادة التدريس" name="teachingSubject" required value={formData.teachingSubject} onChange={handleChange} placeholder="مثال: لغة عربية، لغة إنجليزية، رياضيات..." />
+                  </FormCard>
 
-                  <FormSection title="الحالة المدنية" icon={<User />}>
-                    <Field label="رقم التعريف الوطني (NIN)" name="nin" required value={formData.nin} onChange={handleChange} />
-                    <Field label="اللقب (بالعربية)" name="lastNameAr" required value={formData.lastNameAr} onChange={handleChange} />
-                    <Field label="الاسم (بالعربية)" name="firstNameAr" required value={formData.firstNameAr} onChange={handleChange} />
-                    <Field label="اسم الأب" name="fatherName" required value={formData.fatherName} onChange={handleChange} />
-                    <Field label="اسم الأم" name="motherFirstName" required value={formData.motherFirstName} onChange={handleChange} />
-                    <Field label="لقب الأم" name="motherLastName" required value={formData.motherLastName} onChange={handleChange} />
-                    <Field label="تاريخ الازدياد" name="birthDate" type="date" required value={formData.birthDate} onChange={handleChange} />
-                    <Field label="الجنس" name="gender" required value={formData.gender} onChange={handleChange} options={['ذكر', 'أنثى']} />
-                    <Field label="رقم الهاتف" name="phone" required value={formData.phone} onChange={handleChange} />
-                    <div className="md:col-span-2"><Field label="عنوان الإقامة الكامل" name="address" required value={formData.address} onChange={handleChange} /></div>
-                  </FormSection>
+                  <FormCard title="الهوية والمعلومات المدنية" icon={<User />}>
+                    <InputField label="رقم التعريف الوطني (NIN)" name="nin" required value={formData.nin} onChange={handleChange} maxLength={18} placeholder="أرقام فقط (18 خانة)" />
+                    <InputField label="اللقب (بالعربية)" name="lastNameAr" required value={formData.lastNameAr} onChange={handleChange} />
+                    <InputField label="الاسم (بالعربية)" name="firstNameAr" required value={formData.firstNameAr} onChange={handleChange} />
+                    <InputField label="اللقب باللاتينية (NOM)" name="lastNameLat" required value={formData.lastNameLat} onChange={handleChange} />
+                    <InputField label="الاسم باللاتينية (PRENOM)" name="firstNameLat" required value={formData.firstNameLat} onChange={handleChange} />
+                    <InputField label="اسم الأب" name="fatherName" required value={formData.fatherName} onChange={handleChange} />
+                    <InputField label="اسم الأم" name="motherFirstName" required value={formData.motherFirstName} onChange={handleChange} />
+                    <InputField label="لقب الأم" name="motherLastName" required value={formData.motherLastName} onChange={handleChange} />
+                    <InputField label="تاريخ الازدياد" name="birthDate" type="date" required value={formData.birthDate} onChange={handleChange} />
+                    <InputField label="ولاية الميلاد" name="birthWilaya" required value={formData.birthWilaya} onChange={handleChange} options={WILAYAS} />
+                    <InputField label="بلدية الميلاد" name="birthCommune" required value={formData.birthCommune} onChange={handleChange} placeholder="اكتب بلدية الميلاد هنا" />
+                    <InputField label="الجنس" name="gender" required value={formData.gender} onChange={handleChange} options={['ذكر', 'أنثى']} />
+                    <InputField label="الحالة العائلية" name="maritalStatus" required value={formData.maritalStatus} onChange={handleChange} options={['أعزب(ة)', 'متزوج(ة)', 'مطلق(ة)', 'أرمل(ة)']} />
+                    {formData.maritalStatus !== 'أعزب(ة)' && (
+                      <InputField label="عدد الأولاد" name="childrenCount" type="number" value={formData.childrenCount} onChange={handleChange} placeholder="أدخل عدد الأولاد" />
+                    )}
+                  </FormCard>
 
-                  <FormSection title="المسار العلمي والمهني" icon={<GraduationCap />}>
-                    <Field label="تسمية الشهادة" name="degree" required value={formData.degree} onChange={handleChange} options={['ليسانس', 'ماستر', 'مهندس دولة', 'دكتوراه']} />
-                    <Field label="التخصص" name="degreeSpecialty" required value={formData.degreeSpecialty} onChange={handleChange} />
-                    <Field label="المعدل العام للشهادة" name="avgGrade" type="number" step="0.01" value={formData.avgGrade} onChange={handleChange} />
-                    <Field label="معدل السنة الأخيرة" name="s6" type="number" step="0.01" value={formData.s6} onChange={handleChange} />
-                    <Field label="هل تملك وظيفة حالياً؟" name="hasJob" value={formData.hasJob} onChange={handleChange} options={['نعم', 'لا']} />
-                    <Field label="الوظيفة الحالية" name="currentJob" value={formData.currentJob} onChange={handleChange} disabled={formData.hasJob==='لا'} />
-                  </FormSection>
+                  <FormCard title="بيانات الاتصال والإقامة" icon={<MapPin />}>
+                    <InputField label="ولاية الإقامة" name="residenceWilaya" required value={formData.residenceWilaya} onChange={handleChange} options={WILAYAS} />
+                    <InputField label="بلدية الإقامة" name="residenceCommune" required value={formData.residenceCommune} onChange={handleChange} placeholder="اكتب بلدية الإقامة" />
+                    <div className="md:col-span-2">
+                        <InputField label="العنوان الشخصي المفصل" name="address" required value={formData.address} onChange={handleChange} placeholder="رقم الباب، الشارع، الحي..." />
+                    </div>
+                    <InputField label="رقم الهاتف الجوال" name="phone" required value={formData.phone} onChange={handleChange} maxLength={10} placeholder="أرقام فقط (10 أرقام)" />
+                    <InputField label="البريد الإلكتروني" name="email" type="email" value={formData.email} onChange={handleChange} placeholder="example@mail.com" />
+                  </FormCard>
 
-                  <div className="flex justify-center mb-24">
-                    <button type="submit" className="bg-dz-green hover:bg-dz-green-dark text-white px-16 py-5 rounded-2xl font-black text-xl shadow-2xl flex items-center gap-4 transform active:scale-95 transition-all">
-                      <Save size={28} /> إرسال الاستمارة والتحقق
+                  {/* قسم الخدمة الوطنية - للذكور فقط */}
+                  {formData.gender === 'ذكر' && (
+                    <FormCard title="الوضعية تجاه الخدمة الوطنية" icon={<Briefcase />}>
+                      <InputField label="وضعية الخدمة الوطنية" name="militaryStatus" required value={formData.militaryStatus} onChange={handleChange} options={['مؤدى', 'معفى', 'مؤجل']} />
+                      <InputField label="رقم مرجع الوثيقة" name="militaryDocRef" required value={formData.militaryDocRef} onChange={handleChange} placeholder="رقم البطاقة أو الشهادة" />
+                      <InputField label="تاريخ إصدار الوثيقة" name="militaryIssueDate" type="date" required value={formData.militaryIssueDate} onChange={handleChange} />
+                      <InputField label="تاريخ إنتهاء الوثيقة" name="militaryExpiryDate" type="date" value={formData.militaryExpiryDate} onChange={handleChange} />
+                      {formData.militaryStatus === 'مؤدى' && (
+                        <>
+                          <InputField label="تاريخ بداية الخدمة" name="militaryStartDate" type="date" required value={formData.militaryStartDate} onChange={handleChange} />
+                          <InputField label="تاريخ نهاية الخدمة" name="militaryEndDate" type="date" required value={formData.militaryEndDate} onChange={handleChange} />
+                        </>
+                      )}
+                    </FormCard>
+                  )}
+
+                  <FormCard title="الشهادات والمؤهلات العلمية" icon={<GraduationCap />}>
+                    <InputField label="الشهادة المتحصل عليها" name="degree" required value={formData.degree} onChange={handleChange} options={['ليسانس', 'ماستر', 'دكتوراه', 'مهندس دولة']} />
+                    <InputField label="الشعبة أو التخصص" name="degreeSpecialty" required value={formData.degreeSpecialty} onChange={handleChange} />
+                    <InputField label="رقم الشهادة" name="certNumber" required value={formData.certNumber} onChange={handleChange} />
+                    <InputField label="تاريخ التخرج" name="gradDate" type="date" required value={formData.gradDate} onChange={handleChange} />
+                    <InputField label="المؤسسة المسلمة للشهادة" name="issuingInstitution" required value={formData.issuingInstitution} onChange={handleChange} />
+                    <InputField label="المعدل العام للمسار الدراسي" name="avgGrade" type="number" step="0.01" value={formData.avgGrade} onChange={handleChange} />
+                    <InputField label="علامة التخرج (مذكرة)" name="gradMark" type="number" step="0.01" value={formData.gradMark} onChange={handleChange} placeholder="إن وجدت" />
+                    
+                    <div className="md:col-span-3 p-8 bg-dz-green/5 rounded-[2.5rem] border-2 border-dz-green/10">
+                      <h3 className="font-black text-dz-green mb-6 text-xl">تفاصيل مدة التكوين والمسار الدراسي</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                        <InputField label="سنة بداية التكوين" name="startYear" type="number" placeholder="مثلاً: 2018" value={formData.startYear} onChange={handleChange} />
+                        <InputField label="سنة نهاية التكوين" name="endYear" type="number" placeholder="مثلاً: 2023" value={formData.endYear} onChange={handleChange} />
+                      </div>
+
+                      {academicYearsCount > 0 && (
+                        <div className="space-y-4 animate-in fade-in slide-in-from-top-4">
+                          <p className="text-slate-500 font-bold mb-4">يرجى إدخال معدلات السنوات ({academicYearsCount} سنوات):</p>
+                          {Array.from({ length: academicYearsCount }).map((_, idx) => {
+                            const yIdx = idx + 1;
+                            return (
+                              <div key={yIdx} className="year-strip grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                                <div className="font-black text-dz-green text-lg">السنة {yIdx}</div>
+                                <InputField 
+                                  label="معدل السداسي 1" 
+                                  name={`s1_y${yIdx}`} 
+                                  type="number" step="0.01" 
+                                  value={formData.academicYears[`Year${yIdx}`]?.sem1 || ''} 
+                                  onChange={(e) => handleAcademicYearChange(yIdx, 'sem1', e.target.value)} 
+                                />
+                                <InputField 
+                                  label="معدل السداسي 2" 
+                                  name={`s2_y${yIdx}`} 
+                                  type="number" step="0.01" 
+                                  value={formData.academicYears[`Year${yIdx}`]?.sem2 || ''} 
+                                  onChange={(e) => handleAcademicYearChange(yIdx, 'sem2', e.target.value)} 
+                                />
+                                <InputField 
+                                  label="المعدل السنوي" 
+                                  name={`ann_y${yIdx}`} 
+                                  type="number" step="0.01" 
+                                  value={formData.academicYears[`Year${yIdx}`]?.annual || ''} 
+                                  onChange={(e) => handleAcademicYearChange(yIdx, 'annual', e.target.value)} 
+                                />
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+
+                    <InputField label="تقدير الشهادة" name="degreeMention" required value={formData.degreeMention} onChange={handleChange} options={['مقبول', 'قريب من الحسن', 'حسن', 'حسن جداً', 'ممتاز']} />
+                    <InputField label="هل أنت خريج مدرسة وطنية عليا؟" name="isHigherSchoolGrad" required value={formData.isHigherSchoolGrad} onChange={handleChange} options={['نعم', 'لا']} />
+                    <InputField label="هل أنت الأول في الدفعة؟" name="isFirstInBatch" required value={formData.isFirstInBatch} onChange={handleChange} options={['نعم', 'لا']} />
+
+                    {formData.isFirstInBatch === 'نعم' && (
+                      <>
+                        <InputField label="رقم وثيقة التفوق" name="batchDocRef" required value={formData.batchDocRef} onChange={handleChange} />
+                        <InputField label="تاريخ الإصدار" name="batchDocDate" type="date" required value={formData.batchDocDate} onChange={handleChange} />
+                        <InputField label="الجهة المسلمة للوثيقة" name="batchDocIssuer" required value={formData.batchDocIssuer} onChange={handleChange} />
+                      </>
+                    )}
+                  </FormCard>
+
+                  <FormCard title="الوضعية المهنية الحالية" icon={<Briefcase />}>
+                    <InputField label="هل تشغل وظيفة حالياً؟" name="hasJob" value={formData.hasJob} onChange={handleChange} options={['نعم', 'لا']} />
+                    {formData.hasJob === 'نعم' && (
+                        <InputField label="الوظيفة الحالية" name="currentJob" required value={formData.currentJob} onChange={handleChange} />
+                    )}
+                  </FormCard>
+
+                  <div className="flex justify-center mt-10">
+                    <button type="submit" className="bg-dz-green hover:bg-dz-green-dark text-white text-3xl font-black py-8 px-24 rounded-[3rem] shadow-2xl transition-all hover:scale-[1.03] flex items-center gap-5">
+                      <Save size={36}/> تأكيد حفظ وإرسال البيانات
                     </button>
                   </div>
                 </form>
               ) : (
-                <div className="animate-in fade-in slide-in-from-right-6 duration-700">
-                  <div className="bg-white rounded-3xl shadow-xl border border-gray-200 overflow-hidden">
-                    <div className="p-8 border-b-2 border-gray-100 flex flex-col md:flex-row justify-between items-center bg-gray-50/80 gap-6">
-                      <h3 className="text-2xl font-black text-gray-900 flex items-center gap-3"><FileText size={26} /> قاعدة بيانات المترشحين</h3>
-                      <div className="bg-dz-green/10 text-dz-green font-black px-6 py-2 rounded-full border border-dz-green/20">إجمالي الطلبات: {submissions.length}</div>
-                    </div>
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-right border-collapse">
-                        <thead className="bg-gray-100 text-gray-700">
-                          <tr>
-                            <th className="px-8 py-5 font-black text-md">الاسم الكامل للمترشح</th>
-                            <th className="px-8 py-5 font-black text-md">الرتبة والمادة</th>
-                            <th className="px-8 py-5 font-black text-md text-center">الحالة</th>
-                            <th className="px-8 py-5 font-black text-md text-center">إجراءات</th>
+                <div className="bg-white rounded-[3rem] shadow-2xl border-2 border-slate-200 overflow-hidden animate-in slide-in-from-right-10 duration-500">
+                  <div className="p-10 border-b-2 border-slate-100 flex flex-col md:flex-row justify-between items-center gap-6 bg-slate-50">
+                    <h3 className="text-3xl font-black text-slate-800">قائمة المترشحين</h3>
+                    <div className="px-10 py-3 bg-dz-green text-white font-black rounded-2xl shadow-lg">المسجلون: {submissions.length}</div>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-right">
+                      <thead className="bg-slate-200 text-slate-700">
+                        <tr>
+                          <th className="px-10 py-6 font-black text-lg">اسم المترشح</th>
+                          <th className="px-10 py-6 font-black text-lg">الرتبة والمادة</th>
+                          <th className="px-10 py-6 font-black text-lg text-center">القرار</th>
+                          <th className="px-10 py-6 font-black text-lg text-center">إجراءات</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y-2 divide-slate-100">
+                        {submissions.map(s => (
+                          <tr key={s.id} className="hover:bg-dz-green/5 transition-all group">
+                            <td className="px-10 py-8">
+                              <div className="font-black text-slate-900 text-xl">{s.lastNameAr} {s.firstNameAr}</div>
+                              <div className="text-sm text-slate-600 font-bold mt-1 uppercase">{s.lastNameLat} {s.firstNameLat}</div>
+                            </td>
+                            <td className="px-10 py-8">
+                              <div className="text-md font-extrabold text-slate-800">{s.rank}</div>
+                              <div className="text-sm text-dz-green font-black">{s.teachingSubject}</div>
+                            </td>
+                            <td className="px-10 py-8 text-center">
+                              <span className={`px-6 py-2 rounded-2xl text-xs font-black border-2 ${
+                                s.status === 'مقبول' ? 'bg-blue-50 text-blue-700 border-blue-300' :
+                                s.status === 'مرفوض' ? 'bg-red-50 text-red-700 border-red-300' : 'bg-yellow-50 text-yellow-800 border-yellow-300'
+                              }`}>
+                                {s.status}
+                              </span>
+                            </td>
+                            <td className="px-10 py-8">
+                              <div className="flex justify-center gap-4">
+                                <button onClick={() => setSelected(s)} className="p-4 text-white bg-admin-blue hover:bg-slate-700 rounded-2xl shadow-md transition-all"><Eye size={24}/></button>
+                                <button onClick={() => deleteEntry(s.id)} className="p-4 text-red-600 bg-red-50 hover:bg-red-100 rounded-2xl border border-red-200 transition-all"><Trash size={24}/></button>
+                              </div>
+                            </td>
                           </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-200">
-                          {submissions.map(s => (
-                            <tr key={s.id} className="hover:bg-dz-green/5 transition-all group">
-                              <td className="px-8 py-6">
-                                <div className="font-black text-gray-900 text-lg">{s.lastNameAr} {s.firstNameAr}</div>
-                                <div className="text-sm text-gray-600 mt-1 font-medium">NIN: {s.nin}</div>
-                              </td>
-                              <td className="px-8 py-6">
-                                <div className="text-md font-bold text-gray-800">{s.rank}</div>
-                                <div className="text-sm text-dz-green font-black">{s.subject}</div>
-                              </td>
-                              <td className="px-8 py-6 text-center">
-                                <span className={`px-4 py-1.5 rounded-xl text-xs font-black uppercase tracking-wide border-2 ${
-                                  s.status === 'مقبول' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                                  s.status === 'مرفوض' ? 'bg-red-50 text-red-700 border-red-200' : 
-                                  'bg-yellow-50 text-yellow-700 border-yellow-200'
-                                }`}>
-                                  {s.status}
-                                </span>
-                              </td>
-                              <td className="px-8 py-6">
-                                <div className="flex justify-center gap-3">
-                                  <button onClick={() => setSelected(s)} className="p-2.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-xl transition-all shadow-sm" title="عرض كافة البيانات"><Eye size={22} /></button>
-                                  <button onClick={() => deleteEntry(s.id)} className="p-2.5 text-red-500 bg-red-50 hover:bg-red-100 rounded-xl transition-all shadow-sm" title="حذف الطلب"><Trash size={22} /></button>
-                                </div>
-                              </td>
-                            </tr>
-                          ))}
-                          {submissions.length === 0 && (
-                            <tr><td colSpan="4" className="p-20 text-center text-gray-400 font-bold text-xl italic">لا توجد طلبات توظيف مسجلة حالياً</td></tr>
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               )}
             </main>
 
-            {/* Modal Detail View - High Contrast & High Visibility */}
             {selected && (
               <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 modal-overlay">
-                <div className="bg-white rounded-[2.5rem] w-full max-w-5xl max-h-[92vh] overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-300 flex flex-col border border-gray-100">
-                  
-                  <div className="p-8 border-b-2 border-gray-100 flex items-center justify-between bg-gray-50/50">
-                    <h3 className="text-3xl font-black text-gray-900">الملف التفصيلي الكامل</h3>
-                    <button onClick={() => setSelected(null)} className="text-gray-300 hover:text-red-500 text-5xl font-light leading-none transition-all">&times;</button>
+                <div className="bg-white rounded-[3.5rem] w-full max-w-6xl max-h-[92vh] overflow-hidden shadow-2xl flex flex-col border-4 border-slate-200 animate-in zoom-in duration-300">
+                  <div className="p-10 border-b-4 border-slate-50 flex items-center justify-between bg-slate-50">
+                    <div className="flex items-center gap-5">
+                      <div className="bg-dz-green p-3.5 rounded-2xl text-white shadow-xl"><User size={32}/></div>
+                      <div>
+                        <h3 className="text-3xl font-black text-slate-900">ملف: {selected.lastNameAr} {selected.firstNameAr}</h3>
+                        <p className="text-slate-500 font-bold mt-1">NIN: {selected.nin} | هاتف: {selected.phone}</p>
+                      </div>
+                    </div>
+                    <button onClick={() => setSelected(null)} className="text-slate-300 hover:text-red-600 text-7xl font-light transition-all leading-none">&times;</button>
                   </div>
 
-                  <div className="p-10 overflow-y-auto flex-1 bg-white space-y-12">
-                    
-                    {/* Section 1: Personal */}
-                    <div className="bg-gray-50/50 p-8 rounded-3xl border border-gray-100">
-                      <h4 className="text-dz-green font-black text-xl mb-8 border-b-2 border-dz-green/10 pb-4 flex items-center gap-3"><User size={24}/> معلومات الحالة المدنية</h4>
-                      <div className="detail-grid">
-                        <DetailItem label="الاسم واللقب الكامل" value={`${selected.lastNameAr} ${selected.firstNameAr}`} />
-                        <DetailItem label="رقم التعريف الوطني" value={selected.nin} />
-                        <DetailItem label="تاريخ الازدياد" value={selected.birthDate} />
-                        <DetailItem label="الجنس" value={selected.gender} />
-                        <DetailItem label="اسم الأب" value={selected.fatherName} />
-                        <DetailItem label="اسم ولقب الأم" value={`${selected.motherFirstName} ${selected.motherLastName}`} />
-                        <DetailItem label="رقم الهاتف" value={selected.phone} />
-                        <div className="col-span-full"><DetailItem label="العنوان الشخصي بالكامل" value={selected.address} /></div>
+                  <div className="p-12 overflow-y-auto flex-1 bg-white space-y-12">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                      <DetailBlock label="اللقب والاسم" value={`${selected.lastNameAr} ${selected.firstNameAr}`} />
+                      <DetailBlock label="تاريخ الميلاد" value={selected.birthDate} />
+                      <DetailBlock label="الجنس" value={selected.gender} />
+                      <DetailBlock label="الحالة العائلية" value={selected.maritalStatus} />
+                      <DetailBlock label="رقم الهاتف" value={selected.phone} />
+                      <DetailBlock label="البريد الإلكتروني" value={selected.email} />
+                      
+                      <div className="lg:col-span-4 bg-dz-green/5 p-8 rounded-[2.5rem] border-2 border-dz-green/10">
+                        <h4 className="text-dz-green font-black mb-6 text-xl">المؤهل العلمي والمسار الدراسي بالتفصيل</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+                          <DetailBlock label="الشهادة" value={selected.degree} />
+                          <DetailBlock label="التخصص" value={selected.degreeSpecialty} />
+                          <DetailBlock label="رقم الشهادة" value={selected.certNumber} />
+                          <DetailBlock label="تاريخ التخرج" value={selected.gradDate} />
+                          <DetailBlock label="المؤسسة" value={selected.issuingInstitution} />
+                          <DetailBlock label="المعدل العام" value={selected.avgGrade} />
+                          <DetailBlock label="علامة التخرج" value={selected.gradMark || '---'} />
+                          <DetailBlock label="التقدير" value={selected.degreeMention} />
+                        </div>
+
+                        {selected.academicYears && Object.keys(selected.academicYears).length > 0 && (
+                          <div className="space-y-4">
+                            <h5 className="font-black text-slate-700 text-lg mb-4">كشف المعدلات السنوية:</h5>
+                            {Object.entries(selected.academicYears).map(([key, data]) => (
+                              <div key={key} className="bg-white p-6 rounded-2xl border-2 border-slate-100 flex flex-wrap gap-8 items-center">
+                                <span className="font-black text-dz-green min-w-[100px]">السنة {key.replace('Year', '')}</span>
+                                <div className="flex gap-10">
+                                  <div><span className="text-xs text-slate-400 block font-bold">سداسي 1</span> <span className="font-black text-lg">{data.sem1 || '---'}</span></div>
+                                  <div><span className="text-xs text-slate-400 block font-bold">سداسي 2</span> <span className="font-black text-lg">{data.sem2 || '---'}</span></div>
+                                  <div className="bg-dz-green/10 px-4 py-1 rounded-lg"><span className="text-xs text-dz-green block font-black">السنوي</span> <span className="font-black text-dz-green text-lg">{data.annual || '---'}</span></div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {selected.gender === 'ذكر' && (
+                        <div className="lg:col-span-4 bg-slate-50 p-6 rounded-3xl border-2 border-slate-200 grid grid-cols-1 md:grid-cols-4 gap-6">
+                           <DetailBlock label="وضعية الخدمة" value={selected.militaryStatus} />
+                           <DetailBlock label="مرجع الوثيقة" value={selected.militaryDocRef} />
+                           <DetailBlock label="تاريخ الإصدار" value={selected.militaryIssueDate} />
+                           {selected.militaryStatus === 'مؤدى' && (
+                             <>
+                               <DetailBlock label="البداية" value={selected.militaryStartDate} />
+                               <DetailBlock label="النهاية" value={selected.militaryEndDate} />
+                             </>
+                           )}
+                        </div>
+                      )}
+
+                      <div className="lg:col-span-4">
+                        <DetailBlock label="العنوان المفصل" value={selected.address} />
                       </div>
                     </div>
 
-                    {/* Section 2: Job & Education */}
-                    <div className="bg-gray-50/50 p-8 rounded-3xl border border-gray-100">
-                      <h4 className="text-dz-green font-black text-xl mb-8 border-b-2 border-dz-green/10 pb-4 flex items-center gap-3"><Briefcase size={24}/> المسار الوظيفي والدراسي</h4>
-                      <div className="detail-grid">
-                        <DetailItem label="الرتبة والمادة" value={`${selected.rank} (${selected.subject})`} />
-                        <DetailItem label="الشهادة المتحصل عليها" value={selected.degree} />
-                        <DetailItem label="التخصص الدقيق" value={selected.degreeSpecialty} />
-                        <DetailItem label="المعدل العام" value={selected.avgGrade} />
-                        <DetailItem label="معدل آخر سنة" value={selected.s6} />
-                        <DetailItem label="الوضعية الحالية" value={selected.hasJob === 'نعم' ? `موظف: ${selected.currentJob}` : 'بدون وظيفة حالياً'} />
+                    <div className="p-12 rounded-[3rem] admin-panel-dark text-white shadow-2xl">
+                      <h4 className="text-center font-black text-dz-green text-sm uppercase tracking-[0.3em] mb-10">إجراءات المراجعة الإدارية</h4>
+                      <div className="flex flex-wrap justify-center gap-8">
+                        {['قيد الانتظار', 'مقبول', 'مرفوض'].map(st => (
+                          <button 
+                            key={st}
+                            onClick={() => updateStatus(selected.id, st)}
+                            className={`px-16 py-5 rounded-[2rem] font-black text-xl transition-all border-4 ${
+                              selected.status === st 
+                              ? 'bg-dz-green border-dz-green text-white shadow-2xl scale-110' 
+                              : 'bg-transparent border-slate-700 text-slate-400 hover:border-dz-green hover:text-dz-green'
+                            }`}
+                          >
+                            {st}
+                          </button>
+                        ))}
                       </div>
-                    </div>
-
-                    {/* Admin Decision Area */}
-                    <div className="mt-16 p-10 rounded-[2rem] bg-gray-900 text-white shadow-2xl relative overflow-hidden">
-                       <div className="absolute top-0 right-0 w-32 h-32 bg-dz-green opacity-20 blur-3xl -mr-10 -mt-10"></div>
-                       <p className="text-sm font-black text-dz-green mb-6 text-center uppercase tracking-widest">معالجة إدارية للملف</p>
-                       <div className="flex flex-wrap justify-center gap-5">
-                         {['قيد الانتظار', 'مقبول', 'مرفوض'].map(st => (
-                           <button 
-                             key={st}
-                             onClick={() => updateEntryStatus(selected.id, st)}
-                             className={`px-10 py-4 rounded-2xl text-md font-black transition-all border-4 ${
-                               selected.status === st 
-                               ? 'bg-dz-green text-white border-dz-green shadow-xl shadow-dz-green/40' 
-                               : 'bg-transparent text-gray-400 border-gray-700 hover:border-dz-green hover:text-dz-green'
-                             }`}
-                           >
-                             {st}
-                           </button>
-                         ))}
-                       </div>
                     </div>
                   </div>
 
-                  <div className="p-8 bg-gray-50 border-t-2 border-gray-100 flex justify-end">
-                    <button onClick={() => setSelected(null)} className="bg-white border-2 border-gray-200 text-gray-900 font-black py-3 px-10 rounded-2xl hover:bg-gray-100 transition-all shadow-sm">إغلاق التفاصيل</button>
+                  <div className="p-10 bg-slate-100 border-t-4 border-slate-200 flex justify-end">
+                    <button onClick={() => setSelected(null)} className="bg-white border-2 border-slate-300 text-slate-900 font-black py-4 px-16 rounded-2xl hover:bg-slate-200 transition-all">إغلاق</button>
                   </div>
                 </div>
               </div>
@@ -339,10 +562,10 @@
         );
       }
 
-      const DetailItem = ({ label, value }) => (
-        <div className="flex flex-col gap-2 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
-          <span className="text-xs font-black text-gray-500 uppercase tracking-wider">{label}</span>
-          <span className="text-lg font-black text-gray-900 break-words leading-tight">{value || '---'}</span>
+      const DetailBlock = ({ label, value }) => (
+        <div className="detail-card">
+          <span className="detail-label">{label}</span>
+          <span className="detail-value">{value || '---'}</span>
         </div>
       );
 
