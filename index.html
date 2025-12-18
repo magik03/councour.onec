@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>نظام المسابقات - إدارة القوائم الديناميكية</title>
+    <title>لوحة التحكم الديناميكية - إدارة شاملة</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -16,12 +17,12 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <style>
-        body { font-family: 'Tajawal', sans-serif; background-color: #f1f5f9; }
-        input, select { border: 2px solid #cbd5e1; padding: 0.6rem; border-radius: 0.5rem; width: 100%; margin-top: 0.2rem; }
-        .admin-table th { background-color: #1e293b; color: white; padding: 12px; text-align: right; border: 1px solid #334155; }
-        .admin-table td { padding: 10px; border: 1px solid #e2e8f0; }
-        .tab-btn { padding: 10px 20px; font-weight: bold; border-radius: 8px; transition: 0.3s; }
-        .active-tab { background-color: #2563eb; color: white; }
+        body { font-family: 'Tajawal', sans-serif; background: #f8fafc; }
+        .sidebar-item { @apply flex items-center justify-between w-full p-4 rounded-2xl font-bold transition-all duration-200 mb-2; }
+        .tab-active { @apply bg-blue-600 text-white shadow-lg; }
+        .tab-inactive { @apply text-slate-500 hover:bg-white hover:shadow-sm hover:text-blue-600; }
+        input { @apply w-full p-3 rounded-xl border-2 border-slate-200 outline-none focus:border-blue-500 transition-all; }
+        .card { @apply bg-white p-6 rounded-3xl shadow-sm border border-slate-100; }
     </style>
 </head>
 <body>
@@ -47,174 +48,153 @@
         const App = () => {
             const [view, setView] = useState('user'); 
             const [isLoggedIn, setIsLoggedIn] = useState(false);
+            const [tabs, setTabs] = useState([]);
 
             useEffect(() => {
-                const unsub = auth.onAuthStateChanged(user => setIsLoggedIn(!!user));
-                return unsub;
+                const unsubAuth = auth.onAuthStateChanged(user => setIsLoggedIn(!!user));
+                const unsubTabs = db.collection("settings").doc("navigation").onSnapshot(doc => {
+                    if (doc.exists) setTabs(doc.data().list);
+                    else {
+                        // إنشاء التبويبات الافتراضية إذا كانت غير موجودة
+                        const initial = [
+                            { id: 'data', label: 'المترشحين', icon: 'fa-users' },
+                            { id: 'manage', label: 'إدارة التبويبات', icon: 'fa-gear' }
+                        ];
+                        db.collection("settings").doc("navigation").set({ list: initial });
+                    }
+                });
+                return () => { unsubAuth(); unsubTabs(); };
             }, []);
 
             return (
                 <div className="min-h-screen">
-                    <nav className="bg-slate-900 text-white p-4 flex justify-between items-center sticky top-0 z-50 shadow-xl">
-                        <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center font-black">M</div>
-                            <h1 className="font-black text-lg">بوابة المسابقات</h1>
+                    <header className="h-16 bg-white border-b flex justify-between items-center px-6 sticky top-0 z-50">
+                        <div className="flex items-center gap-2 font-black text-blue-600">
+                            <i className="fa-solid fa-server text-xl"></i>
+                            <span>نظام الإدارة</span>
                         </div>
-                        <button 
-                            onClick={() => setView(view === 'user' ? 'admin' : 'user')}
-                            className="bg-blue-600 hover:bg-blue-700 px-5 py-2 rounded-lg font-bold text-sm transition shadow-lg"
-                        >
-                            {view === 'user' ? 'لوحة الإدارة' : 'الرجوع للاستمارة'}
+                        <button onClick={() => setView(view === 'user' ? 'admin' : 'user')} className="text-sm font-bold bg-slate-100 px-4 py-2 rounded-lg">
+                            {view === 'user' ? 'فتح لوحة التحكم' : 'خروج للموقع'}
                         </button>
-                    </nav>
+                    </header>
 
-                    {view === 'user' ? <UserForm /> : (isLoggedIn ? <AdminPanel /> : <AdminLogin />)}
+                    {view === 'user' ? (
+                        <div className="p-20 text-center text-slate-400 font-bold">واجهة المترشحين</div>
+                    ) : (
+                        isLoggedIn ? <AdminArea tabs={tabs} /> : <AdminLogin />
+                    )}
                 </div>
             );
         };
 
-        // --- 1. استمارة المستخدم (تحمل القوائم من Firebase) ---
-        const UserForm = () => {
-            const [loading, setLoading] = useState(false);
-            const [success, setSuccess] = useState(false);
-            const [lists, setLists] = useState({ ranks: [], subjects: [] });
-            const [formData, setFormData] = useState({ nin: '', firstName: '', lastName: '', rank: '', subject: '', phone: '' });
-
-            useEffect(() => {
-                db.collection("settings").doc("lists").onSnapshot(doc => {
-                    if (doc.exists) setLists(doc.data());
-                });
-            }, []);
-
-            const submitForm = async (e) => {
-                e.preventDefault();
-                setLoading(true);
-                try {
-                    await db.collection("candidates").add({ ...formData, submittedAt: firebase.firestore.FieldValue.serverTimestamp() });
-                    setSuccess(true);
-                } catch (err) { alert("خطأ في الحفظ"); } finally { setLoading(false); }
-            };
-
-            if (success) return <div className="p-20 text-center"><h2 className="text-2xl font-black">✅ تم التسجيل بنجاح!</h2><button onClick={() => setSuccess(false)} className="mt-4 bg-blue-600 text-white px-6 py-2 rounded-lg">تسجيل مترشح آخر</button></div>;
+        const AdminArea = ({ tabs }) => {
+            const [activeTab, setActiveTab] = useState(tabs[0]?.id || 'data');
 
             return (
-                <div className="max-w-2xl mx-auto py-10 px-4">
-                    <form onSubmit={submitForm} className="bg-white p-8 rounded-2xl shadow-xl space-y-4">
-                        <h2 className="text-xl font-black border-r-4 border-blue-600 pr-3">استمارة المترشح</h2>
-                        <input type="text" placeholder="رقم التعريف الوطني (NIN)" required onChange={e => setFormData({...formData, nin: e.target.value})} />
-                        <div className="grid grid-cols-2 gap-4">
-                            <input type="text" placeholder="الاسم" required onChange={e => setFormData({...formData, firstName: e.target.value})} />
-                            <input type="text" placeholder="اللقب" required onChange={e => setFormData({...formData, lastName: e.target.value})} />
-                        </div>
-                        
-                        <label className="text-xs font-bold text-slate-500">اختر الرتبة المطلوبة:</label>
-                        <select required onChange={e => setFormData({...formData, rank: e.target.value})}>
-                            <option value="">-- اختر الرتبة --</option>
-                            {lists.ranks?.map(r => <option key={r} value={r}>{r}</option>)}
-                        </select>
-
-                        <label className="text-xs font-bold text-slate-500">اختر المادة / التخصص:</label>
-                        <select required onChange={e => setFormData({...formData, subject: e.target.value})}>
-                            <option value="">-- اختر التخصص --</option>
-                            {lists.subjects?.map(s => <option key={s} value={s}>{s}</option>)}
-                        </select>
-
-                        <input type="tel" placeholder="رقم الهاتف" required onChange={e => setFormData({...formData, phone: e.target.value})} />
-                        
-                        <button type="submit" disabled={loading} className="w-full bg-blue-600 text-white font-black py-4 rounded-xl shadow-lg">
-                            {loading ? "جاري الحفظ..." : "تأكيد التسجيل"}
-                        </button>
-                    </form>
-                </div>
-            );
-        };
-
-        // --- 2. لوحة الإدارة (تحتوي على تبويبين) ---
-        const AdminPanel = () => {
-            const [tab, setTab] = useState('candidates');
-
-            return (
-                <div className="p-4 md:p-8">
-                    <div className="flex gap-4 mb-8 bg-white p-2 rounded-xl shadow-sm w-fit">
-                        <button onClick={() => setTab('candidates')} className={`tab-btn ${tab === 'candidates' ? 'active-tab' : 'text-slate-600'}`}>قائمة المترشحين</button>
-                        <button onClick={() => setTab('config')} className={`tab-btn ${tab === 'config' ? 'active-tab' : 'text-slate-600'}`}>إدارة القوائم</button>
-                    </div>
-
-                    {tab === 'candidates' ? <CandidatesList /> : <ConfigPanel />}
-                </div>
-            );
-        };
-
-        // --- قائمة المترشحين ---
-        const CandidatesList = () => {
-            const [data, setData] = useState([]);
-            useEffect(() => {
-                return db.collection("candidates").orderBy("submittedAt", "desc").onSnapshot(snap => {
-                    setData(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-                });
-            }, []);
-
-            return (
-                <div className="bg-white rounded-xl shadow-lg overflow-x-auto">
-                    <table className="w-full admin-table text-right">
-                        <thead><tr><th>الاسم</th><th>NIN</th><th>الرتبة</th><th>التخصص</th><th>الهاتف</th></tr></thead>
-                        <tbody>
-                            {data.map(c => (
-                                <tr key={c.id}><td>{c.firstName} {c.lastName}</td><td className="text-xs text-blue-600">{c.nin}</td><td>{c.rank}</td><td>{c.subject}</td><td>{c.phone}</td></tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            );
-        };
-
-        // --- لوحة التحكم في القوائم (إضافة وحذف) ---
-        const ConfigPanel = () => {
-            const [lists, setLists] = useState({ ranks: [], subjects: [] });
-            const [newItem, setNewItem] = useState('');
-
-            useEffect(() => {
-                return db.collection("settings").doc("lists").onSnapshot(doc => {
-                    if (doc.exists) setLists(doc.data());
-                });
-            }, []);
-
-            const addItem = async (category) => {
-                if (!newItem) return;
-                await db.collection("settings").doc("lists").set({
-                    [category]: firebase.firestore.FieldValue.arrayUnion(newItem)
-                }, { merge: true });
-                setNewItem('');
-            };
-
-            const deleteItem = async (category, item) => {
-                await db.collection("settings").doc("lists").update({
-                    [category]: firebase.firestore.FieldValue.arrayRemove(item)
-                });
-            };
-
-            const ListManager = ({ title, items, category }) => (
-                <div className="bg-white p-6 rounded-2xl shadow-md border border-slate-200">
-                    <h3 className="font-black text-lg mb-4 text-slate-800">{title}</h3>
-                    <div className="flex gap-2 mb-4">
-                        <input type="text" placeholder="إضافة جديد..." className="!mt-0" value={newItem} onChange={e => setNewItem(e.target.value)} />
-                        <button onClick={() => addItem(category)} className="bg-green-600 text-white px-4 rounded-lg font-bold">+</button>
-                    </div>
-                    <div className="space-y-2">
-                        {items?.map(item => (
-                            <div key={item} className="flex justify-between items-center bg-slate-50 p-2 rounded border">
-                                <span className="font-bold text-sm">{item}</span>
-                                <button onClick={() => deleteItem(category, item)} className="text-red-500 font-bold px-2">✕</button>
-                            </div>
+                <div className="flex flex-col md:flex-row min-h-[calc(100vh-64px)]">
+                    <aside className="w-full md:w-72 bg-slate-50 border-l p-6">
+                        <p className="text-[10px] font-black text-slate-400 mb-4 uppercase">القائمة</p>
+                        {tabs.map(tab => (
+                            <button 
+                                key={tab.id} 
+                                onClick={() => setActiveTab(tab.id)}
+                                className={`sidebar-item ${activeTab === tab.id ? 'tab-active' : 'tab-inactive'}`}
+                            >
+                                <div className="flex items-center gap-3">
+                                    <i className={`fa-solid ${tab.icon}`}></i>
+                                    {tab.label}
+                                </div>
+                            </button>
                         ))}
-                    </div>
+                    </aside>
+
+                    <main className="flex-1 p-8">
+                        {activeTab === 'manage' ? <TabsEditor tabs={tabs} /> : (
+                            <div className="card">
+                                <h2 className="text-2xl font-black mb-4">محتوى التبويب: {tabs.find(t => t.id === activeTab)?.label}</h2>
+                                <p className="text-slate-500">هذه المساحة مخصصة لعرض بيانات {tabs.find(t => t.id === activeTab)?.label}.</p>
+                            </div>
+                        )}
+                    </main>
                 </div>
             );
+        };
+
+        const TabsEditor = ({ tabs }) => {
+            const [editingTab, setEditingTab] = useState(null);
+            const [newTab, setNewTab] = useState({ label: '', icon: 'fa-star' });
+
+            const save = (newList) => db.collection("settings").doc("navigation").update({ list: newList });
+
+            const handleAdd = () => {
+                if (!newTab.label) return;
+                const id = 't_' + Date.now();
+                save([...tabs, { ...newTab, id }]);
+                setNewTab({ label: '', icon: 'fa-star' });
+            };
+
+            const handleDelete = (id) => {
+                if (confirm("هل أنت متأكد من حذف هذا التبويب نهائياً؟")) {
+                    save(tabs.filter(t => t.id !== id));
+                }
+            };
+
+            const handleUpdate = () => {
+                const newList = tabs.map(t => t.id === editingTab.id ? editingTab : t);
+                save(newList);
+                setEditingTab(null);
+            };
 
             return (
-                <div className="grid md:grid-cols-2 gap-8">
-                    <ListManager title="إدارة الرتب" items={lists.ranks} category="ranks" />
-                    <ListManager title="إدارة المواد / التخصصات" items={lists.subjects} category="subjects" />
+                <div className="max-w-4xl space-y-6">
+                    {/* إضافة تبويب جديد */}
+                    <div className="card border-r-4 border-blue-600">
+                        <h3 className="font-black mb-4 text-slate-800">إضافة تبويب جديد</h3>
+                        <div className="flex flex-col md:flex-row gap-3">
+                            <input placeholder="اسم التبويب (مثلاً: الإحصائيات)" value={newTab.label} onChange={e => setNewTab({...newTab, label: e.target.value})} />
+                            <input placeholder="أيقونة (fa-user)" value={newTab.icon} onChange={e => setNewTab({...newTab, icon: e.target.value})} />
+                            <button onClick={handleAdd} className="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold">إضافة</button>
+                        </div>
+                    </div>
+
+                    {/* قائمة التبويبات مع خيارات التعديل والحذف */}
+                    <div className="card">
+                        <h3 className="font-black mb-6 text-slate-800 text-lg underline">التحكم في التبويبات الحالية</h3>
+                        <div className="space-y-3">
+                            {tabs.map(tab => (
+                                <div key={tab.id} className="bg-slate-50 p-4 rounded-2xl flex flex-col md:flex-row justify-between gap-4 border border-slate-100">
+                                    {editingTab?.id === tab.id ? (
+                                        <div className="flex flex-1 flex-col md:flex-row gap-2">
+                                            <input value={editingTab.label} onChange={e => setEditingTab({...editingTab, label: e.target.value})} />
+                                            <input value={editingTab.icon} onChange={e => setEditingTab({...editingTab, icon: e.target.value})} />
+                                            <button onClick={handleUpdate} className="bg-green-600 text-white px-4 rounded-xl font-bold">حفظ</button>
+                                            <button onClick={() => setEditingTab(null)} className="bg-slate-300 px-4 rounded-xl font-bold">إلغاء</button>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-blue-600 shadow-sm border border-slate-100">
+                                                    <i className={`fa-solid ${tab.icon} text-lg`}></i>
+                                                </div>
+                                                <div>
+                                                    <p className="font-black text-slate-800">{tab.label}</p>
+                                                    <p className="text-[10px] text-slate-400 font-mono italic">{tab.icon}</p>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <button onClick={() => setEditingTab(tab)} className="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all">
+                                                    <i className="fa-solid fa-pen-to-square"></i>
+                                                </button>
+                                                <button onClick={() => handleDelete(tab.id)} className="w-10 h-10 rounded-lg bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-all">
+                                                    <i className="fa-solid fa-trash-can"></i>
+                                                </button>
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
                 </div>
             );
         };
@@ -222,17 +202,17 @@
         const AdminLogin = () => {
             const [email, setEmail] = useState('');
             const [pass, setPass] = useState('');
-            const handleLogin = async (e) => {
+            const login = async (e) => {
                 e.preventDefault();
-                try { await auth.signInWithEmailAndPassword(email, pass); } catch (err) { alert("بيانات خاطئة"); }
+                try { await auth.signInWithEmailAndPassword(email, pass); } catch(err) { alert("بيانات خاطئة!"); }
             };
             return (
-                <div className="max-w-md mx-auto mt-20 p-8 bg-white rounded-3xl shadow-xl">
-                    <h2 className="text-2xl font-black text-center mb-6">دخول الإدارة</h2>
-                    <form onSubmit={handleLogin} className="space-y-4">
-                        <input type="email" placeholder="البريد" onChange={e => setEmail(e.target.value)} />
-                        <input type="password" placeholder="كلمة السر" onChange={e => setPass(e.target.value)} />
-                        <button className="w-full bg-slate-900 text-white py-3 rounded-xl font-bold">دخول</button>
+                <div className="max-w-md mx-auto mt-20 card border-t-8 border-slate-900">
+                    <h2 className="text-2xl font-black text-center mb-8">تسجيل الدخول</h2>
+                    <form onSubmit={login} className="space-y-4">
+                        <input type="email" placeholder="البريد الإلكتروني" onChange={e => setEmail(e.target.value)} />
+                        <input type="password" placeholder="كلمة المرور" onChange={e => setPass(e.target.value)} />
+                        <button className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black">دخول آمن</button>
                     </form>
                 </div>
             );
