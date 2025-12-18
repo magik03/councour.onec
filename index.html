@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>نظام المسابقات المتطور</title>
+    <title>بوابة المسابقات - استمارة التسجيل</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -17,12 +17,19 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <style>
-        body { font-family: 'Tajawal', sans-serif; background: #f8fafc; }
+        body { font-family: 'Tajawal', sans-serif; background: #f8fafc; margin: 0; padding: 0; }
         .sidebar-btn { @apply flex items-center justify-between w-full p-4 rounded-2xl font-bold transition-all mb-2; }
         .tab-active { @apply bg-blue-600 text-white shadow-xl; }
         .tab-inactive { @apply text-slate-500 hover:bg-white hover:text-blue-600; }
-        input, select, textarea { @apply w-full p-3 rounded-xl border-2 border-slate-100 focus:border-blue-500 outline-none transition-all font-bold; }
-        .field-card { @apply bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm relative transition-all hover:shadow-md; }
+        
+        /* تحسين المدخلات لتكون أكثر حداثة */
+        input, select, textarea { 
+            @apply w-full p-4 rounded-2xl border-2 border-slate-100 focus:border-blue-500 focus:ring-4 focus:ring-blue-50 outline-none transition-all font-bold text-slate-700 bg-slate-50; 
+        }
+        
+        /* أنيميشن بسيط لظهور العناصر */
+        .fade-in { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
@@ -63,17 +70,217 @@
 
             return (
                 <div className="min-h-screen flex flex-col">
-                    <nav className="h-16 bg-white border-b px-8 flex justify-between items-center sticky top-0 z-50">
+                    {/* Header المتجاوب */}
+                    <nav className="h-16 md:h-20 bg-white border-b px-4 md:px-8 flex justify-between items-center sticky top-0 z-50">
                         <div className="flex items-center gap-2">
-                            <i className="fa-solid fa-id-card text-blue-600 text-xl"></i>
-                            <h1 className="font-black text-slate-800">بوابة المسابقات</h1>
+                            <div className="bg-blue-600 p-2 rounded-lg text-white">
+                                <i className="fa-solid fa-file-signature"></i>
+                            </div>
+                            <h1 className="font-black text-slate-800 text-sm md:text-xl">بوابة المسابقات</h1>
                         </div>
-                        <button onClick={() => setView(view === 'user' ? 'admin' : 'user')} className="bg-slate-100 px-4 py-2 rounded-xl font-bold text-xs hover:bg-slate-200">
-                            {view === 'user' ? 'لوحة التحكم' : 'عرض الموقع'}
+                        <button onClick={() => setView(view === 'user' ? 'admin' : 'user')} className="bg-slate-100 px-3 py-2 md:px-5 md:py-2 rounded-xl font-bold text-[10px] md:text-xs hover:bg-slate-200 transition-colors">
+                            {view === 'user' ? (<span><i className="fa-solid fa-lock ml-1"></i>لوحة التحكم</span>) : 'عرض الموقع'}
                         </button>
                     </nav>
 
                     {view === 'user' ? <UserView fields={fields} /> : (isLoggedIn ? <AdminDashboard fields={fields} navigation={navigation} /> : <AdminLogin />)}
+                </div>
+            );
+        };
+
+        const UserView = ({ fields }) => {
+            const [f, setF] = useState({});
+            const [sending, setSending] = useState(false);
+            
+            const validateInput = (val, rule) => {
+                if (rule === 'numbers') return val.replace(/\D/g, '');
+                if (rule === 'ar') return val.replace(/[^\u0600-\u06FF\s]/g, '');
+                if (rule === 'en') return val.replace(/[^a-zA-Z\s]/g, '');
+                return val;
+            };
+
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                setSending(true);
+                try {
+                    await db.collection("candidates").add({
+                        ...f, 
+                        submittedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    alert("تم إرسال ترشحكم بنجاح!");
+                    setF({});
+                } catch (err) {
+                    alert("خطأ في الإرسال، يرجى المحاولة لاحقاً");
+                }
+                setSending(false);
+            };
+
+            return (
+                <div className="flex-1 flex flex-col items-center py-6 md:py-12 px-4 bg-[#f8fafc]">
+                    <div className="w-full max-w-5xl fade-in">
+                        <div className="bg-white rounded-[2.5rem] md:rounded-[4rem] shadow-2xl shadow-blue-100/50 overflow-hidden border border-white">
+                            
+                            {/* الجزء العلوي الملون */}
+                            <div className="bg-slate-900 p-8 md:p-12 text-center relative">
+                                <div className="absolute top-0 right-0 p-10 opacity-10">
+                                    <i className="fa-solid fa-paper-plane text-8xl text-white"></i>
+                                </div>
+                                <h2 className="text-3xl md:text-5xl font-black text-white mb-4">استمارة الترشح</h2>
+                                <p className="text-blue-200 font-medium text-sm md:text-lg">يرجى ملء كافة الحقول بعناية لضمان قبول طلبك</p>
+                            </div>
+
+                            <form onSubmit={handleSubmit} className="p-6 md:p-16">
+                                {/* توزيع الحقول في شبكة (Grid) */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-10 text-right">
+                                    {Object.keys(fields).map(key => fields[key].active && (
+                                        <div key={key} className="space-y-2">
+                                            <label className="text-sm font-black text-slate-700 block px-2">
+                                                {fields[key].label}
+                                                {fields[key].rule !== 'any' && <span className="text-blue-500 mr-1">*</span>}
+                                            </label>
+                                            <div className="relative group">
+                                                <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors">
+                                                    <i className={`fa-solid ${fields[key].icon} text-lg`}></i>
+                                                </div>
+                                                
+                                                {fields[key].rule === 'select' ? (
+                                                    <select required className="!pr-12" onChange={e => setF({...f, [key]: e.target.value})}>
+                                                        <option value="">اختر من القائمة...</option>
+                                                        {(fields[key].options || "").split(',').map(opt => (
+                                                            <option key={opt} value={opt}>{opt.trim()}</option>
+                                                        ))}
+                                                    </select>
+                                                ) : (
+                                                    <input 
+                                                        required
+                                                        type={fields[key].rule === 'date' ? 'date' : 'text'}
+                                                        value={f[key] || ''} 
+                                                        placeholder={fields[key].placeholder} 
+                                                        className="!pr-12" 
+                                                        onChange={e => setF({...f, [key]: validateInput(e.target.value, fields[key].rule)})} 
+                                                    />
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <div className="flex flex-col items-center">
+                                    <button 
+                                        disabled={sending}
+                                        className="w-full md:w-80 bg-blue-600 text-white py-5 rounded-2xl font-black text-xl shadow-xl shadow-blue-200 hover:bg-blue-700 hover:-translate-y-1 transition-all active:scale-95 disabled:bg-slate-300"
+                                    >
+                                        {sending ? <i className="fa-solid fa-spinner fa-spin ml-2"></i> : <i className="fa-solid fa-check-double ml-2"></i>}
+                                        إرسال الاستمارة
+                                    </button>
+                                    <p className="mt-4 text-slate-400 text-xs font-bold">بإرسالك الاستمارة أنت توافق على شروط الخصوصية</p>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // المكونات الأخرى (AdminDashboard, FieldsManager, TabsManager, CandidatesManager, AdminLogin) تبقى كما هي في الكود السابق
+        // مع التأكد من إضافة خاصية Responsive للجدول في CandidatesManager
+        
+        const CandidatesManager = ({ data, fields }) => {
+            const columns = Object.keys(fields).filter(k => fields[k].active);
+            return (
+                <div className="space-y-4">
+                    <h2 className="text-2xl font-black text-slate-800">إدارة المترشحين</h2>
+                    <div className="bg-white rounded-3xl shadow-sm overflow-hidden border">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-right">
+                                <thead className="bg-slate-900 text-white">
+                                    <tr>
+                                        {columns.map(c => <th key={c} className="p-4 whitespace-nowrap text-xs">{fields[c].label}</th>)}
+                                        <th className="p-4 text-center text-xs">الإجراء</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {data.map(item => (
+                                        <tr key={item.id} className="border-b hover:bg-slate-50 transition-colors">
+                                            {columns.map(c => <td key={c} className="p-4 font-bold text-xs md:text-sm">{item[c] || '-'}</td>)}
+                                            <td className="p-4 text-center">
+                                                <button onClick={()=>db.collection("candidates").doc(item.id).delete()} className="text-red-400 hover:text-red-600"><i className="fa-solid fa-trash"></i></button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // (تكملة مكونات لوحة التحكم كما في الكود السابق...)
+        const FieldsManager = ({ fields }) => {
+            const [newK, setNewK] = useState('');
+            const save = (d) => db.collection("settings").doc("fields").set(d);
+            const update = (k, p, v) => save({ ...fields, [k]: { ...fields[k], [p]: v } });
+            
+            return (
+                <div className="fade-in">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10">
+                        <h2 className="text-2xl font-black text-slate-800">إدارة حقول الاستمارة</h2>
+                        <div className="flex gap-2 bg-white p-2 rounded-2xl border shadow-sm w-full md:w-auto">
+                            <input placeholder="اسم الحقل (id)..." className="!border-none w-full md:w-40" value={newK} onChange={e=>setNewK(e.target.value)} />
+                            <button onClick={()=>{ if(newK) { save({...fields, [newK]: {label:'حقل جديد', placeholder:'...', icon:'fa-star', iconColor:'#3b82f6', active:true, rule:'any', options:''}}); setNewK(''); } }} className="bg-blue-600 text-white px-6 py-2 rounded-xl font-bold whitespace-nowrap">+ إضافة</button>
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                        {Object.keys(fields).map(key => (
+                            <div key={key} className="field-card border-t-4" style={{borderColor: fields[key].iconColor}}>
+                                <div className="flex justify-between items-center mb-6">
+                                    <input type="checkbox" className="w-5 h-5 accent-blue-600" checked={fields[key].active} onChange={e => update(key, 'active', e.target.checked)} />
+                                    <span className="font-black text-slate-400 text-[10px] tracking-widest uppercase bg-slate-50 px-3 py-1 rounded-full">{key}</span>
+                                    <button onClick={()=>{ if(confirm("حذف؟")) { const n={...fields}; delete n[key]; save(n); } }} className="text-red-400 hover:text-red-600"><i className="fa-solid fa-trash-can"></i></button>
+                                </div>
+                                <div className="space-y-4">
+                                    <input value={fields[key].label} onChange={e => update(key, 'label', e.target.value)} placeholder="اسم الحقل الظاهر" />
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <select value={fields[key].rule || 'any'} onChange={e => update(key, 'rule', e.target.value)}>
+                                            <option value="any">نص حر</option>
+                                            <option value="numbers">أرقام فقط</option>
+                                            <option value="ar">أحرف عربية</option>
+                                            <option value="en">أحرف لاتينية (En)</option>
+                                            <option value="date">تاريخ</option>
+                                            <option value="select">قائمة منسدلة</option>
+                                        </select>
+                                        <input value={fields[key].icon} onChange={e => update(key, 'icon', e.target.value)} placeholder="أيقونة (fa-user)" />
+                                    </div>
+                                    {fields[key].rule === 'select' && (
+                                        <textarea value={fields[key].options || ''} onChange={e => update(key, 'options', e.target.value)} placeholder="الخيارات: خيار 1, خيار 2" className="text-xs h-20" />
+                                    )}
+                                    <div className="flex gap-2">
+                                        <input value={fields[key].placeholder} onChange={e => update(key, 'placeholder', e.target.value)} placeholder="نص المساعدة" />
+                                        <input type="color" value={fields[key].iconColor} onChange={e => update(key, 'iconColor', e.target.value)} className="w-14 h-14 !p-1 cursor-pointer" />
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        };
+
+        const TabsManager = ({ navigation }) => {
+            const save = (l) => db.collection("settings").doc("navigation").set({ list: l });
+            return (
+                <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border max-w-xl fade-in">
+                    <div className="flex justify-between items-center mb-8">
+                        <h2 className="text-xl font-black">إدارة أزرار التنقل</h2>
+                        <button onClick={()=>{ const n=prompt("الاسم:"); if(n) save([...navigation, {id:'t'+Date.now(), label:n, icon:'fa-star'}]); }} className="bg-green-600 text-white px-4 py-2 rounded-xl font-bold text-sm">+ إضافة</button>
+                    </div>
+                    {navigation.map(tab => (
+                        <div key={tab.id} className="flex justify-between items-center p-4 bg-slate-50 rounded-2xl mb-2 hover:bg-slate-100 transition-colors">
+                            <span className="font-bold text-sm md:text-base"><i className={`fa-solid ${tab.icon} ml-3 text-blue-500`}></i>{tab.label}</span>
+                            {tab.id !== 'candidates' && <button onClick={()=>save(navigation.filter(t=>t.id!==tab.id))} className="text-red-500"><i className="fa-solid fa-trash"></i></button>}
+                        </div>
+                    ))}
                 </div>
             );
         };
@@ -90,19 +297,19 @@
             }, []);
 
             return (
-                <div className="flex flex-1 flex-col md:flex-row">
-                    <aside className="w-full md:w-72 bg-slate-50 border-l p-6">
+                <div className="flex flex-1 flex-col md:flex-row h-full">
+                    <aside className="w-full md:w-72 bg-white md:bg-slate-50 border-l border-b md:border-b-0 p-4 md:p-6 overflow-x-auto flex md:flex-col gap-2">
                         {navigation.map(tab => (
-                            <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`sidebar-btn ${activeTab === tab.id ? 'tab-active' : 'tab-inactive'}`}>
-                                <div className="flex items-center gap-3"><i className={`fa-solid ${tab.icon}`}></i>{tab.label}</div>
+                            <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`sidebar-btn flex-shrink-0 md:flex-shrink ${activeTab === tab.id ? 'tab-active' : 'tab-inactive'}`}>
+                                <div className="flex items-center gap-3"><i className={`fa-solid ${tab.icon}`}></i><span className="hidden md:inline">{tab.label}</span></div>
                             </button>
                         ))}
-                        <button onClick={() => auth.signOut()} className="sidebar-btn text-red-500 mt-10 hover:bg-red-50">
-                            <i className="fa-solid fa-power-off"></i> تسجيل الخروج
+                        <button onClick={() => auth.signOut()} className="sidebar-btn text-red-500 hover:bg-red-50 whitespace-nowrap">
+                            <i className="fa-solid fa-power-off ml-2"></i><span className="hidden md:inline">خروج</span>
                         </button>
                     </aside>
 
-                    <main className="flex-1 p-8">
+                    <main className="flex-1 p-4 md:p-8">
                         {activeTab === 'candidates' && <CandidatesManager data={candidates} fields={fields} />}
                         {activeTab === 'manage-fields' && <FieldsManager fields={fields} />}
                         {activeTab === 'manage-tabs' && <TabsManager navigation={navigation} />}
@@ -111,160 +318,18 @@
             );
         };
 
-        const FieldsManager = ({ fields }) => {
-            const [newK, setNewK] = useState('');
-            const save = (d) => db.collection("settings").doc("fields").set(d);
-            const update = (k, p, v) => save({ ...fields, [k]: { ...fields[k], [p]: v } });
-            
-            return (
-                <div>
-                    <div className="flex justify-between items-center mb-10">
-                        <h2 className="text-2xl font-black text-slate-800">إدارة حقول الاستمارة</h2>
-                        <div className="flex gap-2 bg-white p-2 rounded-2xl border shadow-sm">
-                            <input placeholder="اسم الحقل (id)..." className="!border-none w-40" value={newK} onChange={e=>setNewK(e.target.value)} />
-                            <button onClick={()=>{ if(newK) { save({...fields, [newK]: {label:'حقل جديد', placeholder:'...', icon:'fa-star', iconColor:'#3b82f6', active:true, rule:'any', options:''}}); setNewK(''); } }} className="bg-blue-600 text-white px-6 py-2 rounded-xl font-bold">+ إضافة</button>
-                        </div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        {Object.keys(fields).map(key => (
-                            <div key={key} className="field-card border-t-4" style={{borderColor: fields[key].iconColor}}>
-                                <div className="flex justify-between items-center mb-6">
-                                    <input type="checkbox" className="w-5 h-5" checked={fields[key].active} onChange={e => update(key, 'active', e.target.checked)} />
-                                    <span className="font-black text-slate-400 text-xs tracking-widest uppercase">{key}</span>
-                                    <button onClick={()=>{ if(confirm("حذف؟")) { const n={...fields}; delete n[key]; save(n); } }} className="text-red-400 hover:text-red-600"><i className="fa-solid fa-trash-can"></i></button>
-                                </div>
-                                <div className="space-y-4">
-                                    <input value={fields[key].label} onChange={e => update(key, 'label', e.target.value)} placeholder="اسم الحقل الظاهر" />
-                                    
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <select value={fields[key].rule || 'any'} onChange={e => update(key, 'rule', e.target.value)}>
-                                            <option value="any">نص حر</option>
-                                            <option value="numbers">أرقام فقط</option>
-                                            <option value="ar">أحرف عربية</option>
-                                            <option value="en">أحرف لاتينية (En)</option>
-                                            <option value="date">تاريخ</option>
-                                            <option value="select">قائمة منسدلة</option>
-                                        </select>
-                                        <input value={fields[key].icon} onChange={e => update(key, 'icon', e.target.value)} placeholder="أيقونة" />
-                                    </div>
-
-                                    {fields[key].rule === 'select' && (
-                                        <textarea 
-                                            value={fields[key].options || ''} 
-                                            onChange={e => update(key, 'options', e.target.value)} 
-                                            placeholder="أدخل الخيارات مفصولة بفاصلة (مثال: دكتوراه,ماستر,ليسانس)"
-                                            className="text-xs h-20"
-                                        />
-                                    )}
-                                    
-                                    <div className="flex gap-2 items-center">
-                                        <input value={fields[key].placeholder} onChange={e => update(key, 'placeholder', e.target.value)} placeholder="نص توضيحي داخل الحقل" />
-                                        <input type="color" value={fields[key].iconColor} onChange={e => update(key, 'iconColor', e.target.value)} className="w-12 h-12 !p-0 border-none cursor-pointer" />
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            );
-        };
-
-        const CandidatesManager = ({ data, fields }) => {
-            const columns = Object.keys(fields).filter(k => fields[k].active);
-            return (
-                <div className="bg-white rounded-3xl shadow-sm overflow-x-auto border">
-                    <table className="w-full text-right">
-                        <thead className="bg-slate-900 text-white">
-                            <tr>
-                                {columns.map(c => <th key={c} className="p-4 whitespace-nowrap">{fields[c].label}</th>)}
-                                <th className="p-4 text-center">الإجراء</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {data.map(item => (
-                                <tr key={item.id} className="border-b hover:bg-slate-50">
-                                    {columns.map(c => <td key={c} className="p-4 font-bold">{item[c] || '-'}</td>)}
-                                    <td className="p-4 text-center">
-                                        <button onClick={()=>db.collection("candidates").doc(item.id).delete()} className="text-red-500"><i className="fa-solid fa-trash-can"></i></button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            );
-        };
-
-        const UserView = ({ fields }) => {
-            const [f, setF] = useState({});
-            
-            const validateInput = (val, rule) => {
-                if (rule === 'numbers') return val.replace(/\D/g, '');
-                if (rule === 'ar') return val.replace(/[^\u0600-\u06FF\s]/g, '');
-                if (rule === 'en') return val.replace(/[^a-zA-Z\s]/g, '');
-                return val;
-            };
-
-            return (
-                <div className="max-w-xl mx-auto py-16 px-4">
-                    <form onSubmit={async(e)=>{e.preventDefault(); await db.collection("candidates").add({...f, submittedAt: firebase.firestore.FieldValue.serverTimestamp()}); alert("تم التسجيل بنجاح"); setF({});}} className="bg-white p-10 rounded-[3rem] shadow-2xl space-y-6">
-                        <h2 className="text-2xl font-black text-center mb-8 text-slate-800">استمارة الترشح</h2>
-                        {Object.keys(fields).map(key => fields[key].active && (
-                            <div key={key}>
-                                <label className="text-xs font-black text-slate-500 mb-1 block mr-2">{fields[key].label}</label>
-                                <div className="relative">
-                                    <i className={`fa-solid ${fields[key].icon} absolute right-4 top-1/2 -translate-y-1/2`} style={{color: fields[key].iconColor}}></i>
-                                    
-                                    {fields[key].rule === 'select' ? (
-                                        <select required className="!pr-12" onChange={e => setF({...f, [key]: e.target.value})}>
-                                            <option value="">اختر من القائمة...</option>
-                                            {(fields[key].options || "").split(',').map(opt => <option key={opt} value={opt}>{opt.trim()}</option>)}
-                                        </select>
-                                    ) : (
-                                        <input 
-                                            required
-                                            type={fields[key].rule === 'date' ? 'date' : 'text'}
-                                            value={f[key] || ''} 
-                                            placeholder={fields[key].placeholder} 
-                                            className="!pr-12" 
-                                            onChange={e => setF({...f, [key]: validateInput(e.target.value, fields[key].rule)})} 
-                                        />
-                                    )}
-                                </div>
-                            </div>
-                        ))}
-                        <button className="w-full bg-blue-600 text-white py-5 rounded-2xl font-black shadow-xl hover:bg-blue-700 transition-all">إرسال الاستمارة</button>
-                    </form>
-                </div>
-            );
-        };
-
-        const TabsManager = ({ navigation }) => {
-            const save = (l) => db.collection("settings").doc("navigation").set({ list: l });
-            return (
-                <div className="bg-white p-8 rounded-3xl shadow-sm border max-w-xl">
-                    <div className="flex justify-between items-center mb-8">
-                        <h2 className="text-xl font-black">إدارة أزرار التنقل</h2>
-                        <button onClick={()=>{ const n=prompt("الاسم:"); if(n) save([...navigation, {id:'t'+Date.now(), label:n, icon:'fa-star'}]); }} className="bg-green-600 text-white px-6 py-2 rounded-xl">+ إضافة</button>
-                    </div>
-                    {navigation.map(tab => (
-                        <div key={tab.id} className="flex justify-between items-center p-4 bg-slate-50 rounded-2xl mb-2">
-                            <span className="font-bold"><i className={`fa-solid ${tab.icon} ml-3 text-blue-500`}></i>{tab.label}</span>
-                            {tab.id !== 'candidates' && <button onClick={()=>save(navigation.filter(t=>t.id!==tab.id))} className="text-red-500"><i className="fa-solid fa-trash"></i></button>}
-                        </div>
-                    ))}
-                </div>
-            );
-        };
-
         const AdminLogin = () => {
             const [e, setE] = useState(''); const [p, setP] = useState('');
             return (
-                <div className="max-w-md mx-auto mt-24 p-10 bg-white rounded-3xl shadow-xl">
-                    <form onSubmit={async(x)=>{x.preventDefault(); try{await auth.signInWithEmailAndPassword(e, p)}catch(err){alert("خطأ في تسجيل الدخول")}} } className="space-y-4">
+                <div className="max-w-md mx-auto mt-20 p-8 bg-white rounded-[2rem] shadow-xl border w-11/12">
+                    <div className="text-center mb-8">
+                        <i className="fa-solid fa-shield-halved text-5xl text-blue-600 mb-4"></i>
+                        <h2 className="text-2xl font-black">تسجيل دخول المسؤول</h2>
+                    </div>
+                    <form onSubmit={async(x)=>{x.preventDefault(); try{await auth.signInWithEmailAndPassword(e, p)}catch(err){alert("خطأ في البيانات")}} } className="space-y-4">
                         <input type="email" placeholder="البريد" onChange={v=>setE(v.target.value)} />
                         <input type="password" placeholder="كلمة المرور" onChange={v=>setP(v.target.value)} />
-                        <button className="w-full bg-blue-600 text-white py-4 rounded-xl font-bold">دخول</button>
+                        <button className="w-full bg-slate-900 text-white py-4 rounded-xl font-bold hover:bg-slate-800 transition-all shadow-lg">دخول</button>
                     </form>
                 </div>
             );
