@@ -59,7 +59,6 @@
             color: #475569;
             display: block;
             font-size: 0.9rem;
-            margin-right: 0.2rem;
         }
         .animate-fade-in {
             animation: fadeIn 0.4s ease-out forwards;
@@ -110,45 +109,38 @@
                 directorate: '', requestedRank: '', teachingSubject: '',
                 nin: '', lastNameAr: '', firstNameAr: '', lastNameLat: '', firstNameLat: '',
                 fatherName: '', motherFirstName: '', motherLastName: '', birthDate: '',
-                birthWilaya: '', birthCommune: '', birthCommuneManual: '', gender: '',
+                birthWilaya: '', birthCommune: '', birthCommuneManual: '', gender: 'male',
                 maritalStatus: 'أعزب / عزباء', childrenCount: '0', 
                 residenceWilaya: '', residenceCommune: '', residenceCommuneManual: '', fullAddress: '', phoneNumber: '',
                 militaryStatus: '', docRefNum: '', docIssueDate: '', docEndDate: '', serviceStartDate: '', serviceEndDate: '',
-                degreeName: '', specialty: '', degreeNum: '', graduationDate: '', issuingInstitution: '', trainingDuration: '', startYear: '', endYear: '', degreeGrade: '', 
-                isEnsaGraduate: false, isFirstInClass: false, firstInClassDocNum: '', firstInClassDocDate: '', firstInClassIssuer: '',
+                degreeName: '', specialty: '', degreeNum: '', graduationDate: '', issuingInstitution: '', startYear: '', endYear: '', degreeGrade: '', 
+                isEnsaGraduate: false, isFirstInClass: false,
                 gpa: '', thesisGrade: '',
                 semesters: Array(5).fill(null).map(() => ({ s1: '', s2: '', annual: '' })),
-                otherDegreeName: '', otherDegreeSpecialty: '', otherDegreeIssuer: '', otherDegreeSemesters: '', otherDegreeFromYear: '', otherDegreeToYear: '',
-                publicationNature: '', publicationDate: '', journalName: '', journalIssue: '', publicationLink: '',
-                expJob: '', expInstitution: '', expApprovedDegree: '', expContractNum: '', expContractDate: '', expFrom: '', expTo: '', expEndReason: '',
-                isEmployed: false, currentRank: '', firstAppointmentDate: '', rankAppointmentDate: '', currentGrade: '', adminRefNum: '', adminRefDate: '', signingAuthority: '', adminPhone: '', adminAddress: '',
+                otherDegreeName: '', otherDegreeSpecialty: '', otherDegreeIssuer: '', otherDegreeFromYear: '', otherDegreeToYear: '',
+                publicationNature: '', publicationDate: '', journalName: '', publicationLink: '',
+                expJob: '', expInstitution: '', expFrom: '', expTo: '', expEndReason: '',
+                isEmployed: false, currentRank: '', firstAppointmentDate: '', rankAppointmentDate: '', currentGrade: '', adminPhone: '', adminAddress: '',
                 email: '', attachedDocs: []
             });
 
-            // التأشير التلقائي للوثائق
+            // تحديث الوثائق تلقائياً
             useEffect(() => {
                 const docs = [];
-                if (formData.residenceWilaya && (formData.residenceCommune || formData.residenceCommuneManual)) docs.push("بطاقة الإقامة");
+                if (formData.residenceWilaya) docs.push("بطاقة الإقامة");
                 if (formData.gender === 'male' && formData.militaryStatus) docs.push("وثيقة الخدمة الوطنية");
-                if (formData.degreeName && formData.degreeNum) docs.push("نسخة من الشهادة");
-                if (formData.gpa || formData.semesters.some(s => s.annual)) docs.push("كشوف النقاط للمسار الدراسي");
-                if (formData.otherDegreeName || formData.publicationNature) docs.push("ملف المنشورات والشهادات العليا");
-                if (formData.expJob) docs.push("شهادات العمل (الخبرة)");
-                if (formData.isEmployed) docs.push("ترخيص المشاركة (للموظفين)");
+                if (formData.degreeName) docs.push("نسخة من الشهادة");
+                if (formData.gpa) docs.push("كشوف النقاط");
+                if (formData.expJob) docs.push("شهادات العمل");
+                if (formData.isEmployed) docs.push("ترخيص المشاركة");
                 setFormData(prev => ({ ...prev, attachedDocs: docs }));
-            }, [
-                formData.residenceWilaya, formData.residenceCommune, formData.residenceCommuneManual,
-                formData.gender, formData.militaryStatus, formData.degreeName, formData.degreeNum,
-                formData.gpa, formData.semesters, formData.otherDegreeName, formData.publicationNature,
-                formData.expJob, formData.isEmployed
-            ]);
+            }, [formData.residenceWilaya, formData.gender, formData.militaryStatus, formData.degreeName, formData.gpa, formData.expJob, formData.isEmployed]);
 
             const birthCommunes = useMemo(() => communesMap[formData.birthWilaya] || communesMap["default"], [formData.birthWilaya]);
             const residenceCommunes = useMemo(() => communesMap[formData.residenceWilaya] || communesMap["default"], [formData.residenceWilaya]);
 
             const handleChange = (e) => {
                 const { name, value, type, checked } = e.target;
-                if (name === 'nin' && !/^\d*$/.test(value)) return;
                 setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
             };
 
@@ -158,96 +150,69 @@
                 setFormData(prev => ({ ...prev, semesters: newSemesters }));
             };
 
-            // توليد التقرير النصي الكامل (TXT) بوضوح تام لسهولة النسخ
             const generateReportText = () => {
-                const finalBirth = formData.birthCommune === 'بلدية أخرى (كتابة يدوية)' ? formData.birthCommuneManual : formData.birthCommune;
-                const finalResidence = formData.residenceCommune === 'بلدية أخرى (كتابة يدوية)' ? formData.residenceCommuneManual : formData.residenceCommune;
-
-                let text = `====================================================\n`;
-                text += `         تــقــريــر مــعــلــومــات الــمــتــرشــح         \n`;
-                text += `====================================================\n\n`;
+                const bCommune = formData.birthCommune === 'بلدية أخرى (كتابة يدوية)' ? formData.birthCommuneManual : formData.birthCommune;
+                const rCommune = formData.residenceCommune === 'بلدية أخرى (كتابة يدوية)' ? formData.residenceCommuneManual : formData.residenceCommune;
                 
-                text += `[1. معلومات المنصب المطلوب]\n`;
-                text += `المديرية: ${formData.directorate}\n`;
-                text += `الرتبة: ${formData.requestedRank}\n`;
-                text += `المادة: ${formData.teachingSubject}\n\n`;
+                let text = `تقرير معلومات المترشح الكامل\n`;
+                text += `==============================\n\n`;
+                text += `1. المنصب المطلـوب:\n`;
+                text += `- المديرية: ${formData.directorate}\n`;
+                text += `- الرتبة: ${formData.requestedRank}\n`;
+                text += `- المادة: ${formData.teachingSubject}\n\n`;
                 
-                text += `[2. الهوية والمعلومات الشخصية]\n`;
-                text += `رقم التعريف الوطني (NIN): ${formData.nin}\n`;
-                text += `الاسم: ${formData.firstNameAr}\n`;
-                text += `اللقب: ${formData.lastNameAr}\n`;
-                text += `الاسم باللاتينية: ${formData.firstNameLat}\n`;
-                text += `اللقب باللاتينية: ${formData.lastNameLat}\n`;
-                text += `اسم الأب: ${formData.fatherName}\n`;
-                text += `اسم ولقب الأم: ${formData.motherFirstName} ${formData.motherLastName}\n`;
-                text += `تاريخ الميلاد: ${formData.birthDate}\n`;
-                text += `مكان الميلاد: ${finalBirth} (${formData.birthWilaya})\n`;
-                text += `الجنس: ${formData.gender === 'male' ? 'ذكر' : 'أنثى'}\n`;
-                text += `الحالة العائلية: ${formData.maritalStatus}\n`;
-                text += `عدد الأولاد: ${formData.childrenCount}\n\n`;
+                text += `2. الهوية الشخصية:\n`;
+                text += `- رقم التعريف (NIN): ${formData.nin}\n`;
+                text += `- الاسم واللقب: ${formData.firstNameAr} ${formData.lastNameAr}\n`;
+                text += `- الاسم واللقب (LATIN): ${formData.firstNameLat} ${formData.lastNameLat}\n`;
+                text += `- اسم الأب: ${formData.fatherName}\n`;
+                text += `- اسم ولقب الأم: ${formData.motherFirstName} ${formData.motherLastName}\n`;
+                text += `- الميلاد: ${formData.birthDate} في ${bCommune} (${formData.birthWilaya})\n`;
+                text += `- الجنس: ${formData.gender === 'male' ? 'ذكر' : 'أنثى'}\n`;
+                text += `- الحالة العائلية: ${formData.maritalStatus} (الأولاد: ${formData.childrenCount})\n\n`;
                 
-                text += `[3. معلومات الإقامة والاتصال]\n`;
-                text += `الولاية: ${formData.residenceWilaya}\n`;
-                text += `البلدية: ${finalResidence}\n`;
-                text += `العنوان الكامل: ${formData.fullAddress}\n`;
-                text += `رقم الهاتف: ${formData.phoneNumber}\n`;
-                text += `البريد الإلكتروني: ${formData.email}\n\n`;
+                text += `3. السكن والاتصال:\n`;
+                text += `- العنوان: ${formData.fullAddress}\n`;
+                text += `- البلدية: ${rCommune} (${formData.residenceWilaya})\n`;
+                text += `- الهاتف: ${formData.phoneNumber}\n`;
+                text += `- البريد: ${formData.email}\n\n`;
                 
-                if(formData.gender === 'male') {
-                    text += `[4. الخدمة الوطنية]\n`;
-                    text += `الوضعية: ${formData.militaryStatus}\n`;
-                    text += `رقم الوثيقة: ${formData.docRefNum}\n`;
-                    text += `تاريخ الإصدار: ${formData.docIssueDate}\n`;
-                    text += `تاريخ الانتهاء: ${formData.docEndDate}\n`;
-                    text += `الفترة: من ${formData.serviceStartDate} إلى ${formData.serviceEndDate}\n\n`;
+                if (formData.gender === 'male' && formData.militaryStatus) {
+                    text += `4. الخدمة الوطنية:\n`;
+                    text += `- الوضعية: ${formData.militaryStatus}\n`;
+                    text += `- رقم الوثيقة: ${formData.docRefNum}\n`;
+                    text += `- التاريخ: من ${formData.serviceStartDate} إلى ${formData.serviceEndDate}\n\n`;
                 }
 
-                text += `[5. المؤهل العلمي والشهادة]\n`;
-                text += `تسمية الشهادة: ${formData.degreeName}\n`;
-                text += `الشعبة/التخصص: ${formData.specialty}\n`;
-                text += `رقم الشهادة: ${formData.degreeNum}\n`;
-                text += `تاريخ التخرج: ${formData.graduationDate}\n`;
-                text += `المؤسسة المسلمة: ${formData.issuingInstitution}\n`;
-                text += `مدة التكوين: من ${formData.startYear} إلى ${formData.endYear}\n`;
-                text += `التقدير: ${formData.degreeGrade}\n`;
-                text += `خريج مدرسة عليا: ${formData.isEnsaGraduate ? 'نعم' : 'لا'}\n`;
-                text += `الأول في الدفعة: ${formData.isFirstInClass ? 'نعم' : 'لا'}\n`;
-                text += `المعدل العام للمسار: ${formData.gpa}\n`;
-                text += `علامة مذكرة التخرج: ${formData.thesisGrade}\n\n`;
+                text += `5. المؤهل العلمي:\n`;
+                text += `- الشهادة: ${formData.degreeName} (${formData.specialty})\n`;
+                text += `- رقم الشهادة: ${formData.degreeNum} بتاريخ ${formData.graduationDate}\n`;
+                text += `- المؤسسة: ${formData.issuingInstitution}\n`;
+                text += `- التقدير: ${formData.degreeGrade}\n`;
+                text += `- المعدل العام: ${formData.gpa}\n`;
+                text += `- علامة المذكرة: ${formData.thesisGrade}\n\n`;
 
-                text += `[6. كشوف النقاط التفصيلية]\n`;
+                text += `6. كشوف النقاط:\n`;
                 formData.semesters.forEach((s, i) => {
-                    text += `السنة ${i+1}: س1(${s.s1 || '0'}) | س2(${s.s2 || '0'}) | السنوي(${s.annual || '0'})\n`;
+                    if (s.annual) text += `- السنة ${i+1}: س1(${s.s1}) | س2(${s.s2}) | السنوي(${s.annual})\n`;
                 });
                 text += `\n`;
-                
-                text += `[7. الشهادات والمنشورات الإضافية]\n`;
-                text += `شهادة عليا أخرى: ${formData.otherDegreeName} (${formData.otherDegreeSpecialty}) - ${formData.otherDegreeIssuer}\n`;
-                text += `فترة الدراسة الأخرى: من ${formData.otherDegreeFromYear} إلى ${formData.otherDegreeToYear}\n`;
-                text += `المنشورات: ${formData.publicationNature} - ${formData.journalName} - تاريخ: ${formData.publicationDate}\n`;
-                text += `رابط النشر: ${formData.publicationLink}\n\n`;
-                
-                text += `[8. الخبرة المهنية]\n`;
-                text += `الوظيفة السابقة: ${formData.expJob}\n`;
-                text += `المؤسسة: ${formData.expInstitution}\n`;
-                text += `الفترة: من ${formData.expFrom} إلى ${formData.expTo}\n`;
-                text += `سبب المغادرة: ${formData.expEndReason}\n\n`;
-                
-                if(formData.isEmployed) {
-                    text += `[9. الوضعية المهنية الحالية]\n`;
-                    text += `الرتبة الحالية: ${formData.currentRank}\n`;
-                    text += `تاريخ أول تعيين: ${formData.firstAppointmentDate}\n`;
-                    text += `تاريخ التعيين في الرتبة: ${formData.rankAppointmentDate}\n`;
-                    text += `الصنف والدرجة: ${formData.currentGrade}\n`;
-                    text += `هاتف الإدارة: ${formData.adminPhone}\n`;
-                    text += `عنوان الإدارة: ${formData.adminAddress}\n\n`;
+
+                text += `7. الخبرة المهنية:\n`;
+                text += `- الوظيفة: ${formData.expJob} في ${formData.expInstitution}\n`;
+                text += `- الفترة: من ${formData.expFrom} إلى ${formData.expTo}\n`;
+                text += `- سبب المغادرة: ${formData.expEndReason}\n\n`;
+
+                if (formData.isEmployed) {
+                    text += `8. الوظيفة الحالية:\n`;
+                    text += `- الرتبة: ${formData.currentRank}\n`;
+                    text += `- تاريخ التعيين: ${formData.firstAppointmentDate}\n`;
+                    text += `- هاتف الإدارة: ${formData.adminPhone}\n`;
+                    text += `- عنوان الإدارة: ${formData.adminAddress}\n\n`;
                 }
 
-                text += `[10. الوثائق المرفقة]\n`;
-                text += formData.attachedDocs.join(" | ") + `\n\n`;
-                text += `====================================================\n`;
-                text += `تم توليد هذا الملف تلقائياً بواسطة نظام الاستمارة الإلكترونية\n`;
-                text += `====================================================\n`;
+                text += `9. الوثائق المرفقة:\n`;
+                text += formData.attachedDocs.join(" | ") + `\n`;
                 
                 return text;
             };
@@ -256,17 +221,50 @@
                 e.preventDefault();
                 setIsSubmitting(true);
 
+                // تجهيز الملف النصي
                 const reportContent = generateReportText();
                 const reportBlob = new Blob([reportContent], { type: 'text/plain' });
-                const reportFile = new File([reportBlob], "الملف_الكامل_للمترشح.txt", { type: 'text/plain' });
+                const reportFile = new File([reportBlob], "ملف_المعلومات_كامل.txt", { type: 'text/plain' });
 
                 const form = new FormData();
-                form.append("NIN", formData.nin);
-                form.append("الاسم_واللقب", `${formData.firstNameAr} ${formData.lastNameAr}`);
-                form.append("المنصب_المطلوب", formData.requestedRank);
-                form.append("البريد_الإلكتروني", formData.email);
-                form.append("تقرير_نصي_كامل", reportFile);
-                form.append("_subject", `استمارة كاملة (NIN: ${formData.nin}) - ${formData.firstNameAr} ${formData.lastNameAr}`);
+                
+                // إضافة معلومات الإيميل الأساسية (ستظهر في الجدول العلوي للإيميل)
+                form.append("رقم التعريف الوطني (NIN)", formData.nin);
+                form.append("الاسم واللقب", `${formData.firstNameAr} ${formData.lastNameAr}`);
+                form.append("الرتبة المطلوبة", formData.requestedRank);
+                form.append("المادة", formData.teachingSubject);
+                form.append("رقم الهاتف", formData.phoneNumber);
+                form.append("البريد الإلكتروني", formData.email);
+
+                // إضافة كافة البيانات الأخرى لضمان وصولها في جدول الإيميل
+                form.append("--- معلومات الهوية ---", "------------------");
+                form.append("تاريخ ومكان الميلاد", `${formData.birthDate} في ${formData.birthCommune} (${formData.birthWilaya})`);
+                form.append("اسم الأب والأم", `${formData.fatherName} ابن ${formData.motherFirstName} ${formData.motherLastName}`);
+                form.append("الحالة العائلية", `${formData.maritalStatus} (الأولاد: ${formData.childrenCount})`);
+                form.append("عنوان السكن", `${formData.fullAddress} - ${formData.residenceCommune} (${formData.residenceWilaya})`);
+
+                form.append("--- معلومات الشهادة ---", "------------------");
+                form.append("تسمية الشهادة", `${formData.degreeName} - تخصص ${formData.specialty}`);
+                form.append("رقم وتاريخ الشهادة", `${formData.degreeNum} بتـاريخ ${formData.graduationDate}`);
+                form.append("المعدل العام للمسار", formData.gpa);
+                form.append("تقدير الشهادة", formData.degreeGrade);
+
+                form.append("--- كشوف النقاط السنوية ---", "------------------");
+                formData.semesters.forEach((s, i) => {
+                    if (s.annual) form.append(`معدل السنة ${i+1}`, `س1: ${s.s1} | س2: ${s.s2} | سنوي: ${s.annual}`);
+                });
+
+                if (formData.isEmployed) {
+                    form.append("--- الوظيفة الحالية ---", "------------------");
+                    form.append("الرتبة الحالية", formData.currentRank);
+                    form.append("هاتف الإدارة", formData.adminPhone);
+                }
+
+                // إرفاق الملف النصي
+                form.append("الملف المرفق (TXT للنسخ)", reportFile);
+
+                // إعدادات FormSubmit
+                form.append("_subject", `استمارة كاملة - ${formData.firstNameAr} ${formData.lastNameAr} (NIN: ${formData.nin})`);
                 form.append("_template", "table");
                 form.append("_captcha", "false");
 
@@ -276,9 +274,9 @@
                         body: form
                     });
                     if (response.ok) setSubmitted(true);
-                    else alert("خطأ: يرجى التحقق من اتصال الإنترنت.");
+                    else alert("خطأ في الإرسال، يرجى المحاولة لاحقاً.");
                 } catch {
-                    alert("خطأ في الاتصال بالخادم.");
+                    alert("خطأ في الاتصال بالإنترنت.");
                 } finally {
                     setIsSubmitting(false);
                 }
@@ -286,248 +284,201 @@
 
             if (submitted) {
                 return (
-                    <div className="min-h-screen flex items-center justify-center p-6 text-center animate-fade-in">
-                        <div className="bg-white p-12 rounded-2xl shadow-2xl max-w-xl w-full border-t-8 border-green-600">
-                            <div className="text-green-600 text-7xl mb-6">✓</div>
-                            <h1 className="text-3xl font-black text-gray-800 mb-4">تم الإرسال بنجاح</h1>
-                            <p className="text-gray-600 font-bold text-lg mb-8 leading-relaxed">تم إرسال كافة معلوماتك في ملف نصي شامل (TXT) مرفق بالإيميل لضمان عدم نقص أي معلومة وسهولة النسخ واللصق من قبل الإدارة.</p>
-                            <button onClick={() => window.location.reload()} className="bg-slate-800 text-white px-10 py-4 rounded-xl font-black hover:bg-slate-700 transition w-full shadow-lg">إرسال استمارة أخرى</button>
+                    <div className="min-h-screen flex items-center justify-center p-6 animate-fade-in text-center">
+                        <div className="bg-white p-10 rounded-2xl shadow-2xl max-w-lg w-full border-t-8 border-green-600">
+                            <div className="text-green-600 text-6xl mb-4">✓</div>
+                            <h2 className="text-2xl font-black mb-2">تم إرسال الملف بنجاح!</h2>
+                            <p className="text-gray-600 font-bold mb-8">تم إرسال كافة البيانات في جدول مفصل مع إرفاق ملف نصي (TXT) للنسخ واللصق.</p>
+                            <button onClick={() => window.location.reload()} className="bg-slate-800 text-white px-8 py-3 rounded-xl font-black shadow-lg hover:bg-slate-700 transition w-full">إرسال استمارة أخرى</button>
                         </div>
                     </div>
                 );
             }
 
             return (
-                <div className="max-w-5xl mx-auto py-12 px-4">
-                    <header className="mb-10 text-center bg-white border-b-8 border-slate-800 p-8 rounded-2xl shadow-xl">
-                        <h1 className="text-3xl md:text-4xl font-black text-slate-800 mb-2">الاستمارة الإلكترونية للمسابقات</h1>
-                        <p className="text-xl font-bold text-blue-600">نظام الإرسال الذكي للملفات (TXT)</p>
+                <div className="max-w-4xl mx-auto py-10 px-4">
+                    <header className="mb-10 text-center bg-white p-6 rounded-2xl shadow-lg border-b-8 border-slate-800">
+                        <h1 className="text-2xl md:text-3xl font-black text-slate-800">استمارة المسابقات الإلكترونية</h1>
+                        <p className="text-blue-600 font-bold mt-1 italic">سيصل ملفك كاملاً (جدول + TXT) إلى الإدارة</p>
                     </header>
 
-                    <div className="mb-10 flex items-center justify-between text-xs md:text-sm font-black text-slate-400 gap-2 pb-2 overflow-x-auto whitespace-nowrap scrollbar-hide">
-                        {[1, 2, 3, 4, 5, 6].map((s) => (
-                            <div key={s} className={`flex-1 text-center pb-3 border-b-4 transition-all ${step >= s ? 'border-blue-600 text-blue-600' : 'border-slate-200'}`}>المرحلة {s}</div>
+                    <div className="mb-8 flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                        {[1, 2, 3, 4, 5, 6].map(s => (
+                            <div key={s} className={`flex-1 min-w-[80px] text-center pb-2 border-b-4 transition ${step >= s ? 'border-blue-600 text-blue-600' : 'border-slate-200 text-slate-400'} font-black text-xs`}>المرحلة {s}</div>
                         ))}
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-6">
                         {step === 1 && (
-                            <div className="animate-fade-in space-y-6">
-                                <div className="form-section">
-                                    <h2 className="section-header">1. بيانات المنصب والهوية</h2>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div><label className="label-title">الولاية المستقبلة للطلب</label>
-                                            <select name="directorate" required value={formData.directorate} onChange={handleChange}>
-                                                <option value="">-- اختر الولاية --</option>
-                                                {wilayas.map(w => <option key={w} value={w}>{w}</option>)}
-                                            </select>
-                                        </div>
-                                        <div><label className="label-title">الرتبة المترشح لها</label>
-                                            <select name="requestedRank" required value={formData.requestedRank} onChange={handleChange}>
-                                                <option value="">-- اختر الرتبة --</option>
-                                                {["أستاذ مدرسة ابتدائية", "أستاذ تعليم متوسط", "أستاذ تعليم ثانوي"].map(r => <option key={r} value={r}>{r}</option>)}
-                                            </select>
-                                        </div>
-                                        <div className="md:col-span-2"><label className="label-title">مادة التدريس</label><input type="text" name="teachingSubject" placeholder="لغة عربية، رياضيات..." required value={formData.teachingSubject} onChange={handleChange} /></div>
-                                        
-                                        <div className="md:col-span-2"><label className="label-title">رقم التعريف الوطني (18 رقم)</label><input type="text" name="nin" maxLength="18" placeholder="000000000000000000" required value={formData.nin} onChange={handleChange} /></div>
-                                        <div><label className="label-title">اللقب (عربي)</label><input type="text" name="lastNameAr" required value={formData.lastNameAr} onChange={handleChange} /></div>
-                                        <div><label className="label-title">الاسم (عربي)</label><input type="text" name="firstNameAr" required value={formData.firstNameAr} onChange={handleChange} /></div>
-                                        <div><label className="label-title">اللقب (لاتيني)</label><input type="text" name="lastNameLat" dir="ltr" required value={formData.lastNameLat} onChange={handleChange} /></div>
-                                        <div><label className="label-title">الاسم (لاتيني)</label><input type="text" name="firstNameLat" dir="ltr" required value={formData.firstNameLat} onChange={handleChange} /></div>
-                                        <div><label className="label-title">تاريخ الميلاد</label><input type="date" name="birthDate" required value={formData.birthDate} onChange={handleChange} /></div>
-                                        <div className="grid grid-cols-2 gap-2">
-                                            <div><label className="label-title">ولاية الميلاد</label>
-                                                <select name="birthWilaya" required value={formData.birthWilaya} onChange={handleChange}>
-                                                    <option value="">-- اختر --</option>
-                                                    {wilayas.map(w => <option key={w} value={w}>{w}</option>)}
-                                                </select>
-                                            </div>
-                                            <div><label className="label-title">بلدية الميلاد</label>
-                                                <select name="birthCommune" required value={formData.birthCommune} onChange={handleChange} disabled={!formData.birthWilaya}>
-                                                    <option value="">-- اختر --</option>
-                                                    {birthCommunes.map(c => <option key={c} value={c}>{c}</option>)}
-                                                </select>
-                                            </div>
-                                        </div>
-                                        {formData.birthCommune === 'بلدية أخرى (كتابة يدوية)' && (
-                                            <div className="md:col-span-2"><label className="label-title">اكتب اسم البلدية يدوياً</label><input type="text" name="birthCommuneManual" required value={formData.birthCommuneManual} onChange={handleChange} /></div>
-                                        )}
-                                        <div><label className="label-title">اسم الأب</label><input type="text" name="fatherName" required value={formData.fatherName} onChange={handleChange} /></div>
-                                        <div className="grid grid-cols-2 gap-2">
-                                            <div><label className="label-title">اسم الأم</label><input type="text" name="motherFirstName" required value={formData.motherFirstName} onChange={handleChange} /></div>
-                                            <div><label className="label-title">لقب الأم</label><input type="text" name="motherLastName" required value={formData.motherLastName} onChange={handleChange} /></div>
-                                        </div>
+                            <div className="form-section animate-fade-in">
+                                <h2 className="section-header">1. معلومات المنصب والهوية</h2>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div><label className="label-title">مديرية التربية لولاية</label>
+                                        <select name="directorate" required value={formData.directorate} onChange={handleChange}>
+                                            <option value="">-- اختر الولاية --</option>
+                                            {wilayas.map(w => <option key={w} value={w}>{w}</option>)}
+                                        </select>
                                     </div>
+                                    <div><label className="label-title">الرتبة المطلوبة</label>
+                                        <select name="requestedRank" required value={formData.requestedRank} onChange={handleChange}>
+                                            <option value="">-- اختر الرتبة --</option>
+                                            {["أستاذ مدرسة ابتدائية", "أستاذ تعليم متوسط", "أستاذ تعليم ثانوي"].map(r => <option key={r} value={r}>{r}</option>)}
+                                        </select>
+                                    </div>
+                                    <div className="md:col-span-2"><label className="label-title">مادة التدريس</label><input type="text" name="teachingSubject" required value={formData.teachingSubject} onChange={handleChange} /></div>
+                                    <div className="md:col-span-2"><label className="label-title">رقم التعريف الوطني (18 رقم)</label><input type="text" name="nin" maxLength="18" required value={formData.nin} onChange={handleChange} /></div>
+                                    <div><label className="label-title">الاسم (عربي)</label><input type="text" name="firstNameAr" required value={formData.firstNameAr} onChange={handleChange} /></div>
+                                    <div><label className="label-title">اللقب (عربي)</label><input type="text" name="lastNameAr" required value={formData.lastNameAr} onChange={handleChange} /></div>
+                                    <div><label className="label-title">الاسم (LATIN)</label><input type="text" name="firstNameLat" dir="ltr" required value={formData.firstNameLat} onChange={handleChange} /></div>
+                                    <div><label className="label-title">اللقب (LATIN)</label><input type="text" name="lastNameLat" dir="ltr" required value={formData.lastNameLat} onChange={handleChange} /></div>
                                 </div>
                             </div>
                         )}
 
                         {step === 2 && (
-                            <div className="animate-fade-in space-y-6">
-                                <div className="form-section">
-                                    <h2 className="section-header">2. معلومات السكن والاتصال</h2>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div><label className="label-title">ولاية الإقامة</label>
-                                            <select name="residenceWilaya" required value={formData.residenceWilaya} onChange={handleChange}>
-                                                <option value="">-- اختر --</option>
-                                                {wilayas.map(w => <option key={w} value={w}>{w}</option>)}
-                                            </select>
-                                        </div>
-                                        <div><label className="label-title">بلدية الإقامة</label>
-                                            <select name="residenceCommune" required value={formData.residenceCommune} onChange={handleChange} disabled={!formData.residenceWilaya}>
-                                                <option value="">-- اختر --</option>
-                                                {residenceCommunes.map(c => <option key={c} value={c}>{c}</option>)}
-                                            </select>
-                                        </div>
-                                        {formData.residenceCommune === 'بلدية أخرى (كتابة يدوية)' && (
-                                            <div className="md:col-span-2"><label className="label-title">اكتب بلدية الإقامة يدوياً</label><input type="text" name="residenceCommuneManual" required value={formData.residenceCommuneManual} onChange={handleChange} /></div>
-                                        )}
-                                        <div className="md:col-span-2"><label className="label-title">العنوان التفصيلي</label><input type="text" name="fullAddress" placeholder="الحي، الشارع، رقم المنزل..." required value={formData.fullAddress} onChange={handleChange} /></div>
-                                        <div><label className="label-title">رقم الهاتف الشخصي</label><input type="text" name="phoneNumber" required value={formData.phoneNumber} onChange={handleChange} /></div>
-                                        <div><label className="label-title">الجنس</label>
-                                            <div className="flex gap-6 mt-3">
-                                                <label className="flex items-center gap-2 font-bold cursor-pointer"><input type="radio" name="gender" value="male" checked={formData.gender === 'male'} onChange={handleChange} /> ذكر</label>
-                                                <label className="flex items-center gap-2 font-bold cursor-pointer"><input type="radio" name="gender" value="female" checked={formData.gender === 'female'} onChange={handleChange} /> أنثى</label>
-                                            </div>
-                                        </div>
-                                        <div><label className="label-title">الحالة العائلية</label>
-                                            <select name="maritalStatus" required value={formData.maritalStatus} onChange={handleChange}>
-                                                {["أعزب / عزباء", "متزوج(ة)", "مطلق(ة)", "أرمل(ة)"].map(m => <option key={m} value={m}>{m}</option>)}
-                                            </select>
-                                        </div>
-                                        {formData.maritalStatus === 'متزوج(ة)' && (
-                                            <div><label className="label-title">عدد الأولاد</label><input type="number" name="childrenCount" min="0" value={formData.childrenCount} onChange={handleChange} /></div>
-                                        )}
+                            <div className="form-section animate-fade-in">
+                                <h2 className="section-header">2. معلومات الميلاد والعائلة</h2>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div><label className="label-title">تاريخ الميلاد</label><input type="date" name="birthDate" required value={formData.birthDate} onChange={handleChange} /></div>
+                                    <div><label className="label-title">ولاية الميلاد</label>
+                                        <select name="birthWilaya" required value={formData.birthWilaya} onChange={handleChange}>
+                                            <option value="">-- اختر --</option>
+                                            {wilayas.map(w => <option key={w} value={w}>{w}</option>)}
+                                        </select>
                                     </div>
+                                    <div><label className="label-title">بلدية الميلاد</label>
+                                        <select name="birthCommune" required value={formData.birthCommune} onChange={handleChange}>
+                                            <option value="">-- اختر --</option>
+                                            {birthCommunes.map(c => <option key={c} value={c}>{c}</option>)}
+                                        </select>
+                                    </div>
+                                    {formData.birthCommune === 'بلدية أخرى (كتابة يدوية)' && (
+                                        <div><label className="label-title">اكتب بلدية الميلاد يدوياً</label><input type="text" name="birthCommuneManual" required value={formData.birthCommuneManual} onChange={handleChange} /></div>
+                                    )}
+                                    <div><label className="label-title">اسم الأب</label><input type="text" name="fatherName" required value={formData.fatherName} onChange={handleChange} /></div>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <div><label className="label-title">اسم الأم</label><input type="text" name="motherFirstName" required value={formData.motherFirstName} onChange={handleChange} /></div>
+                                        <div><label className="label-title">لقب الأم</label><input type="text" name="motherLastName" required value={formData.motherLastName} onChange={handleChange} /></div>
+                                    </div>
+                                    <div><label className="label-title">الحالة العائلية</label>
+                                        <select name="maritalStatus" value={formData.maritalStatus} onChange={handleChange}>
+                                            {["أعزب / عزباء", "متزوج(ة)", "مطلق(ة)", "أرمل(ة)"].map(m => <option key={m} value={m}>{m}</option>)}
+                                        </select>
+                                    </div>
+                                    <div><label className="label-title">عدد الأولاد</label><input type="number" name="childrenCount" min="0" value={formData.childrenCount} onChange={handleChange} /></div>
                                 </div>
                             </div>
                         )}
 
                         {step === 3 && (
-                            <div className="animate-fade-in space-y-6">
-                                <div className="form-section">
-                                    <h2 className="section-header">3. الشهادة والوضعية القانونية</h2>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div><label className="label-title">الشهادة المتحصل عليها</label>
-                                            <select name="degreeName" required value={formData.degreeName} onChange={handleChange}>
-                                                <option value="">-- اختر --</option>
-                                                {["ليسانس", "ماستر", "دراسات عليا", "مهندس"].map(d => <option key={d} value={d}>{d}</option>)}
-                                            </select>
-                                        </div>
-                                        <div><label className="label-title">التخصص الدقيق</label><input type="text" name="specialty" required value={formData.specialty} onChange={handleChange} /></div>
-                                        <div><label className="label-title">رقم الشهادة</label><input type="text" name="degreeNum" required value={formData.degreeNum} onChange={handleChange} /></div>
-                                        <div><label className="label-title">تاريخ التخرج</label><input type="date" name="graduationDate" required value={formData.graduationDate} onChange={handleChange} /></div>
-                                        <div className="md:col-span-2"><label className="label-title">المؤسسة المسلمة للشهادة</label><input type="text" name="issuingInstitution" required value={formData.issuingInstitution} onChange={handleChange} /></div>
-                                        <div className="grid grid-cols-2 gap-2">
-                                            <div><label className="label-title">سنة البداية</label><input type="text" name="startYear" maxLength="4" placeholder="2018" value={formData.startYear} onChange={handleChange} /></div>
-                                            <div><label className="label-title">سنة التخرج</label><input type="text" name="endYear" maxLength="4" placeholder="2023" value={formData.endYear} onChange={handleChange} /></div>
-                                        </div>
-                                        <div><label className="label-title">التقدير</label>
-                                            <select name="degreeGrade" value={formData.degreeGrade} onChange={handleChange}>
-                                                <option value="">-- اختر --</option>
-                                                {["مقبول", "حسن", "حسن جداً", "امتياز"].map(g => <option key={g} value={g}>{g}</option>)}
-                                            </select>
-                                        </div>
-                                        <div className="md:col-span-2 border-t pt-4 grid grid-cols-2 gap-4">
-                                            <label className="flex items-center gap-2 font-bold cursor-pointer"><input type="checkbox" name="isEnsaGraduate" checked={formData.isEnsaGraduate} onChange={handleChange} /> خريج مدرسة وطنية عليا</label>
-                                            <label className="flex items-center gap-2 font-bold cursor-pointer"><input type="checkbox" name="isFirstInClass" checked={formData.isFirstInClass} onChange={handleChange} /> الأول في الدفعة</label>
-                                        </div>
+                            <div className="form-section animate-fade-in">
+                                <h2 className="section-header">3. السكن والشهادة</h2>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div><label className="label-title">ولاية الإقامة</label>
+                                        <select name="residenceWilaya" required value={formData.residenceWilaya} onChange={handleChange}>
+                                            <option value="">-- اختر --</option>
+                                            {wilayas.map(w => <option key={w} value={w}>{w}</option>)}
+                                        </select>
                                     </div>
+                                    <div><label className="label-title">بلدية الإقامة</label>
+                                        <select name="residenceCommune" required value={formData.residenceCommune} onChange={handleChange}>
+                                            <option value="">-- اختر --</option>
+                                            {residenceCommunes.map(c => <option key={c} value={c}>{c}</option>)}
+                                        </select>
+                                    </div>
+                                    {formData.residenceCommune === 'بلدية أخرى (كتابة يدوية)' && (
+                                        <div className="md:col-span-2"><label className="label-title">اكتب بلدية الإقامة يدوياً</label><input type="text" name="residenceCommuneManual" required value={formData.residenceCommuneManual} onChange={handleChange} /></div>
+                                    )}
+                                    <div className="md:col-span-2"><label className="label-title">العنوان التفصيلي</label><input type="text" name="fullAddress" required value={formData.fullAddress} onChange={handleChange} /></div>
+                                    
+                                    <div className="md:col-span-2 border-t pt-4 mt-2">
+                                        <h3 className="font-bold text-blue-700 underline mb-2">معلومات الشهادة:</h3>
+                                    </div>
+                                    <div><label className="label-title">الشهادة</label>
+                                        <select name="degreeName" required value={formData.degreeName} onChange={handleChange}>
+                                            <option value="">-- اختر --</option>
+                                            {["ليسانس", "ماستر", "دراسات عليا", "مهندس"].map(d => <option key={d} value={d}>{d}</option>)}
+                                        </select>
+                                    </div>
+                                    <div><label className="label-title">التخصص</label><input type="text" name="specialty" required value={formData.specialty} onChange={handleChange} /></div>
+                                    <div><label className="label-title">رقم الشهادة</label><input type="text" name="degreeNum" required value={formData.degreeNum} onChange={handleChange} /></div>
+                                    <div><label className="label-title">تاريخ الشهادة</label><input type="date" name="graduationDate" required value={formData.graduationDate} onChange={handleChange} /></div>
                                 </div>
                             </div>
                         )}
 
                         {step === 4 && (
-                            <div className="animate-fade-in space-y-6">
-                                <div className="form-section">
-                                    <h2 className="section-header">4. المسار الدراسي والتكوين</h2>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                                        <div><label className="label-title">المعدل العام للمسار</label><input type="text" name="gpa" placeholder="00.00" value={formData.gpa} onChange={handleChange} /></div>
-                                        <div><label className="label-title">علامة مذكرة التخرج</label><input type="text" name="thesisGrade" value={formData.thesisGrade} onChange={handleChange} /></div>
-                                    </div>
-                                    <div className="overflow-x-auto rounded-xl border-2 border-slate-200">
-                                        <table className="w-full text-center font-bold">
-                                            <thead className="bg-slate-800 text-white">
-                                                <tr><th className="p-4">السنة</th><th className="p-4">س 1</th><th className="p-4">س 2</th><th className="p-4">السنوي</th></tr>
-                                            </thead>
-                                            <tbody className="divide-y divide-slate-200">
-                                                {[1, 2, 3, 4, 5].map((y, idx) => (
-                                                    <tr key={y}>
-                                                        <td className="p-4 bg-slate-50">السنة {y}</td>
-                                                        <td><input type="text" className="border-none text-center bg-transparent" value={formData.semesters[idx].s1} onChange={(e) => handleSemesterChange(idx, 's1', e.target.value)} /></td>
-                                                        <td><input type="text" className="border-none text-center bg-transparent" value={formData.semesters[idx].s2} onChange={(e) => handleSemesterChange(idx, 's2', e.target.value)} /></td>
-                                                        <td><input type="text" className="border-none text-center bg-transparent" value={formData.semesters[idx].annual} onChange={(e) => handleSemesterChange(idx, 'annual', e.target.value)} /></td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
+                            <div className="form-section animate-fade-in">
+                                <h2 className="section-header">4. كشوف النقاط</h2>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                    <div><label className="label-title">المعدل العام للمسار</label><input type="text" name="gpa" placeholder="00.00" value={formData.gpa} onChange={handleChange} /></div>
+                                    <div><label className="label-title">علامة المذكرة</label><input type="text" name="thesisGrade" value={formData.thesisGrade} onChange={handleChange} /></div>
+                                </div>
+                                <div className="overflow-x-auto border rounded-xl">
+                                    <table className="w-full text-center">
+                                        <thead className="bg-slate-100 font-black text-xs">
+                                            <tr><th className="p-2">السنة</th><th className="p-2">س1</th><th className="p-2">س2</th><th className="p-2">سنوي</th></tr>
+                                        </thead>
+                                        <tbody className="divide-y font-bold text-sm">
+                                            {[1, 2, 3, 4, 5].map((y, idx) => (
+                                                <tr key={y}>
+                                                    <td className="p-2 bg-slate-50">السنة {y}</td>
+                                                    <td><input type="text" className="w-full text-center border-none p-1" value={formData.semesters[idx].s1} onChange={(e) => handleSemesterChange(idx, 's1', e.target.value)} /></td>
+                                                    <td><input type="text" className="w-full text-center border-none p-1" value={formData.semesters[idx].s2} onChange={(e) => handleSemesterChange(idx, 's2', e.target.value)} /></td>
+                                                    <td><input type="text" className="w-full text-center border-none p-1" value={formData.semesters[idx].annual} onChange={(e) => handleSemesterChange(idx, 'annual', e.target.value)} /></td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
                         )}
 
                         {step === 5 && (
-                            <div className="animate-fade-in space-y-6">
-                                <div className="form-section">
-                                    <h2 className="section-header">5. الخبرة والوضعية المهنية</h2>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-6 border-b-2 border-dashed">
-                                        <h3 className="md:col-span-2 font-black text-blue-800">الخبرة المهنية السابقة:</h3>
-                                        <div><label className="label-title">المسمى الوظيفي</label><input type="text" name="expJob" value={formData.expJob} onChange={handleChange} /></div>
-                                        <div><label className="label-title">المؤسسة المستخدمة</label><input type="text" name="expInstitution" value={formData.expInstitution} onChange={handleChange} /></div>
-                                        <div className="grid grid-cols-2 gap-2">
-                                            <div><label className="label-title">من تاريخ</label><input type="date" name="expFrom" value={formData.expFrom} onChange={handleChange} /></div>
-                                            <div><label className="label-title">إلى تاريخ</label><input type="date" name="expTo" value={formData.expTo} onChange={handleChange} /></div>
+                            <div className="form-section animate-fade-in">
+                                <h2 className="section-header">5. الخبرة والوضعية الحالية</h2>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div><label className="label-title">آخر وظيفة سابقة</label><input type="text" name="expJob" value={formData.expJob} onChange={handleChange} /></div>
+                                    <div><label className="label-title">المؤسسة</label><input type="text" name="expInstitution" value={formData.expInstitution} onChange={handleChange} /></div>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <div><label className="label-title">من تاريخ</label><input type="date" name="expFrom" value={formData.expFrom} onChange={handleChange} /></div>
+                                        <div><label className="label-title">إلى تاريخ</label><input type="date" name="expTo" value={formData.expTo} onChange={handleChange} /></div>
+                                    </div>
+                                    <div className="md:col-span-2 flex items-center gap-2 p-4 bg-blue-50 border rounded-xl mt-4">
+                                        <input type="checkbox" name="isEmployed" checked={formData.isEmployed} onChange={handleChange} className="w-5 h-5" />
+                                        <span className="font-black text-blue-800">هل تشغل وظيفة حالياً؟</span>
+                                    </div>
+                                    {formData.isEmployed && (
+                                        <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in bg-slate-50 p-4 rounded-xl">
+                                            <div><label className="label-title">الرتبة المشغولة</label><input type="text" name="currentRank" required={formData.isEmployed} value={formData.currentRank} onChange={handleChange} /></div>
+                                            <div><label className="label-title">هاتف الإدارة</label><input type="text" name="adminPhone" required={formData.isEmployed} value={formData.adminPhone} onChange={handleChange} /></div>
+                                            <div className="md:col-span-2"><label className="label-title">عنوان الإدارة</label><input type="text" name="adminAddress" required={formData.isEmployed} value={formData.adminAddress} onChange={handleChange} /></div>
                                         </div>
-                                        <div className="md:col-span-2"><label className="label-title">سبب إنهاء الخدمة</label><input type="text" name="expEndReason" value={formData.expEndReason} onChange={handleChange} /></div>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-6">
-                                        <div className="md:col-span-2"><label className="flex items-center gap-2 font-bold cursor-pointer p-4 border-2 rounded-xl bg-blue-50 border-blue-200"><input type="checkbox" name="isEmployed" checked={formData.isEmployed} onChange={handleChange} /> هل تشغل وظيفة حالياً؟</label></div>
-                                        {formData.isEmployed && (
-                                            <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in">
-                                                <div><label className="label-title">الرتبة المشغولة</label><input type="text" name="currentRank" required={formData.isEmployed} value={formData.currentRank} onChange={handleChange} /></div>
-                                                <div><label className="label-title">تاريخ التعيين في الرتبة</label><input type="date" name="rankAppointmentDate" value={formData.rankAppointmentDate} onChange={handleChange} /></div>
-                                                <div><label className="label-title">هاتف الإدارة الحالي</label><input type="text" name="adminPhone" required={formData.isEmployed} value={formData.adminPhone} onChange={handleChange} /></div>
-                                                <div><label className="label-title">عنوان الإدارة الحالي</label><input type="text" name="adminAddress" required={formData.isEmployed} value={formData.adminAddress} onChange={handleChange} /></div>
-                                            </div>
-                                        )}
-                                    </div>
+                                    )}
                                 </div>
                             </div>
                         )}
 
                         {step === 6 && (
-                            <div className="animate-fade-in space-y-6">
-                                <div className="form-section">
-                                    <h2 className="section-header">6. المراجعة النهائية والإرسال</h2>
-                                    <div className="grid grid-cols-1 gap-6">
-                                        <div><label className="label-title text-blue-800">البريد الإلكتروني الشخصي (إلزامي للرد)</label><input type="email" name="email" required placeholder="example@gmail.com" value={formData.email} onChange={handleChange} /></div>
-                                        
-                                        <div className="bg-slate-50 p-6 rounded-xl border-2 border-slate-200">
-                                            <h3 className="font-black mb-4 text-slate-800 underline">نظام التأشير التلقائي للملف المرفق (TXT):</h3>
-                                            <p className="text-sm text-slate-600 mb-4 font-bold">بناءً على إدخالاتك، تم تحضير الملف النصي ليشمل التأشير على الوثائق التالية:</p>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                                {["بطاقة الإقامة", "وثيقة الخدمة الوطنية", "نسخة من الشهادة", "كشوف النقاط للمسار الدراسي", "شهادات العمل (الخبرة)", "ملف المنشورات والشهادات العليا", "ترخيص المشاركة (للموظفين)"].map(doc => (
-                                                    <div key={doc} className={`flex items-center gap-3 p-3 rounded-lg border ${formData.attachedDocs.includes(doc) ? 'bg-green-100 border-green-600 text-green-900' : 'bg-slate-200 border-slate-300 opacity-40 text-slate-500'}`}>
-                                                        {formData.attachedDocs.includes(doc) ? '✅' : '⚪'}
-                                                        <span className="text-sm font-black">{doc}</span>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
+                            <div className="form-section animate-fade-in">
+                                <h2 className="section-header">6. الاتصال والتأكيد النهائي</h2>
+                                <div className="space-y-4">
+                                    <div><label className="label-title text-blue-700">رقم هاتف المترشح</label><input type="text" name="phoneNumber" required value={formData.phoneNumber} onChange={handleChange} /></div>
+                                    <div><label className="label-title text-blue-700">البريد الإلكتروني الشخصي (إلزامي للرد)</label><input type="email" name="email" required placeholder="example@gmail.com" value={formData.email} onChange={handleChange} /></div>
+                                    <div className="bg-yellow-50 p-4 rounded-xl border-2 border-dashed border-yellow-300">
+                                        <p className="font-black text-yellow-900 text-sm">⚠️ ملاحظة: سيصل ملفك للإدارة في شكل جدول بيانات مفصل داخل الإيميل، مع إرفاق ملف نصي (TXT) يحتوي على كافة المعلومات للنسخ واللصق السريع.</p>
                                     </div>
                                 </div>
                             </div>
                         )}
 
                         <div className="flex justify-between items-center py-6">
-                            {step > 1 && <button type="button" onClick={() => setStep(step - 1)} className="bg-slate-300 text-slate-800 px-10 py-4 rounded-xl font-black hover:bg-slate-400">السابق</button>}
+                            {step > 1 && <button type="button" onClick={() => setStep(step - 1)} className="bg-slate-300 text-slate-800 px-8 py-3 rounded-xl font-black hover:bg-slate-400">السابق</button>}
                             {step < 6 ? (
-                                <button type="button" onClick={() => setStep(step + 1)} className="mr-auto bg-blue-600 text-white px-10 py-4 rounded-xl font-black hover:bg-blue-700 shadow-xl">التالي</button>
+                                <button type="button" onClick={() => setStep(step + 1)} className="mr-auto bg-blue-600 text-white px-8 py-3 rounded-xl font-black shadow-lg hover:bg-blue-700">التالي</button>
                             ) : (
-                                <button type="submit" disabled={isSubmitting} className={`mr-auto px-12 py-4 rounded-xl font-black transition-all ${isSubmitting ? 'bg-slate-400' : 'bg-green-600 text-white hover:bg-green-700 shadow-2xl'}`}>
-                                    {isSubmitting ? 'جاري تحضير الملف وإرساله...' : 'إرسال الملف الكامل (TXT)'}
+                                <button type="submit" disabled={isSubmitting} className={`mr-auto px-10 py-3 rounded-xl font-black shadow-2xl transition ${isSubmitting ? 'bg-slate-400' : 'bg-green-600 text-white hover:bg-green-700'}`}>
+                                    {isSubmitting ? 'جاري التحضير والإرسال...' : 'إرسال الملف الكامل (TXT + جدول)'}
                                 </button>
                             )}
                         </div>
@@ -541,3 +492,4 @@
     </script>
 </body>
 </html>
+
