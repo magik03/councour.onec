@@ -123,7 +123,7 @@
         };
 
         const deleteEntry = (id) => {
-          if (confirm('هل أنت متأكد من الحذف النهائي للملف؟ لا يمكن التراجع عن هذا الإجراء.')) {
+          if (confirm('هل أنت متأكد من الحذف النهائي للملف؟')) {
             const updated = submissions.filter(item => item.id !== id);
             setSubmissions(updated);
             localStorage.setItem('dz_recruitment_v18_shared', JSON.stringify(updated));
@@ -190,34 +190,55 @@
                   <div className="sticky top-0 bg-white z-[110] flex justify-between items-center mb-10 pb-6 border-b-2 border-slate-100">
                     <div>
                       <h3 className="text-3xl font-black text-slate-900">معاينة الملف الكامل للمترشح</h3>
-                      <p className="text-slate-500 font-bold mt-1">المعرف الفريد: {selected.id} | تاريخ التسجيل: {selected.submissionDate}</p>
+                      <p className="text-slate-500 font-bold mt-1">تاريخ التسجيل: {selected.submissionDate}</p>
                     </div>
                     <button onClick={() => setSelected(null)} className="text-5xl text-slate-300 hover:text-red-600 transition-colors">&times;</button>
                   </div>
                   
                   <div className="space-y-16">
-                    {/* Identity Section */}
+                    {/* 1. Appointment Info Section */}
                     <section>
-                      <div className="section-header"><User size={28}/> <h4 className="text-2xl font-black">الهوية والمعلومات المدنية</h4></div>
+                      <div className="section-header"><Briefcase size={28}/> <h4 className="text-2xl font-black">1. معلومات التعيين</h4></div>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <DetailBlock label="مديرية التربية لولاية" value={selected.wilaya} />
+                        <DetailBlock label="الرتبة المراد الالتحاق بها" value={selected.rank} />
+                        <DetailBlock label="مادة التدريس" value={selected.teachingSubject} />
+                      </div>
+                    </section>
+
+                    {/* 2. Identity Section */}
+                    <section>
+                      <div className="section-header"><User size={28}/> <h4 className="text-2xl font-black">2. الهوية والمعلومات المدنية</h4></div>
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <DetailBlock label="اللقب والاسم (عربي)" value={`${selected.lastNameAr} ${selected.firstNameAr}`} />
-                        <DetailBlock label="اللقب والاسم (فرنسية)" value={`${selected.lastNameLat} ${selected.firstNameLat}`} />
+                        <DetailBlock label="رقم التعريف الوطني (NIN)" value={selected.nin} />
+                        <DetailBlock label="اللقب (عربي)" value={selected.lastNameAr} />
+                        <DetailBlock label="الاسم (عربي)" value={selected.firstNameAr} />
+                        <DetailBlock label="اللقب (فرنسي)" value={selected.lastNameLat} />
+                        <DetailBlock label="الاسم (فرنسي)" value={selected.firstNameLat} />
                         <DetailBlock label="اسم الأب" value={selected.fatherName} />
                         <DetailBlock label="لقب الأم" value={selected.motherLastName} />
                         <DetailBlock label="اسم الأم" value={selected.motherFirstName} />
-                        <DetailBlock label="رقم التعريف الوطني (NIN)" value={selected.nin} />
-                        <DetailBlock label="تاريخ الازدياد" value={selected.birthDate} />
-                        <DetailBlock label="مكان الازدياد (ولاية)" value={selected.birthWilaya} />
-                        <DetailBlock label="مكان الازدياد (البلدية)" value={selected.birthCommune} />
                         <DetailBlock label="الجنس" value={selected.gender} />
                         <DetailBlock label="الحالة العائلية" value={selected.maritalStatus} />
                         <DetailBlock label="عدد الأولاد" value={selected.childrenCount} />
-                        <div className="lg:col-span-2"><DetailBlock label="البريد الإلكتروني الشخصي" value={selected.email} /></div>
+                        <DetailBlock label="تاريخ الازدياد" value={selected.birthDate} />
+                        <DetailBlock label="مكان الازدياد (ولاية)" value={selected.birthWilaya} />
+                        <DetailBlock label="مكان الازدياد (البلدية)" value={selected.birthCommune} />
+                      </div>
+                    </section>
+
+                    {/* 3. Residence & National Service */}
+                    <section>
+                      <div className="section-header"><Home size={28}/> <h4 className="text-2xl font-black">3. مكان الإقامة والخدمة الوطنية</h4></div>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <DetailBlock label="ولاية الإقامة" value={selected.residenceWilaya} />
+                        <DetailBlock label="بلدية الإقامة" value={selected.residenceCommune} />
+                        <DetailBlock label="رقم الهاتف الشخصي" value={selected.phone} />
                       </div>
                       
                       {selected.gender === 'ذكر' && (
-                        <div className="mt-8 p-6 bg-slate-50 border-2 border-slate-200 rounded-3xl">
-                          <h5 className="font-black text-dz-green mb-4 border-b pb-2">وضعية الخدمة الوطنية:</h5>
+                        <div className="p-6 bg-slate-50 border-2 border-slate-200 rounded-3xl">
+                          <h5 className="font-black text-dz-green mb-4 border-b pb-2 text-sm">تفاصيل الخدمة الوطنية:</h5>
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <DetailBlock label="الوضعية" value={selected.nationalServiceStatus} />
                             <DetailBlock label="رقم المرجع" value={selected.nsRefNum} />
@@ -234,45 +255,23 @@
                       )}
                     </section>
 
-                    {/* Residence Section */}
+                    {/* 4. Education & Academic Path */}
                     <section>
-                      <div className="section-header"><Home size={28}/> <h4 className="text-2xl font-black">مكان الإقامة والاتصال</h4></div>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <DetailBlock label="ولاية الإقامة" value={selected.residenceWilaya} />
-                        <DetailBlock label="بلدية الإقامة" value={selected.residenceCommune} />
-                        <DetailBlock label="رقم الهاتف" value={selected.phone} />
-                      </div>
-                    </section>
-
-                    {/* Target Job Section */}
-                    <section>
-                      <div className="section-header"><Briefcase size={28}/> <h4 className="text-2xl font-black">معلومات التعيين المستهدف</h4></div>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <DetailBlock label="مديرية التربية لولاية" value={selected.wilaya} />
-                        <DetailBlock label="الرتبة المطلوبة" value={selected.rank} />
-                        <DetailBlock label="المادة" value={selected.teachingSubject} />
-                      </div>
-                    </section>
-
-                    {/* Education Section */}
-                    <section>
-                      <div className="section-header"><GraduationCap size={28}/> <h4 className="text-2xl font-black">المؤهلات العلمية والمسار الدراسي</h4></div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                      <div className="section-header"><GraduationCap size={28}/> <h4 className="text-2xl font-black">4. الشهادات والمؤهلات والمسار الدراسي</h4></div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
                         <DetailBlock label="الشهادة" value={selected.degree} />
                         <DetailBlock label="التخصص" value={selected.degreeSpecialty} />
                         <DetailBlock label="رقم الشهادة" value={selected.degreeCertNum} />
-                        <DetailBlock label="التقدير" value={selected.degreeAppreciation} />
                         <DetailBlock label="تاريخ التخرج" value={selected.gradDate} />
+                        <DetailBlock label="التقدير" value={selected.degreeAppreciation} />
                         <DetailBlock label="المؤسسة المسلمة" value={selected.issuingInstitution} />
-                        <DetailBlock label="خريج مدرسة عليا" value={selected.isHigherSchoolGraduate} />
+                        <DetailBlock label="خريج مدرسة وطنية عليا" value={selected.isHigherSchoolGraduate} />
                         <DetailBlock label="الأول في الدفعة" value={selected.isTopOfClass} />
-                        <DetailBlock label="المعدل العام للمسار" value={selected.overallGpa} />
-                        <DetailBlock label="علامة المذكرة" value={selected.thesisGrade} />
                       </div>
 
                       {selected.isTopOfClass === 'نعم' && (
                         <div className="mb-6 p-6 bg-amber-50 border-2 border-amber-200 rounded-3xl">
-                          <h5 className="font-black text-amber-800 mb-4 border-b border-amber-200 pb-2">تفاصيل وثيقة التفوق:</h5>
+                          <h5 className="font-black text-amber-800 mb-4 border-b border-amber-200 pb-2 text-sm">وثيقة التفوق:</h5>
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <DetailBlock label="رقم الوثيقة" value={selected.topOfClassDocNum} />
                             <DetailBlock label="تاريخ الإصدار" value={selected.topOfClassDocDate} />
@@ -281,28 +280,36 @@
                         </div>
                       )}
 
-                      {/* Academic Grades Display */}
-                      {selected.academicYears && Object.keys(selected.academicYears).length > 0 && (
-                        <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 mb-6">
-                          <h5 className="font-black text-dz-green mb-4">كشف المعدلات السنوية المفصل:</h5>
-                          <div className="space-y-2">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <DetailBlock label="المعدل العام للمسار الدراسي" value={selected.overallGpa} />
+                        <DetailBlock label="علامة المذكرة" value={selected.thesisGrade} />
+                      </div>
+
+                      <div className="p-6 bg-slate-50 border-2 border-dz-green/10 rounded-3xl mb-6">
+                        <h5 className="font-black text-dz-green mb-4 border-b border-dz-green/10 pb-2 text-sm">المسار الدراسي (المعدلات السنوية):</h5>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                          <DetailBlock label="سنة بداية التكوين" value={selected.startYear} />
+                          <DetailBlock label="سنة نهاية التكوين" value={selected.endYear} />
+                        </div>
+                        {selected.academicYears && Object.keys(selected.academicYears).length > 0 && (
+                          <div className="space-y-3">
                             {Object.entries(selected.academicYears).map(([key, data]) => (
                                <div key={key} className="year-row">
-                                 <span className="font-black">السنة {key.replace('Year','')}</span>
+                                 <span className="font-black text-slate-700">السنة {key.replace('Year','')}</span>
                                  <span className="text-sm">س1: {data.s1 || '---'}</span> 
                                  <span className="text-sm">س2: {data.s2 || '---'}</span> 
                                  <span className="text-dz-green font-black">السنوي: {data.ann || '---'}</span>
                                </div>
                             ))}
                           </div>
-                        </div>
-                      )}
+                        )}
+                      </div>
 
                       {selected.hasOtherDegrees === 'نعم' && (
-                        <div className="mt-4 p-6 bg-blue-50 rounded-2xl border border-blue-100">
-                          <h5 className="font-black text-blue-800 mb-3 border-b border-blue-200 pb-2 text-sm">شهادات ومؤهلات أخرى:</h5>
+                        <div className="p-6 bg-blue-50 border-2 border-blue-100 rounded-3xl">
+                          <h5 className="font-black text-blue-800 mb-4 border-b border-blue-100 pb-2 text-sm">شهادات عليا أخرى:</h5>
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <DetailBlock label="اسم الشهادة" value={selected.otherDegreeName} />
+                            <DetailBlock label="الشهادة" value={selected.otherDegreeName} />
                             <DetailBlock label="التخصص" value={selected.otherDegreeSpecialty} />
                             <DetailBlock label="الجهة المسلمة" value={selected.otherDegreeIssuer} />
                           </div>
@@ -310,43 +317,44 @@
                       )}
                     </section>
 
-                    {/* Publications Section */}
+                    {/* 5. Publications Section */}
                     <section>
-                      <div className="section-header"><BookOpen size={28}/> <h4 className="text-2xl font-black">المنشورات والأعمال المهنية</h4></div>
+                      <div className="section-header"><BookOpen size={28}/> <h4 className="text-2xl font-black">5. المنشورات والأعمال المهنية</h4></div>
                       {selected.hasPublications === 'نعم' ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 bg-emerald-50/30 p-6 rounded-3xl border border-emerald-100">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 bg-emerald-50/20 p-6 rounded-3xl border border-emerald-100">
                           <DetailBlock label="طبيعة العمل" value={selected.pubNature} />
                           <DetailBlock label="تاريخ النشر" value={selected.pubDate} />
                           <DetailBlock label="المجلة / الملتقى" value={selected.pubJournal} />
                           <DetailBlock label="العدد / المجلد" value={selected.pubIssue} />
                           <div className="md:col-span-2 lg:col-span-3">
-                             <DetailBlock label="رابط النشر أو المرجع" value={selected.pubLink} />
+                            <DetailBlock label="رابط النشر" value={selected.pubLink} />
                           </div>
                         </div>
-                      ) : <p className="text-slate-400 font-bold italic">لا توجد منشورات أو أعمال علمية مسجلة</p>}
+                      ) : <p className="text-slate-400 italic font-bold">لا توجد منشورات مسجلة</p>}
                     </section>
 
-                    {/* Experience Section */}
+                    {/* 6. Previous Experience Section */}
                     <section>
-                      <div className="section-header"><Briefcase size={28}/> <h4 className="text-2xl font-black">الخبرة المهنية المكتسبة</h4></div>
+                      <div className="section-header"><Briefcase size={28}/> <h4 className="text-2xl font-black">6. الخبرة المهنية المكتسبة</h4></div>
                       {selected.hasProfessionalExp === 'نعم' ? (
                         <div className="space-y-4">
-                          <DetailBlock label="نوع الخبرة" value={selected.expType} />
+                          <DetailBlock label="فئة الخبرة" value={selected.expType} />
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                            <DetailBlock label="المنصب المشغول" value={selected.expJob} />
-                            <DetailBlock label="المؤسسة / الإدارة" value={selected.expInstitution} />
-                            <DetailBlock label="رقم الشهادة / العقد" value={selected.expCertNum} />
-                            <DetailBlock label="تاريخ البداية" value={selected.expStartDate} />
-                            <DetailBlock label="تاريخ النهاية" value={selected.expEndDate} />
-                            <div className="lg:col-span-2"><DetailBlock label="سبب التوقف عن العمل" value={selected.expTerminationReason} /></div>
+                            <DetailBlock label="المنصب" value={selected.expJob} />
+                            <DetailBlock label="المؤسسة" value={selected.expInstitution} />
+                            <DetailBlock label="رقم الشهادة/العقد" value={selected.expCertNum} />
+                            <DetailBlock label="الفترة" value={`${selected.expStartDate} إلى ${selected.expEndDate}`} />
+                            <div className="lg:col-span-2">
+                              <DetailBlock label="سبب التوقف" value={selected.expTerminationReason} />
+                            </div>
                           </div>
                         </div>
-                      ) : <p className="text-slate-400 font-bold italic">لا توجد خبرة مهنية سابقة مسجلة</p>}
+                      ) : <p className="text-slate-400 italic font-bold">لا توجد خبرة سابقة مسجلة</p>}
                     </section>
 
-                    {/* Current Status Section */}
+                    {/* 7. Current Job Status Section */}
                     <section>
-                      <div className="section-header"><Briefcase size={28}/> <h4 className="text-2xl font-black">الوضعية المهنية الحالية</h4></div>
+                      <div className="section-header"><Briefcase size={28}/> <h4 className="text-2xl font-black">7. الوضعية المهنية الحالية</h4></div>
                       {selected.hasJob === 'نعم' ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 bg-blue-50/20 p-6 rounded-3xl border border-blue-100">
                           <DetailBlock label="الرتبة الحالية" value={selected.currentJobRank} />
@@ -356,10 +364,20 @@
                           <DetailBlock label="تاريخ المرجع" value={selected.jobRefDate} />
                           <DetailBlock label="تسمية الإدارة" value={selected.adminName} />
                           <DetailBlock label="هاتف الإدارة" value={selected.adminPhone} />
-                          <DetailBlock label="البريد الإلكتروني للإدارة" value={selected.adminEmail} />
-                          <div className="lg:col-span-4"><DetailBlock label="عنوان الإدارة" value={selected.adminAddress} /></div>
+                          <DetailBlock label="إيميل الإدارة" value={selected.adminEmail} />
+                          <div className="lg:col-span-4">
+                            <DetailBlock label="عنوان الإدارة" value={selected.adminAddress} />
+                          </div>
                         </div>
-                      ) : <p className="text-slate-400 font-bold italic">المترشح حالياً في وضعية "بدون عمل"</p>}
+                      ) : <p className="text-slate-400 italic font-bold">لا يشغل وظيفة حالياً</p>}
+                    </section>
+
+                    {/* 8. Final Contact Section */}
+                    <section>
+                      <div className="section-header"><Mail size={28}/> <h4 className="text-2xl font-black">8. بيانات الاتصال النهائية</h4></div>
+                      <div className="grid grid-cols-1 gap-4">
+                        <DetailBlock label="البريد الإلكتروني الشخصي" value={selected.email} />
+                      </div>
                     </section>
                   </div>
 
