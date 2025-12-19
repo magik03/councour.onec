@@ -213,7 +213,7 @@
         };
 
         const calculateRequiredDocs = () => {
-          const docs = ["طلب خطي للمشاركة في المسابقة.", "نسخة من بطاقة التعريف الوطنية."];
+          const docs = [];
           
           if (formData.residenceCommune) docs.push("بطاقة إقامة سارية المفعول.");
           if (formData.degree) docs.push(`نسخة من الشهادة المطلوبة (${formData.degree}) في التخصص المعني.`);
@@ -221,7 +221,7 @@
           if (Object.keys(formData.academicYears).length > 0 || formData.overallGpa) docs.push("كشوف نقاط المسار الدراسي (لكافة السنوات الجامعية).");
           if (formData.isTopOfClass === 'نعم') docs.push("شهادة تثبت أن المترشح هو الأول في دفعته.");
           if (formData.hasProfessionalExp === 'نعم') docs.push("شهادات العمل التي تثبت الخبرة المهنية المكتسبة.");
-          if (formData.hasJob === 'نعم') docs.push("ترخيص من الإدارة المستخدمة بالمشاركة في المسابقة وتعهد بالاستقالة.");
+          if (formData.hasJob === 'نعم') docs.push("وثيقة تثبت الوظيفة الحالية.");
           if (formData.hasOtherDegrees === 'نعم') docs.push("نسخة من شهادة الدراسات العليا الإضافية.");
           if (formData.hasPublications === 'نعم') docs.push("نسخ من المقالات المنشورة أو الأعمال العلمية والبحثية المنجزة.");
           
