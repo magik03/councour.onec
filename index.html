@@ -4,7 +4,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>استمارة معلومات لمسابقة التوظيف - د.عبد المجيد</title>
+    <title>استمارة المعلومات الكاملة - د.عبد المجيد</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
@@ -17,7 +17,6 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <script>
-      // إعدادات Firebase مع الرابط الذي أرسلته
       const firebaseConfig = {
         apiKey: "AIzaSyBdlRDPTQqY8lZvD4R7nneXAwPgRbxmm14",
         authDomain: "councour-59e43.firebaseapp.com",
@@ -27,7 +26,6 @@
         messagingSenderId: "492907661374",
         appId: "1:492907661374:web:31792fc3ab95d0e69ea96f"
       };
-
       firebase.initializeApp(firebaseConfig);
       const db = firebase.database();
 
@@ -35,116 +33,238 @@
         theme: {
           extend: {
             fontFamily: { sans: ['Tajawal', 'sans-serif'] },
-            colors: {
-              'dz-green': '#008568',
-              'dz-green-dark': '#006b54',
-              'admin-blue': '#0f172a',
-            }
+            colors: { 'dz-green': '#008568', 'admin-blue': '#0f172a' }
           },
         },
       }
     </script>
     <style>
-      ::-webkit-scrollbar { width: 10px; }
-      ::-webkit-scrollbar-track { background: #f8fafc; }
-      ::-webkit-scrollbar-thumb { background: #008568; border-radius: 5px; }
-      input, select { background-color: #ffffff !important; font-weight: 700 !important; border: 2px solid #cbd5e1 !important; }
+      input, select { background-color: #ffffff !important; font-weight: 700 !important; border: 2px solid #cbd5e1 !important; transition: 0.3s; }
       input:focus, select:focus { border-color: #008568 !important; box-shadow: 0 0 0 4px rgba(0, 133, 104, 0.1); }
+      .form-card { background: white; border-radius: 2.5rem; border: 2px solid #e2e8f0; padding: 2.5rem; margin-bottom: 3rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+      .section-title { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; border-bottom: 3px solid #f1f5f9; padding-bottom: 1rem; font-size: 1.6rem; font-weight: 900; color: #0f172a; }
+      .year-strip { background: #f8fafc; border-right: 6px solid #008568; padding: 1.2rem; border-radius: 1.2rem; margin-bottom: 0.8rem; display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; align-items: center; }
       .loading-pulse { animation: pulse 1.5s infinite; }
       @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
-      .modal-bg { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px); }
     </style>
   </head>
-  <body class="bg-slate-100 font-sans text-right text-slate-900">
+  <body class="bg-slate-50 font-sans text-right text-slate-900">
     <div id="root"></div>
 
     <script type="text/babel">
-      const { useState } = React;
+      const { useState, useMemo } = React;
 
-      const WILAYAS = ["01 أدرار", "02 الشلف", "03 الأغواط", "04 أم البواقي", "05 باتنة", "16 الجزائر", "31 وهران"]; // قائمة مختصرة للتجربة
+      const WILAYAS = ["01 أدرار", "02 الشلف", "03 الأغواط", "04 أم البواقي", "05 باتنة", "06 بجاية", "07 بسكرة", "08 بشار", "09 البليدة", "10 البويرة", "11 تمنراست", "12 تبسة", "13 تلمسان", "14 تيارت", "15 تيزي وزو", "16 الجزائر", "17 الجلفة", "18 جيجل", "19 سطيف", "20 سعيدة", "21 سكيكدة", "22 سيدي بلعباس", "23 عنابة", "24 قالمة", "25 قسنطينة", "26 المدية", "27 مستغانم", "28 المسيلة", "29 معسكر", "30 ورقلة", "31 وهران", "32 البيض", "33 إليزي", "34 برج بوعريريج", "35 بومرداس", "36 الطارف", "37 تندوف", "38 تيسمسيلت", "39 الوادي", "40 خنشلة", "41 سوق أهراس", "42 تيبازة", "43 ميلة", "44 عين الدفلى", "45 النعامة", "46 عين تموشنت", "47 غرداية", "48 غليزان", "49 تميمون", "50 برج باجي مختار", "51 أولاد جلال", "52 بني عباس", "53 عين صالح", "54 عين قزام", "55 تقرت", "56 جانت", "57 المغير", "58 المنيعة"];
       
-      const InputField = ({ label, name, value, onChange, type="text", required=false, options=null, maxLength=null, placeholder="" }) => (
+      const InputField = ({ label, name, value, onChange, type="text", required=false, options=null, placeholder="", step="any" }) => (
         <div className="flex flex-col mb-4">
-          <label className="text-sm font-black mb-2">{label} {required && <span className="text-red-600">*</span>}</label>
+          <label className="text-sm font-black mb-2 text-slate-700">{label} {required && <span className="text-red-600">*</span>}</label>
           {options ? (
-            <select name={name} value={value} onChange={onChange} required={required} className="p-4 rounded-xl border-2">
+            <select name={name} value={value} onChange={onChange} required={required} className="p-4 rounded-xl outline-none">
               <option value="">-- اختر --</option>
               {options.map(o => <option key={o} value={o}>{o}</option>)}
             </select>
           ) : (
-            <input type={type} name={name} value={value} onChange={onChange} required={required} maxLength={maxLength} placeholder={placeholder} className="p-4 rounded-xl border-2" />
+            <input type={type} name={name} value={value} onChange={onChange} required={required} placeholder={placeholder} step={step} className="p-4 rounded-xl outline-none" />
           )}
         </div>
       );
 
       const App = () => {
         const [formData, setFormData] = useState({
-          wilaya: '', rank: '', nin: '', lastNameAr: '', firstNameAr: '', phone: '', email: '', status: 'قيد الانتظار'
+          wilaya: '', rank: '', teachingSubject: '',
+          nin: '', lastNameAr: '', firstNameAr: '', lastNameLat: '', firstNameLat: '',
+          fatherName: '', motherLastName: '', motherFirstName: '', gender: 'ذكر', maritalStatus: 'أعزب(ة)', childrenCount: '0',
+          birthDate: '', birthWilaya: '', birthCommune: '',
+          residenceWilaya: '', residenceCommune: '', personalAddress: '', phone: '', email: '',
+          nationalServiceStatus: '', nsRefNum: '', nsIssueDate: '', nsExpiryDate: '', nsStartDate: '', nsEndDate: '',
+          degree: '', degreeSpecialty: '', degreeCertNum: '', gradDate: '', issuingInstitution: '', degreeAppreciation: '',
+          isHigherSchoolGraduate: 'لا', isTopOfClass: 'لا', topOfClassDocNum: '', topOfClassDocDate: '', topOfClassDocIssuer: '',
+          overallGpa: '', thesisGrade: '', startYear: '', endYear: '', academicYears: {},
+          hasOtherDegrees: 'لا', otherDegreeName: '', otherDegreeSpecialty: '', otherDegreeIssuer: '',
+          hasPublications: 'لا', pubNature: '', pubDate: '', pubJournal: '', pubIssue: '', pubLink: '',
+          hasProfessionalExp: 'لا', expType: '', expJob: '', expInstitution: '', expStartDate: '', expEndDate: '', expTerminationReason: '',
+          hasJob: 'لا', currentJobRank: '', firstAppointDate: '', adminName: '', adminPhone: '', adminEmail: '', adminAddress: '',
+          status: 'قيد الانتظار'
         });
+
         const [isSubmitting, setIsSubmitting] = useState(false);
         const [showSuccess, setShowSuccess] = useState(false);
+
+        const academicYearsCount = useMemo(() => {
+          const s = parseInt(formData.startYear);
+          const e = parseInt(formData.endYear);
+          return (s && e && e > s) ? Math.min(Math.max(e - s, 1), 7) : 0;
+        }, [formData.startYear, formData.endYear]);
 
         const handleChange = (e) => {
           const { name, value } = e.target;
           setFormData(prev => ({ ...prev, [name]: value }));
         };
 
+        const handleAcademicYearChange = (year, field, val) => {
+          setFormData(prev => ({
+            ...prev,
+            academicYears: { ...prev.academicYears, [`Year${year}`]: { ...(prev.academicYears[`Year${year}`] || {}), [field]: val } }
+          }));
+        };
+
         const handleSubmit = (e) => {
           e.preventDefault();
           setIsSubmitting(true);
-
-          const submission = {
-            ...formData,
-            submissionDate: new Date().toLocaleString('ar-DZ'),
-            timestamp: firebase.database.ServerValue.TIMESTAMP
-          };
-
-          // الإرسال الفعلي لـ Realtime Database
-          db.ref('submissions').push(submission)
-            .then(() => {
-              setIsSubmitting(false);
-              setShowSuccess(true);
-            })
-            .catch((err) => {
-              setIsSubmitting(false);
-              alert("فشل الإرسال: " + err.message);
-            });
+          db.ref('submissions').push({ ...formData, submissionDate: new Date().toLocaleString('ar-DZ'), timestamp: firebase.database.ServerValue.TIMESTAMP })
+            .then(() => { setIsSubmitting(false); setShowSuccess(true); })
+            .catch(err => { setIsSubmitting(false); alert("خطأ: " + err.message); });
         };
 
         return (
           <div className="min-h-screen pb-20">
-            <header className="bg-admin-blue text-white p-10 text-center shadow-xl mb-10">
-              <h1 className="text-4xl font-black mb-2">استمارة التوظيف الإلكترونية</h1>
-              <p className="text-dz-green font-bold">بوابة د.عبد المجيد - حفظ سحابي مباشر</p>
+            <header className="bg-admin-blue text-white p-12 text-center shadow-2xl mb-12">
+              <h1 className="text-4xl md:text-5xl font-black mb-4">استمارة معلومات مسابقة التوظيف</h1>
+              <p className="text-dz-green font-black text-2xl border-t-2 border-dz-green/20 pt-4 inline-block tracking-widest">بوابة د.عبد المجيد | الحفظ السحابي الكامل</p>
             </header>
 
-            <main className="max-w-4xl mx-auto px-4">
-              <form onSubmit={handleSubmit} className="bg-white p-8 rounded-[2rem] shadow-sm border-2">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <InputField label="الولاية" name="wilaya" required value={formData.wilaya} onChange={handleChange} options={WILAYAS} />
-                  <InputField label="الرتبة" name="rank" required value={formData.rank} onChange={handleChange} options={['أستاذ ابتدائي', 'أستاذ متوسط', 'أستاذ ثانوي']} />
-                  <InputField label="رقم التعريف الوطني (NIN)" name="nin" required maxLength={18} value={formData.nin} onChange={handleChange} />
-                  <InputField label="اللقب (عربي)" name="lastNameAr" required value={formData.lastNameAr} onChange={handleChange} />
-                  <InputField label="الاسم (عربي)" name="firstNameAr" required value={formData.firstNameAr} onChange={handleChange} />
-                  <InputField label="رقم الهاتف" name="phone" required maxLength={10} value={formData.phone} onChange={handleChange} />
-                  <div className="md:col-span-2">
-                    <InputField label="البريد الإلكتروني" name="email" type="email" required value={formData.email} onChange={handleChange} />
+            <main className="max-w-7xl mx-auto px-6">
+              <form onSubmit={handleSubmit}>
+                
+                {/* 1. التعيين */}
+                <div className="form-card">
+                  <div className="section-title">1. معلومات التعيين</div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <InputField label="مديرية التربية لولاية" name="wilaya" required value={formData.wilaya} onChange={handleChange} options={WILAYAS} />
+                    <InputField label="الرتبة" name="rank" required value={formData.rank} onChange={handleChange} options={['أستاذ ابتدائي', 'أستاذ متوسط', 'أستاذ ثانوي', 'مشرف تربية']} />
+                    <InputField label="مادة التدريس" name="teachingSubject" required value={formData.teachingSubject} onChange={handleChange} />
                   </div>
                 </div>
 
-                <button type="submit" disabled={isSubmitting} className={`w-full mt-8 bg-dz-green text-white py-6 rounded-2xl text-2xl font-black shadow-lg transition-transform hover:scale-[1.02] ${isSubmitting ? 'loading-pulse' : ''}`}>
-                  {isSubmitting ? 'جاري الحفظ سحابياً...' : 'إرسال الملف الآن'}
-                </button>
+                {/* 2. الهوية */}
+                <div className="form-card">
+                  <div className="section-title">2. الهوية والمعلومات المدنية</div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <InputField label="رقم التعريف الوطني (NIN)" name="nin" required value={formData.nin} onChange={handleChange} />
+                    <InputField label="اللقب (عربي)" name="lastNameAr" required value={formData.lastNameAr} onChange={handleChange} />
+                    <InputField label="الاسم (عربي)" name="firstNameAr" required value={formData.firstNameAr} onChange={handleChange} />
+                    <InputField label="اللقب (Latine)" name="lastNameLat" required value={formData.lastNameLat} onChange={handleChange} />
+                    <InputField label="الاسم (Latine)" name="firstNameLat" required value={formData.firstNameLat} onChange={handleChange} />
+                    <InputField label="اسم الأب" name="fatherName" required value={formData.fatherName} onChange={handleChange} />
+                    <InputField label="لقب الأم" name="motherLastName" required value={formData.motherLastName} onChange={handleChange} />
+                    <InputField label="اسم الأم" name="motherFirstName" required value={formData.motherFirstName} onChange={handleChange} />
+                    <InputField label="الجنس" name="gender" required value={formData.gender} onChange={handleChange} options={['ذكر', 'أنثى']} />
+                    <InputField label="الحالة العائلية" name="maritalStatus" required value={formData.maritalStatus} onChange={handleChange} options={['أعزب(ة)', 'متزوج(ة)', 'مطلق(ة)', 'أرمل(ة)']} />
+                    {['متزوج(ة)', 'مطلق(ة)', 'أرمل(ة)'].includes(formData.maritalStatus) && <InputField label="عدد الأولاد" name="childrenCount" type="number" value={formData.childrenCount} onChange={handleChange} />}
+                    <InputField label="تاريخ الازدياد" name="birthDate" type="date" required value={formData.birthDate} onChange={handleChange} />
+                    <InputField label="مكان الازدياد (البلدية)" name="birthCommune" required value={formData.birthCommune} onChange={handleChange} />
+                  </div>
+                </div>
+
+                {/* 3. الخدمة الوطنية */}
+                {formData.gender === 'ذكر' && (
+                  <div className="form-card bg-slate-50">
+                    <div className="section-title">3. وضعية الخدمة الوطنية</div>
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                      <InputField label="الوضعية" name="nationalServiceStatus" required value={formData.nationalServiceStatus} onChange={handleChange} options={['مؤدى', 'معفى', 'مؤجل', 'في طور الإنجاز']} />
+                      <InputField label="رقم الوثيقة" name="nsRefNum" value={formData.nsRefNum} onChange={handleChange} />
+                      <InputField label="تاريخ الإصدار" name="nsIssueDate" type="date" value={formData.nsIssueDate} onChange={handleChange} />
+                      <InputField label="تاريخ الانتهاء" name="nsExpiryDate" type="date" value={formData.nsExpiryDate} onChange={handleChange} />
+                    </div>
+                  </div>
+                )}
+
+                {/* 4. الشهادات والمسار الدراسي */}
+                <div className="form-card">
+                  <div className="section-title">4. الشهادات والمؤهلات والمسار الدراسي</div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <InputField label="الشهادة" name="degree" required value={formData.degree} onChange={handleChange} options={['ليسانس', 'ماستر', 'دكتوراه', 'مهندس']} />
+                    <InputField label="التخصص" name="degreeSpecialty" required value={formData.degreeSpecialty} onChange={handleChange} />
+                    <InputField label="رقم الشهادة" name="degreeCertNum" required value={formData.degreeCertNum} onChange={handleChange} />
+                    <InputField label="المؤسسة المسلمة" name="issuingInstitution" required value={formData.issuingInstitution} onChange={handleChange} />
+                    <InputField label="تاريخ التخرج" name="gradDate" type="date" required value={formData.gradDate} onChange={handleChange} />
+                    <InputField label="التقدير" name="degreeAppreciation" required value={formData.degreeAppreciation} onChange={handleChange} options={['مقبول', 'قريب من الحسن', 'حسن', 'حسن جدا']} />
+                    <InputField label="المعدل العام" name="overallGpa" type="number" step="0.01" required value={formData.overallGpa} onChange={handleChange} />
+                    <InputField label="الأول في الدفعة؟" name="isTopOfClass" value={formData.isTopOfClass} onChange={handleChange} options={['نعم', 'لا']} />
+                  </div>
+
+                  <div className="mt-8 p-8 bg-dz-green/5 rounded-[2rem]">
+                    <h4 className="font-black text-dz-green mb-6">المسار الدراسي (المعدلات السنوية)</h4>
+                    <div className="grid grid-cols-2 gap-6 mb-6">
+                      <InputField label="سنة بداية التكوين" name="startYear" type="number" value={formData.startYear} onChange={handleChange} />
+                      <InputField label="سنة نهاية التكوين" name="endYear" type="number" value={formData.endYear} onChange={handleChange} />
+                    </div>
+                    {academicYearsCount > 0 && Array.from({ length: academicYearsCount }).map((_, idx) => (
+                      <div key={idx+1} className="year-strip">
+                        <span className="font-black">السنة {idx+1}</span>
+                        <input placeholder="س1" className="p-2 border rounded" onChange={(e) => handleAcademicYearChange(idx+1, 's1', e.target.value)} />
+                        <input placeholder="س2" className="p-2 border rounded" onChange={(e) => handleAcademicYearChange(idx+1, 's2', e.target.value)} />
+                        <input placeholder="السنوي" className="p-2 border rounded font-black" onChange={(e) => handleAcademicYearChange(idx+1, 'ann', e.target.value)} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 5. المنشورات */}
+                <div className="form-card">
+                  <div className="section-title">5. المنشورات والأعمال المهنية</div>
+                  <InputField label="هل لديك منشورات؟" name="hasPublications" value={formData.hasPublications} onChange={handleChange} options={['نعم', 'لا']} />
+                  {formData.hasPublications === 'نعم' && (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
+                      <InputField label="طبيعة العمل" name="pubNature" value={formData.pubNature} onChange={handleChange} />
+                      <InputField label="اسم المجلة/الملتقى" name="pubJournal" value={formData.pubJournal} onChange={handleChange} />
+                      <InputField label="رابط النشر" name="pubLink" value={formData.pubLink} onChange={handleChange} />
+                    </div>
+                  )}
+                </div>
+
+                {/* 6. الخبرة المهنية */}
+                <div className="form-card">
+                  <div className="section-title">6. الخبرة المهنية المكتسبة</div>
+                  <InputField label="هل لديك خبرة سابقة؟" name="hasProfessionalExp" value={formData.hasProfessionalExp} onChange={handleChange} options={['نعم', 'لا']} />
+                  {formData.hasProfessionalExp === 'نعم' && (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
+                      <InputField label="المنصب" name="expJob" value={formData.expJob} onChange={handleChange} />
+                      <InputField label="المؤسسة" name="expInstitution" value={formData.expInstitution} onChange={handleChange} />
+                      <InputField label="الفترة" name="expPeriod" placeholder="من تاريخ .. إلى تاريخ" value={formData.expPeriod} onChange={handleChange} />
+                    </div>
+                  )}
+                </div>
+
+                {/* 7. الوضعية الحالية */}
+                <div className="form-card">
+                  <div className="section-title">7. الوضعية المهنية الحالية</div>
+                  <InputField label="هل تشغل وظيفة حالياً؟" name="hasJob" value={formData.hasJob} onChange={handleChange} options={['نعم', 'لا']} />
+                  {formData.hasJob === 'نعم' && (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
+                      <InputField label="الرتبة الحالية" name="currentJobRank" value={formData.currentJobRank} onChange={handleChange} />
+                      <InputField label="اسم الإدارة" name="adminName" value={formData.adminName} onChange={handleChange} />
+                      <InputField label="هاتف الإدارة" name="adminPhone" value={formData.adminPhone} onChange={handleChange} />
+                    </div>
+                  )}
+                </div>
+
+                {/* 8. الاتصال */}
+                <div className="form-card border-dz-green">
+                  <div className="section-title">8. بيانات الاتصال النهائية</div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <InputField label="رقم الهاتف" name="phone" required value={formData.phone} onChange={handleChange} maxLength={10} />
+                    <InputField label="البريد الإلكتروني" name="email" type="email" required value={formData.email} onChange={handleChange} />
+                    <InputField label="عنوان الإقامة" name="personalAddress" required value={formData.personalAddress} onChange={handleChange} />
+                  </div>
+                </div>
+
+                <div className="flex justify-center mt-12 mb-20">
+                  <button type="submit" disabled={isSubmitting} className={`bg-dz-green text-white text-4xl font-black py-8 px-40 rounded-[3rem] shadow-2xl transition-all hover:scale-105 ${isSubmitting ? 'loading-pulse opacity-80' : ''}`}>
+                    {isSubmitting ? 'جاري الإرسال...' : 'إرسال الملف الكامل'}
+                  </button>
+                </div>
               </form>
             </main>
 
             {showSuccess && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 modal-bg">
-                <div className="bg-white rounded-[3rem] p-12 text-center max-w-lg shadow-2xl">
-                  <div className="text-dz-green text-6xl mb-6">✓</div>
-                  <h2 className="text-3xl font-black mb-4">تم التسجيل بنجاح!</h2>
-                  <p className="text-slate-600 font-bold mb-8">لقد استلمنا ملفك الإلكتروني عبر السحابة بنجاح.</p>
-                  <button onClick={() => { setShowSuccess(false); window.location.reload(); }} className="bg-dz-green text-white px-10 py-4 rounded-xl font-bold">إغلاق</button>
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-admin-blue/90 backdrop-blur-md">
+                <div className="bg-white rounded-[3rem] p-16 text-center max-w-lg shadow-2xl border-4 border-dz-green">
+                  <div className="text-dz-green text-8xl mb-6">✓</div>
+                  <h2 className="text-4xl font-black mb-4">تم التسجيل بنجاح!</h2>
+                  <p className="text-slate-600 font-bold mb-10 text-xl">لقد تم حفظ كامل ملفك الرقمي في السحابة الخاصة بـ د.عبد المجيد.</p>
+                  <button onClick={() => window.location.reload()} className="bg-dz-green text-white w-full py-5 rounded-2xl font-black text-2xl shadow-lg">إغلاق</button>
                 </div>
               </div>
             )}
