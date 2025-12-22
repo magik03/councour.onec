@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
   <head>
@@ -31,7 +32,7 @@
 
       // تهيئة Firebase
       firebase.initializeApp(firebaseConfig);
-      const db = firebase.database(); // تعريف قاعدة البيانات
+      const db = firebase.database();
 
       tailwind.config = {
         theme: {
@@ -142,7 +143,7 @@
       const Home = (p) => <Icon {...p}><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></Icon>;
       const CheckCircle = (p) => <Icon {...p}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></Icon>;
 
-      const InputField = ({ label, name, value, onChange, type="text", required=false, options=null, maxLength=null, placeholder="", step="any" }) => (
+      const InputField = ({ label, name, value, onChange, type="text", required=false, options=null, maxLength=null, placeholder="", step="any", readOnly=false }) => (
         <div className="flex flex-col mb-4">
           <label htmlFor={name} className="text-sm font-black text-slate-700">{label} {required && <span className="text-red-600">*</span>}</label>
           {options ? (
@@ -161,7 +162,8 @@
               maxLength={maxLength}
               placeholder={placeholder}
               step={step}
-              className="p-4 rounded-xl shadow-sm outline-none border-2 border-slate-200" 
+              readOnly={readOnly}
+              className={`p-4 rounded-xl shadow-sm outline-none border-2 border-slate-200 ${readOnly ? 'bg-slate-50 text-dz-green-dark border-dz-green/30' : ''}`} 
             />
           )}
         </div>
@@ -180,7 +182,9 @@
       const App = () => {
         const initialForm = {
           wilaya: '', rank: '', teachingSubject: '',
-          nin: '', lastNameAr: '', firstNameAr: '', lastNameLat: '', firstNameLat: '',
+          nin: '', 
+          birthCertNum: '', // حقل رقم شهادة الميلاد الجديد
+          lastNameAr: '', firstNameAr: '', lastNameLat: '', firstNameLat: '',
           fatherName: '', motherLastName: '', motherFirstName: '', childrenCount: '0',
           birthDate: '', birthWilaya: '', birthCommune: '',
           residenceWilaya: '', residenceCommune: '', personalAddress: '',
@@ -192,6 +196,7 @@
           overallGpa: '', thesisGrade: '',
           startYear: '', endYear: '', academicYears: {},
           hasOtherDegrees: 'لا', otherDegreeName: '', otherDegreeSpecialty: '', otherDegreeIssuer: '',
+          nmsemester: '', otherStartYear: '', otherEndYear: '',
           hasPublications: 'لا', pubNature: '', pubDate: '', pubJournal: '', pubIssue: '', pubLink: '',
           hasProfessionalExp: 'لا', expType: '', expJob: '', expInstitution: '', expCertType: '', expCertNum: '', expCertDate: '', expStartDate: '', expEndDate: '', expTerminationReason: '',
           hasJob: 'لا', currentJobRank: '', firstAppointDate: '', currentRankDate: '', category: '', gradeLevel: '', jobRefNum: '', jobRefDate: '', signingAuthority: '', adminPhone: '', adminEmail: '', adminName: '', adminAddress: '',
@@ -212,39 +217,53 @@
         const handleChange = (e) => {
           const { name, value } = e.target;
 
-          // 1. Email protection
+          // 1. البريد الإلكتروني
           if (name === 'email' || name === 'adminEmail') {
             const safeEmail = value.replace(/[^\w@.\-]/g, ''); 
             setFormData(prev => ({ ...prev, [name]: safeEmail }));
             return;
           }
 
-          // 2. Numbers protection
-          if (['phone', 'adminPhone', 'nin', 'childrenCount'].includes(name)) {
+          // 2. رقم التعريف الوطني واستخراج رقم شهادة الميلاد
+          if (name === 'nin') {
+            const onlyNums = value.replace(/[^0-9]/g, '');
+            if (onlyNums.length > 18) return;
+            
+            // المنطق البرمجي: حذف آخر 4 أرقام وأخذ الـ 5 التي قبلها
+            let calculatedBirthNum = '';
+            if (onlyNums.length >= 9) {
+                calculatedBirthNum = onlyNums.slice(0, -4).slice(-5);
+            }
+
+            setFormData(prev => ({ 
+                ...prev, 
+                nin: onlyNums,
+                birthCertNum: calculatedBirthNum 
+            }));
+            return;
+          }
+
+          // 3. حماية الأرقام (الهاتف، الأولاد)
+          if (['phone', 'adminPhone', 'childrenCount'].includes(name)) {
             const onlyNums = value.replace(/[^0-9]/g, '');
             if (name === 'phone' || name === 'adminPhone') {
               if (onlyNums.length > 10) return;
               if (onlyNums.length === 1 && onlyNums !== "0") return;
               if (onlyNums.length === 2 && !/^[567]$/.test(onlyNums[1])) return;
             }
-            if (name === 'nin') {
-              if (onlyNums.length > 18) return;
-              if (onlyNums.length === 1 && onlyNums !== "1") return;
-              if (onlyNums.length === 2 && !/^[012]$/.test(onlyNums[1])) return;
-            }
             setFormData(prev => ({ ...prev, [name]: onlyNums }));
             return;
           }
 
-          // 3. Arabic protection
-          if (['lastNameAr', 'firstNameAr', 'fatherName', 'motherLastName', 'motherFirstName', 'birthCommune', 'residenceCommune', 'teachingSubject' , 'birthCommune' , 'personalAddress', 'teachingSubject', 'residenceCommune','degreeSpecialty','issuingInstitution','otherDegreeName','otherDegreeSpecialty','otherDegreeIssuer','pubNature','pubJournal','pubIssue'].includes(name)) {
+          // 4. حماية اللغة العربية
+          if (['lastNameAr', 'firstNameAr', 'fatherName', 'motherLastName', 'motherFirstName', 'birthCommune', 'residenceCommune', 'teachingSubject' , 'personalAddress', 'degreeSpecialty','issuingInstitution','otherDegreeName','otherDegreeSpecialty','otherDegreeIssuer','pubNature','pubJournal','pubIssue'].includes(name)) {
             const onlyAr = value.replace(/[^\u0600-\u06FF\s]/g, '');
             setFormData(prev => ({ ...prev, [name]: onlyAr }));
             return;
           }
 
-          // 4. Latin protection
-          if (['lastNameLat', 'firstNameLat', 'birthCommune'].includes(name)) {
+          // 5. حماية اللغة اللاتينية
+          if (['lastNameLat', 'firstNameLat'].includes(name)) {
             const onlyLat = value.replace(/[^a-zA-Z\s]/g, '');
             setFormData(prev => ({ ...prev, [name]: onlyLat }));
             return;
@@ -268,6 +287,10 @@
 
         const calculateRequiredDocs = () => {
           const docs = [];
+          
+          // إضافة بطاقة التعريف الوطنية كما طلبت
+          docs.push("نسخة من بطاقة التعريف الوطنية (إلزامي).");
+
           if (formData.residenceCommune) docs.push("بطاقة إقامة سارية المفعول.");
           if (formData.degree) docs.push(`نسخة من الشهادة المطلوبة (${formData.degree}) في التخصص المعني.`);
           if (formData.gender === 'ذكر' && formData.nationalServiceStatus) docs.push("شهادة تثبت وضعية المترشح تجاه الخدمة الوطنية.");
@@ -285,10 +308,7 @@
           setIsSubmitting(true);
           
           try {
-            // Generate a unique ID for the submission
             const submissionId = Date.now().toString();
-            
-            // Prepare data with ID and date
             const finalData = {
               ...formData,
               id: submissionId,
@@ -296,11 +316,8 @@
               status: 'قيد الانتظار'
             };
 
-            // *** FIREBASE SUBMISSION ***
-            // Sending data to 'submissions' node
             await db.ref('submissions/' + submissionId).set(finalData);
             
-            // Calculate docs and show success modal
             const docsList = calculateRequiredDocs();
             setRequiredDocs(docsList);
             setIsSubmitting(false);
@@ -333,15 +350,20 @@
             <main className="max-w-7xl mx-auto w-full p-4 md:p-12">
               <form onSubmit={handleSubmit} className="animate-in fade-in duration-700">
                 
-                {/* 1. Appointment Info */}
+                {/* 1. معلومات التعيين */}
                 <FormCard title="1. معلومات التعيين" icon={<Briefcase />}>
                   <InputField label="مديرية التربية لولاية" name="wilaya" required value={formData.wilaya} onChange={handleChange} options={WILAYAS} />
-<InputField label="الرتبة المطلوبة" name="rank" required value={formData.rank} onChange={handleChange} options={['أستاذ ابتدائي', 'أستاذ متوسط', 'أستاذ ثانوي']} />                  <InputField label="مادة التدريس" name="teachingSubject" required value={formData.teachingSubject} onChange={handleChange} placeholder="اللغة العربية، الرياضيات..." />
+                  <InputField label="الرتبة المطلوبة" name="rank" required value={formData.rank} onChange={handleChange} options={['أستاذ ابتدائي', 'أستاذ متوسط', 'أستاذ ثانوي']} />
+                  <InputField label="مادة التدريس" name="teachingSubject" required value={formData.teachingSubject} onChange={handleChange} placeholder="اللغة العربية، الرياضيات..." />
                 </FormCard>
 
-                {/* 2. Identity Info */}
+                {/* 2. المعلومات الشخصية */}
                 <FormCard title="2. المعلومات الشخصية" icon={<User />}>
                   <InputField label="رقم التعريف الوطني (NIN)" name="nin" required value={formData.nin} onChange={handleChange} maxLength={18} placeholder="رقم بطاقة التعريف الوطني الطويل " />
+                  
+                  {/* حقل رقم شهادة الميلاد المستخرج تلقائياً */}
+                  <InputField label="رقم شهادة الميلاد (مستخرج تلقائياً)" name="birthCertNum" value={formData.birthCertNum} readOnly placeholder="سيظهر هنا تلقائياً" />
+
                   <InputField label="اللقب (بالعربية)" name="lastNameAr" required value={formData.lastNameAr} onChange={handleChange} />
                   <InputField label="الاسم (بالعربية)" name="firstNameAr" required value={formData.firstNameAr} onChange={handleChange} />
                   <InputField label="اللقب باللغة الفرنسية" name="lastNameLat" required value={formData.lastNameLat} onChange={handleChange} />
@@ -359,8 +381,8 @@
                   <InputField label="بلدية الميلاد" name="birthCommune" required value={formData.birthCommune} onChange={handleChange} placeholder="اكتب اسم البلدية" />
                 </FormCard>
 
-                {/* 3. Residence Info & National Service */}
-                <FormCard title="3. الخدمة الوطنية" icon={<Home />}>
+                {/* 3. الخدمة الوطنية والإقامة */}
+                <FormCard title="3. الخدمة الوطنية والإقامة" icon={<Home />}>
                   {formData.gender === 'ذكر' && (
                     <div className="md:col-span-2 lg:col-span-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6 bg-slate-50 border-2 border-dz-green/10 rounded-3xl mt-4">
                       <div className="md:col-span-2 lg:col-span-3">
@@ -391,15 +413,15 @@
                   </div>
                 </FormCard>
 
-                {/* 4. Education Info */}
+                {/* 4. الشهادات والمؤهلات العلمية */}
                 <FormCard title="4. الشهادات والمؤهلات العلمية" icon={<GraduationCap />}>
                   <InputField label="تسمية الشهادة" name="degree" required value={formData.degree} onChange={handleChange} options={['ليسانس', 'ماستر', 'دكتوراه', 'مهندس دولة']} />
                   <InputField label="الشعبة / التخصص" name="degreeSpecialty" required value={formData.degreeSpecialty} onChange={handleChange} />
                   <InputField label="رقم الشهادة" name="degreeCertNum" required value={formData.degreeCertNum} onChange={handleChange} placeholder="اكتب رقم الشهادة" />
-                  <InputField label="تاريخ  التخرج (المداولات)" name="gradDate" type="date" required value={formData.gradDate} onChange={handleChange} />
+                  <InputField label="تاريخ التخرج" name="gradDate" type="date" required value={formData.gradDate} onChange={handleChange} />
                   <InputField label="المؤسسة المسلمة للشهادة" name="issuingInstitution" required value={formData.issuingInstitution} onChange={handleChange} />
                   
-                  {/* Academic Path */}
+                  {/* المسار الدراسي */}
                   <div className="md:col-span-3 p-8 bg-dz-green/5 rounded-[2.5rem] border-2 border-dz-green/10 my-4">
                     <h3 className="font-black text-dz-green mb-6 text-xl">المسار الدراسي (المعدلات السنوية)</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
@@ -435,7 +457,7 @@
                   <InputField label="المعدل العام للمسار الدراسي" name="overallGpa" type="number" step="0.01" required value={formData.overallGpa} onChange={handleChange} placeholder="00.00" />
                   <InputField label="علامة المذكرة (إن وجدت)" name="thesisGrade" type="number" step="0.01" value={formData.thesisGrade} onChange={handleChange} placeholder="00.00" />
 
-                  {/* Other Degrees */}
+                  {/* شهادات أخرى */}
                   <div className="md:col-span-3 mt-6">
                     <InputField label="هل لديك شهادات عليا أخرى (ماجستير، دكتوراة ثانية...)؟" name="hasOtherDegrees" required value={formData.hasOtherDegrees} onChange={handleChange} options={['نعم', 'لا']} />
                     {formData.hasOtherDegrees === 'نعم' && (
@@ -451,7 +473,7 @@
                   </div>
                 </FormCard>
 
-                {/* 5. Publications Section */}
+                {/* 5. المنشورات والأعمال المهنية */}
                 <FormCard title="5. المنشورات والأعمال المهنية" icon={<BookOpen />}>
                   <div className="md:col-span-3">
                     <InputField label="هل لديك منشورات أو أعمال مهنية؟" name="hasPublications" required value={formData.hasPublications} onChange={handleChange} options={['نعم', 'لا']} />
@@ -467,7 +489,7 @@
                   </div>
                 </FormCard>
 
-                {/* 6. Previous Experience Section */}
+                {/* 6. الخبرة المهنية المكتسبة */}
                 <FormCard title="6. الخبرة المهنية المكتسبة" icon={<Briefcase />}>
                   <div className="md:col-span-3">
                     <InputField label="هل لديك خبرة مهنية سابقة؟" name="hasProfessionalExp" required value={formData.hasProfessionalExp} onChange={handleChange} options={['نعم', 'لا']} />
@@ -493,7 +515,7 @@
                   </div>
                 </FormCard>
 
-                {/* 7. Current Job Status */}
+                {/* 7. الوضعية المهنية الحالية */}
                 <FormCard title="7. الوضعية المهنية الحالية" icon={<Briefcase />}>
                   <div className="md:col-span-3">
                     <InputField 
@@ -513,13 +535,13 @@
                         <InputField label="الصنف / الدرجة" name="category" required value={formData.category} onChange={handleChange} placeholder="مثال: 11 / 02" />
                         <InputField label="رقم المرجع (القرار/القرار الإطاري)" name="jobRefNum" required value={formData.jobRefNum} onChange={handleChange} />
                         <InputField label="تاريخ المرجع" name="jobRefDate" type="date" required value={formData.jobRefDate} onChange={handleChange} />
-						<InputField label="صفة السلطة (صاحب الإمضاء)" name="expInstitution" required value={formData.expInstitution} onChange={handleChange} placeholder="مثال: مدير التربية، الوزير..." />
+						            <InputField label="صفة السلطة (صاحب الإمضاء)" name="signingAuthority" required value={formData.signingAuthority} onChange={handleChange} placeholder="مثال: مدير التربية، الوزير..." />
                         <InputField label="رقم هاتف الإدارة" name="adminPhone" required value={formData.adminPhone} onChange={handleChange} maxLength={10} />
                         
                         <div className="flex flex-col">
                           <InputField label="البريد الإلكتروني للإدارة" name="adminEmail" type="email" required value={formData.adminEmail} onChange={handleChange} />
                           {formData.adminEmail && formData.adminEmail.length > 0 && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.adminEmail) && (
-                            <p className="text-red-500 text-[10px] font-bold mt-1 bg-redششثشثش-50 p-1 rounded border border-red-100">
+                            <p className="text-red-500 text-[10px] font-bold mt-1 bg-red-50 p-1 rounded border border-red-100">
                               ⚠️ يجب كتابة الإيميل بالحروف اللاتينية وصيغة صحيحة
                             </p>
                           )}
@@ -533,7 +555,7 @@
                   </div>
                 </FormCard>
 
-                {/* 8. Final Contact */}
+                {/* 8. بيانات الاتصال النهائية */}
                 <FormCard title="8. بيانات الاتصال النهائية" icon={<Mail />} className="email-final-section">
                   <div className="md:col-span-3">
                     <div className="flex flex-col">
