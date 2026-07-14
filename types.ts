@@ -1,1 +1,0 @@
-// This file is no longer needed as the application is bundled in index.html
