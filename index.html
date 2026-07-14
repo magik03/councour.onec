@@ -1,637 +1,819 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>استمارة معلومات لمسابقة التوظيف - د.عبد المجيد</title>
-    
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
-    
-    <!-- 1. مكتبات Firebase (الإصدار المتوافق) -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>استمارة التسجيل - معلومات المترشح</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+    body { font-family: 'Tajawal', sans-serif; background-color: #f4f7f9; padding: 20px 0 60px; }
+    .form-container { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 0 15px rgba(0,0,0,0.08); max-width: 1150px; margin: auto; }
+    .section-title { background: #f8f9fa; padding: 10px 14px; border-right: 5px solid #28a745; margin-top: 25px; margin-bottom: 20px; font-weight: 700; font-size: 16px; }
+    .required::after { content: " *"; color: #dc3545; }
+    .hidden-field { display: none !important; }
+    label { font-size: 14px; margin-bottom: 5px; color: #333; display:block; }
+    .form-control, .form-select { border-radius: 5px; }
+    .form-control:disabled, .form-select:disabled { background-color: #eceff1; }
+    .upload-box { border: 1px dashed #ced4da; border-radius: 6px; padding: 10px; background:#fafafa; }
+    .upload-note { font-size: 12px; background:#eaf6ff; color:#0d6efd; padding:4px 10px; border-radius: 15px; display:inline-block; margin-bottom:6px; }
+    .btn-upload { background:#6c757d; color:#fff; border:none; }
 
-    <!-- 2. مكتبات React -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    /* Stepper */
+    .stepper { display:flex; justify-content:space-between; align-items:center; margin-bottom:35px; position:relative; }
+    .stepper::before { content:""; position:absolute; top:19px; right:5%; left:5%; height:2px; background:#28a745; z-index:0; }
+    .step { position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; flex:1; }
+    .step-circle { width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; background:#fff; border:2px solid #28a745; color:#28a745; }
+    .step.completed .step-circle { background:#28a745; color:#fff; }
+    .step.active .step-circle { border-color:#28a745; color:#28a745; box-shadow:0 0 0 4px rgba(40,167,69,0.15); }
+    .step.upcoming .step-circle { border-color:#ced4da; color:#ced4da; }
+    .step.upcoming ~ .step::before, .step.upcoming .step-circle { background:#fff; }
+    .step-label { font-size: 13px; margin-top:6px; font-weight:600; color:#555; text-align:center; }
+    .step.upcoming .step-label { color:#adb5bd; }
 
-    <script>
-      // 3. إعدادات Firebase الخاصة بك
-      const firebaseConfig = {
-        apiKey: "AIzaSyBdlRDPTQqY8lZvD4R7nneXAwPgRbxmm14",
-        authDomain: "councour-59e43.firebaseapp.com",
-        databaseURL: "https://councour-59e43-default-rtdb.firebaseio.com/", 
-        projectId: "councour-59e43",
-        storageBucket: "councour-59e43.firebasestorage.app",
-        messagingSenderId: "492907661374",
-        appId: "1:492907661374:web:31792fc3ab95d0e69ea96f"
-      };
+    .step-pane { display:none; }
+    .step-pane.active { display:block; }
+    .nav-buttons { display:flex; justify-content:space-between; margin-top:35px; }
+    .field-note { font-size:12px; color:#888; margin-top:3px; }
 
-      // تهيئة Firebase
-      firebase.initializeApp(firebaseConfig);
-      const db = firebase.database();
+    /* Success modal */
+    .modal-overlay {
+        display:none; position:fixed; inset:0; background:rgba(20,30,25,0.55);
+        z-index:2000; align-items:center; justify-content:center; padding:20px;
+        backdrop-filter: blur(2px);
+    }
+    .modal-overlay.active { display:flex; }
+    .modal-box {
+        background:#fff; border-radius:16px; max-width:480px; width:100%;
+        padding:36px 32px 28px; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.25);
+        animation: modalPop .25s ease-out;
+    }
+    @keyframes modalPop { from{ transform:scale(.92); opacity:0; } to{ transform:scale(1); opacity:1; } }
+    .modal-icon {
+        width:64px; height:64px; border-radius:50%; background:#28a745; color:#fff;
+        font-size:32px; display:flex; align-items:center; justify-content:center; margin:0 auto 16px;
+    }
+    .modal-title { font-weight:700; margin-bottom:8px; color:#222; }
+    .modal-subtitle { font-size:14px; color:#666; margin-bottom:20px; }
+    .modal-docs { background:#f8f9fa; border-radius:10px; padding:16px 18px; text-align:right; margin-bottom:24px; }
+    .modal-docs-title { font-weight:700; font-size:14px; margin-bottom:10px; color:#333; }
+    .modal-docs ul { margin:0; padding-right:20px; font-size:14px; color:#444; }
+    .modal-docs li { margin-bottom:6px; }
+    #submitWarning ul { margin:6px 0 0; padding-right:20px; text-align:right; }
 
-      tailwind.config = {
-        theme: {
-          extend: {
-            fontFamily: { sans: ['Tajawal', 'sans-serif'] },
-            colors: {
-              'dz-green': '#008568',
-              'dz-green-dark': '#006b54',
-              'admin-blue': '#0f172a',
-            }
-          },
-        },
-      }
-    </script>
-    <style>
-      ::-webkit-scrollbar { width: 10px; }
-      ::-webkit-scrollbar-track { background: #f8fafc; }
-      ::-webkit-scrollbar-thumb { background: #008568; border-radius: 5px; }
-      
-      input, select, textarea {
-        background-color: #ffffff !important;
-        color: #000000 !important;
-        font-weight: 700 !important;
-        border: 2px solid #cbd5e1 !important;
-      }
-      
-      input:focus, select:focus {
-        border-color: #008568 !important;
-        box-shadow: 0 0 0 4px rgba(0, 133, 104, 0.1);
-      }
-
-      label {
-        color: #1e293b !important;
-        font-weight: 800 !important;
-        margin-bottom: 0.5rem;
-      }
-
-      .year-strip {
-        background: #ffffff;
-        border: 2px solid #f1f5f9;
-        border-right: 6px solid #008568;
-        padding: 1.5rem;
-        border-radius: 1.5rem;
-        margin-bottom: 1rem;
-      }
-
-      .email-final-section {
-        background: linear-gradient(to left, #ffffff, #f0fdf4);
-        border: 4px solid #008568;
-        animation: pulse-border 2s infinite;
-      }
-
-      @keyframes pulse-border {
-        0% { border-color: #008568; }
-        50% { border-color: #059669; }
-        100% { border-color: #008568; }
-      }
-
-      .loading-pulse {
-        animation: pulse-fast 1s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-      }
-      @keyframes pulse-fast {
-        0%, 100% { opacity: 1; }
-        50% { opacity: .5; }
-      }
-
-      .modal-bg {
-        background: rgba(15, 23, 42, 0.85);
-        backdrop-filter: blur(8px);
-      }
-    </style>
+    /* Home screen */
+    .home-cards { margin-top: 10px; }
+    .home-card {
+        background:#fff; border:1px solid #e2e6ea; border-radius:12px; padding:32px 20px;
+        text-align:center; cursor:pointer; height:100%;
+        transition: box-shadow .2s ease, transform .2s ease, border-color .2s ease;
+    }
+    .home-card:hover { box-shadow:0 8px 24px rgba(40,167,69,0.15); transform:translateY(-3px); border-color:#28a745; }
+    .home-card-icon {
+        width:56px; height:56px; border-radius:50%; background:#e9f7ef; color:#28a745;
+        font-size:26px; display:flex; align-items:center; justify-content:center; margin:0 auto 14px;
+    }
+    .home-card h5 { font-weight:700; margin-bottom:8px; color:#222; }
+    .home-card p { font-size:13px; color:#666; margin-bottom:0; }
+</style>
 </head>
-  <body class="bg-slate-100 font-sans text-right text-slate-900 leading-relaxed">
-    <div id="root"></div>
+<body>
 
-    <script type="text/babel" data-presets="typescript,react">
-      const { useState, useMemo, useEffect } = React;
+<div class="form-container" id="homeScreen">
+    <h3 class="text-center mb-2">بوابة مسابقة التوظيف</h3>
+    <p class="text-center text-muted mb-4">اطّلع على دليل التخصصات المطلوبة قبل التسجيل، أو انتقل مباشرة إلى استمارة الترشح</p>
+    <div class="row g-4 justify-content-center home-cards">
+        <div class="col-md-5">
+            <div class="home-card" onclick="showGuide()">
+                <div class="home-card-icon">📖</div>
+                <h5>دليل التخصصات</h5>
+                <p>تعرف على تسمية الشهادة والميدان المطلوبين لكل رتبة</p>
+            </div>
+        </div>
+        <div class="col-md-5">
+            <div class="home-card" onclick="showRegistration()">
+                <div class="home-card-icon">📝</div>
+                <h5>التسجيل في المسابقة</h5>
+                <p>املأ استمارة الترشح وأرسل معلوماتك</p>
+            </div>
+        </div>
+    </div>
+</div>
 
-      const WILAYAS = [
-        "01 أدرار", "02 الشلف", "03 الأغواط", "04 أم البواقي", "05 باتنة", "06 بجاية", "07 بسكرة", "08 بشار", 
-        "09 البليدة", "10 البويرة", "11 تمنراست", "12 تبسة", "13 تلمسان", "14 تيارت", "15 تيزي وزو", "16 الجزائر", 
-        "17 الجلفة", "18 جيجل", "19 سطيف", "20 سعيدة", "21 سكيكدة", "22 سيدي بلعباس", "23 عنابة", "24 قالمة", 
-        "25 قسنطينة", "26 المدية", "27 مستغانم", "28 المسيلة", "29 معسكر", "30 ورقلة", "31 وهران", "32 البيض", 
-        "33 إليزي", "34 برج بوعريريج", "35 بومرداس", "36 الطارف", "37 تندوف", "38 تيسمسيلت", "39 الوادي", "40 خنشلة", 
-        "41 سوق أهراس", "42 تيبازة", "43 ميلة", "44 عين الدفلى", "45 النعامة", "46 عين تموشنت", "47 غرداية", "48 غليزان", 
-        "49 تميمون", "50 برج باجي مختار", "51 أولاد جلال", "52 بني عباس", "53 عين صالح", "54 عين قزام", "55 تقرت", 
-        "56 جانت", "57 المغير", "58 المنيعة"
-      ];
-
-      const EXP_TYPES = [
-        "1. خبرة مهنية مكتسبة في المؤسسات والإدارات العمومية التابعة لقطاع التربية الوطنية (ممضاة من طرف مدير التربية).",
-        "2. خبرة مهنية مكتسبة في مؤسسة أو إدارة عمومية أخرى تضمن مهام التدريس أو التكوين، في منصب شغل من مستوى معادل (ممضاة من مدير المؤسسة).",
-        "3. خبرة مهنية مكتسبة في المؤسسات والإدارات العموبية التابعة لقطاع التربية الوطنية في منصب مختلف (أقل أو أعلى) (ممضاة من طرف مدير التربية).",
-        "4. خبرة مهنية مكتسبة في المؤسسات والإدارات العمومية الأخرى التي تضمن مهام التدريس أو التكوين، في منصب شغل من مستوى مختلف (ممضاة من مدير المؤسسة).",
-        "5. خبرة مهنية مكتسبة مثبتة قانونًا في المؤسسات الخاصة للتربية والتعليم المعتمدة (مؤشر عليها من قبل هيئة الضمان الاجتماعي + شهادة الانتساب)."
-      ];
-
-      const Icon = ({ children, size = 20, className = "" }) => (
-        <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
-          {children}
-        </svg>
-      );
-      const Briefcase = (p) => <Icon {...p}><rect width="20" height="14" x="2" y="7" rx="2" ry="2" /><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2-2v16" /></Icon>;
-      const User = (p) => <Icon {...p}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></Icon>;
-      const GraduationCap = (p) => <Icon {...p}><path d="M22 10v6M2 10l10-5 10 5-10 5z" /><path d="M6 12v5c3 3 9 3 12 0v-5" /></Icon>;
-      const BookOpen = (p) => <Icon {...p}><path d="M2 3h6a4 4 0 0 1 4 4v14a4 4 0 0 0-4-4H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a4 4 0 0 1 4-4h6z"/></Icon>;
-      const Mail = (p) => <Icon {...p}><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" /><polyline points="22,6 12,13 2,6" /></Icon>;
-      const Home = (p) => <Icon {...p}><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></Icon>;
-      const CheckCircle = (p) => <Icon {...p}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></Icon>;
-
-      const InputField = ({ label, name, value, onChange, type="text", required=false, options=null, maxLength=null, placeholder="", step="any", readOnly=false }) => (
-        <div className="flex flex-col mb-4">
-          <label htmlFor={name} className="text-sm font-black text-slate-700">{label} {required && <span className="text-red-600">*</span>}</label>
-          {options ? (
-            <select name={name} id={name} value={value} onChange={onChange} required={required} className="p-4 rounded-xl shadow-sm outline-none border-2 border-slate-200">
-              <option value="">-- اختر من القائمة --</option>
-              {options.map(o => <option key={o} value={o}>{o}</option>)}
+<div class="form-container hidden-field" id="guideScreen">
+    <button type="button" class="btn btn-outline-secondary btn-sm mb-3" onclick="showHome()">→ رجوع للرئيسية</button>
+    <h4 class="text-center mb-4">دليل التخصصات والشهادات المطلوبة</h4>
+    <div class="row g-3 justify-content-center mb-4">
+        <div class="col-md-8 mx-auto">
+            <label class="required">اختر الرتبة:</label>
+            <select class="form-select" id="guideRankSelect" onchange="renderGuideResult()">
+                <option value="">--يرجى الاختيار--</option>
             </select>
-          ) : (
-            <input 
-              type={type} 
-              name={name} 
-              id={name} 
-              value={value} 
-              onChange={onChange} 
-              required={required} 
-              maxLength={maxLength}
-              placeholder={placeholder}
-              step={step}
-              readOnly={readOnly}
-              className={`p-4 rounded-xl shadow-sm outline-none border-2 border-slate-200 ${readOnly ? 'bg-slate-50 text-dz-green-dark border-dz-green/30' : ''}`} 
-            />
-          )}
         </div>
-      );
+    </div>
+    <div id="guideResult" class="hidden-field mb-4">
+        <div class="section-title">تسمية الشهادة</div>
+        <p id="guideCertText" class="fs-5 fw-bold text-success mb-3"></p>
+        <div class="section-title">الميدان و/أو الشعبة و/أو الفرع</div>
+        <div id="guideFieldsList" class="mb-2"></div>
+    </div>
+    <hr class="my-4">
+    <h6 class="mb-3 text-muted">جدول كامل لجميع الرتب</h6>
+    <div class="table-responsive">
+        <table class="table table-bordered table-sm align-middle">
+            <thead class="table-light"><tr><th>الرتبة</th><th>تسمية الشهادة</th><th>الميدان و/أو الشعبة و/أو الفرع</th></tr></thead>
+            <tbody id="guideTableBody"></tbody>
+        </table>
+    </div>
+</div>
 
-      const FormCard = ({ title, icon, children, className="" }) => (
-        <div className={`bg-white rounded-[2rem] border-2 border-slate-200 p-8 mb-10 shadow-sm ${className}`}>
-          <div className="flex items-center gap-4 mb-8 border-b-2 border-slate-50 pb-5">
-            <div className="bg-dz-green p-3 rounded-2xl text-white shadow-lg shadow-dz-green/20">{icon}</div>
-            <h2 className="text-2xl font-black text-slate-800">{title}</h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">{children}</div>
+<div class="form-container hidden-field" id="registrationScreen">
+    <button type="button" class="btn btn-outline-secondary btn-sm mb-3" onclick="showHome()">→ رجوع للرئيسية</button>
+    <h3 class="text-center mb-4">استمارة معلومات المترشح</h3>
+
+    <!-- Stepper -->
+    <div class="stepper" id="stepper">
+        <div class="step" data-step="1"><div class="step-circle">1</div><div class="step-label">الشروط</div></div>
+        <div class="step" data-step="2"><div class="step-circle">2</div><div class="step-label">الترشح</div></div>
+        <div class="step" data-step="3"><div class="step-circle">3</div><div class="step-label">الحالة المدنية والعائلية</div></div>
+        <div class="step" data-step="4"><div class="step-circle">4</div><div class="step-label">الشهادة والمسار الدراسي</div></div>
+        <div class="step" data-step="5"><div class="step-circle">5</div><div class="step-label">الحالة المهنية</div></div>
+        <div class="step" data-step="6"><div class="step-circle">6</div><div class="step-label">التأكيد</div></div>
+    </div>
+
+    <form id="regForm" onsubmit="return false;">
+
+        <!-- ============ STEP 1 : الشروط ============ -->
+        <div class="step-pane" data-pane="1">
+            <div class="section-title">شروط المشاركة في المسابقة</div>
+            <div class="alert alert-light border">
+                <p>يُرجى قراءة الشروط التالية بعناية قبل متابعة عملية التسجيل:</p>
+                <ul>
+                    <li>يجب أن تتوفر في المترشح كافة الشروط القانونية والتنظيمية المطلوبة للرتبة المترشح لها.</li>
+                    <li>يتحمل المترشح المسؤولية الكاملة عن صحة المعلومات والوثائق المدرجة في الاستمارة.</li>
+                    <li>كل معلومة أو وثيقة غير صحيحة تؤدي إلى إلغاء الترشح في أي مرحلة من مراحل المسابقة.</li>
+                    <li>يجب إرفاق الوثائق المطلوبة بصيغة PDF واضحة المقروئية وضمن الحجم المسموح به.</li>
+                </ul>
+                <div class="form-check mt-3">
+                    <input class="form-check-input" type="checkbox" id="acceptTerms">
+                    <label class="form-check-label" for="acceptTerms">أقر بأنني اطلعت على الشروط أعلاه وأوافق عليها</label>
+                </div>
+            </div>
         </div>
-      );
 
-      const App = () => {
-        const initialForm = {
-          wilaya: '', rank: '', teachingSubject: '',
-          nin: '', 
-          birthCertNum: '', // حقل رقم شهادة الميلاد الجديد
-          lastNameAr: '', firstNameAr: '', lastNameLat: '', firstNameLat: '',
-          fatherName: '', motherLastName: '', motherFirstName: '', childrenCount: '0',
-          birthDate: '', birthWilaya: '', birthCommune: '',
-          residenceWilaya: '', residenceCommune: '', personalAddress: '',
-          gender: 'ذكر', maritalStatus: 'أعزب(ة)', phone: '', email: '',
-          nationalServiceStatus: '', nsRefNum: '', nsIssueDate: '', nsExpiryDate: '', nsStartDate: '', nsEndDate: '',
-          degree: '', degreeSpecialty: '', gradDate: '', issuingInstitution: '',
-          degreeCertNum: '', degreeAppreciation: '', isHigherSchoolGraduate: 'لا',
-          isTopOfClass: 'لا', topOfClassDocNum: '', topOfClassDocDate: '', topOfClassDocIssuer: '',
-          overallGpa: '', thesisGrade: '',
-          startYear: '', endYear: '', academicYears: {},
-          hasOtherDegrees: 'لا', otherDegreeName: '', otherDegreeSpecialty: '', otherDegreeIssuer: '',
-          nmsemester: '', otherStartYear: '', otherEndYear: '',
-          hasPublications: 'لا', pubNature: '', pubDate: '', pubJournal: '', pubIssue: '', pubLink: '',
-          hasProfessionalExp: 'لا', expType: '', expJob: '', expInstitution: '', expCertType: '', expCertNum: '', expCertDate: '', expStartDate: '', expEndDate: '', expTerminationReason: '',
-          hasJob: 'لا', currentJobRank: '', firstAppointDate: '', currentRankDate: '', category: '', gradeLevel: '', jobRefNum: '', jobRefDate: '', signingAuthority: '', adminPhone: '', adminEmail: '', adminName: '', adminAddress: '',
-          status: 'قيد الانتظار'
-        };
-
-        const [formData, setFormData] = useState(initialForm);
-        const [isSubmitting, setIsSubmitting] = useState(false);
-        const [showSuccessModal, setShowSuccessModal] = useState(false);
-        const [requiredDocs, setRequiredDocs] = useState([]);
-
-        const academicYearsCount = useMemo(() => {
-          const s = parseInt(formData.startYear);
-          const e = parseInt(formData.endYear);
-          return (s && e && e > s) ? Math.min(Math.max(e - s, 1), 7) : 0;
-        }, [formData.startYear, formData.endYear]);
-
-        const handleChange = (e) => {
-          const { name, value } = e.target;
-
-          // 1. البريد الإلكتروني
-          if (name === 'email' || name === 'adminEmail') {
-            const safeEmail = value.replace(/[^\w@.\-]/g, ''); 
-            setFormData(prev => ({ ...prev, [name]: safeEmail }));
-            return;
-          }
-
-          // 2. رقم التعريف الوطني واستخراج رقم شهادة الميلاد
-          if (name === 'nin') {
-            const onlyNums = value.replace(/[^0-9]/g, '');
-            if (onlyNums.length > 18) return;
-            
-            // المنطق البرمجي: حذف آخر 4 أرقام وأخذ الـ 5 التي قبلها
-            let calculatedBirthNum = '';
-            if (onlyNums.length >= 9) {
-                calculatedBirthNum = onlyNums.slice(0, -4).slice(-5);
-            }
-
-            setFormData(prev => ({ 
-                ...prev, 
-                nin: onlyNums,
-                birthCertNum: calculatedBirthNum 
-            }));
-            return;
-          }
-
-          // 3. حماية الأرقام (الهاتف، الأولاد)
-          if (['phone', 'adminPhone', 'childrenCount'].includes(name)) {
-            const onlyNums = value.replace(/[^0-9]/g, '');
-            if (name === 'phone' || name === 'adminPhone') {
-              if (onlyNums.length > 10) return;
-              if (onlyNums.length === 1 && onlyNums !== "0") return;
-              if (onlyNums.length === 2 && !/^[567]$/.test(onlyNums[1])) return;
-            }
-            setFormData(prev => ({ ...prev, [name]: onlyNums }));
-            return;
-          }
-
-          // 4. حماية اللغة العربية
-          if (['lastNameAr', 'firstNameAr', 'fatherName', 'motherLastName', 'motherFirstName', 'birthCommune', 'residenceCommune', 'teachingSubject' , 'personalAddress', 'degreeSpecialty','issuingInstitution','otherDegreeName','otherDegreeSpecialty','otherDegreeIssuer','pubNature','pubJournal','pubIssue'].includes(name)) {
-            const onlyAr = value.replace(/[^\u0600-\u06FF\s]/g, '');
-            setFormData(prev => ({ ...prev, [name]: onlyAr }));
-            return;
-          }
-
-          // 5. حماية اللغة اللاتينية
-          if (['lastNameLat', 'firstNameLat'].includes(name)) {
-            const onlyLat = value.replace(/[^a-zA-Z\s]/g, '');
-            setFormData(prev => ({ ...prev, [name]: onlyLat }));
-            return;
-          }
-
-          setFormData(prev => ({ ...prev, [name]: value }));
-        };
-
-        const handleAcademicYearChange = (year, field, value) => {
-          setFormData(prev => ({
-            ...prev,
-            academicYears: {
-              ...prev.academicYears,
-              [`Year${year}`]: {
-                ...prev.academicYears[`Year${year}`],
-                [field]: value
-              }
-            }
-          }));
-        };
-
-        const calculateRequiredDocs = () => {
-          const docs = [];
-          
-          // إضافة بطاقة التعريف الوطنية كما طلبت
-          docs.push("نسخة من بطاقة التعريف الوطنية (إلزامي).");
-
-          if (formData.residenceCommune) docs.push("بطاقة إقامة سارية المفعول.");
-          if (formData.degree) docs.push(`نسخة من الشهادة المطلوبة (${formData.degree}) في التخصص المعني.`);
-          if (formData.gender === 'ذكر' && formData.nationalServiceStatus) docs.push("شهادة تثبت وضعية المترشح تجاه الخدمة الوطنية.");
-          if (Object.keys(formData.academicYears).length > 0 || formData.overallGpa) docs.push("كشوف نقاط المسار الدراسي (لكافة السنوات الجامعية).");
-          if (formData.isTopOfClass === 'نعم') docs.push("شهادة تثبت أن المترشح هو الأول في دفعته.");
-          if (formData.hasProfessionalExp === 'نعم') docs.push("شهادات العمل التي تثبت الخبرة المهنية المكتسبة.");
-          if (formData.hasJob === 'نعم') docs.push("وثيقة تثبت الوظيفة الحالية.");
-          if (formData.hasOtherDegrees === 'نعم') docs.push("نسخة من شهادة الدراسات العليا الإضافية.");
-          if (formData.hasPublications === 'نعم') docs.push("نسخ من المقالات المنشورة أو الأعمال العلمية والبحثية المنجزة.");
-          return docs;
-        };
-
-        const handleSubmit = async (e) => {
-          e.preventDefault();
-          setIsSubmitting(true);
-          
-          try {
-            const submissionId = Date.now().toString();
-            const finalData = {
-              ...formData,
-              id: submissionId,
-              submissionDate: new Date().toLocaleString('ar-DZ'),
-              status: 'قيد الانتظار'
-            };
-
-            await db.ref('submissions/' + submissionId).set(finalData);
-            
-            const docsList = calculateRequiredDocs();
-            setRequiredDocs(docsList);
-            setIsSubmitting(false);
-            setShowSuccessModal(true);
-
-          } catch (error) {
-            console.error("Error writing to Firebase:", error);
-            alert("حدث خطأ أثناء إرسال الاستمارة، يرجى المحاولة مرة أخرى.");
-            setIsSubmitting(false);
-          }
-        };
-
-        const closeSuccess = () => {
-          setShowSuccessModal(false);
-          setFormData(initialForm);
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        };
-
-        const showChildrenField = formData.maritalStatus === 'متزوج(ة)' || formData.maritalStatus === 'مطلق(ة)' || formData.maritalStatus === 'أرمل(ة)';
-
-        return (
-          <div className="min-h-screen flex flex-col">
-            <header className="bg-admin-blue text-white p-8 shadow-2xl text-center">
-              <div className="max-w-7xl mx-auto flex flex-col items-center gap-4">
-                <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-2">استمارة معلومات لمسابقة التوظيف على أساس الشهادة</h1>
-                <p className="text-2xl font-bold text-dz-green">استمارة خاصة فقط ب د.عبد المجيد</p>
-              </div>
-            </header>
-
-            <main className="max-w-7xl mx-auto w-full p-4 md:p-12">
-              <form onSubmit={handleSubmit} className="animate-in fade-in duration-700">
-                
-                {/* 1. معلومات التعيين */}
-                <FormCard title="1. معلومات التعيين" icon={<Briefcase />}>
-                  <InputField label="مديرية التربية لولاية" name="wilaya" required value={formData.wilaya} onChange={handleChange} options={WILAYAS} />
-                  <InputField label="الرتبة المطلوبة" name="rank" required value={formData.rank} onChange={handleChange} options={['أستاذ ابتدائي', 'أستاذ متوسط', 'أستاذ ثانوي']} />
-                  <InputField label="مادة التدريس" name="teachingSubject" required value={formData.teachingSubject} onChange={handleChange} placeholder="اللغة العربية، الرياضيات..." />
-                </FormCard>
-
-                {/* 2. المعلومات الشخصية */}
-                <FormCard title="2. المعلومات الشخصية" icon={<User />}>
-                  <InputField label="رقم التعريف الوطني (NIN)" name="nin" required value={formData.nin} onChange={handleChange} maxLength={18} placeholder="رقم بطاقة التعريف الوطني الطويل " />
-                  
-                  {/* حقل رقم شهادة الميلاد المستخرج تلقائياً */}
-                  <InputField label="رقم شهادة الميلاد (مستخرج تلقائياً)" name="birthCertNum" value={formData.birthCertNum} readOnly placeholder="سيظهر هنا تلقائياً" />
-
-                  <InputField label="اللقب (بالعربية)" name="lastNameAr" required value={formData.lastNameAr} onChange={handleChange} />
-                  <InputField label="الاسم (بالعربية)" name="firstNameAr" required value={formData.firstNameAr} onChange={handleChange} />
-                  <InputField label="اللقب باللغة الفرنسية" name="lastNameLat" required value={formData.lastNameLat} onChange={handleChange} />
-                  <InputField label="الاسم باللغة الفرنسية" name="firstNameLat" required value={formData.firstNameLat} onChange={handleChange} />
-                  <InputField label="اسم الأب" name="fatherName" required value={formData.fatherName} onChange={handleChange} />
-                  <InputField label="لقب الأم" name="motherLastName" required value={formData.motherLastName} onChange={handleChange} />
-                  <InputField label="اسم الأم" name="motherFirstName" required value={formData.motherFirstName} onChange={handleChange} />
-                  <InputField label="الجنس" name="gender" required value={formData.gender} onChange={handleChange} options={['ذكر', 'أنثى']} />
-                  <InputField label="الحالة العائلية" name="maritalStatus" required value={formData.maritalStatus} onChange={handleChange} options={['أعزب(ة)', 'متزوج(ة)', 'مطلق(ة)', 'أرمل(ة)']} />
-                  {showChildrenField && (
-                    <InputField label="عدد الأولاد" name="childrenCount" type="number" required value={formData.childrenCount} onChange={handleChange} placeholder="0" />
-                  )}
-                  <InputField label="تاريخ الازدياد" name="birthDate" type="date" required value={formData.birthDate} onChange={handleChange} />
-                  <InputField label="ولاية الميلاد" name="birthWilaya" required value={formData.birthWilaya} onChange={handleChange} options={WILAYAS} />
-                  <InputField label="بلدية الميلاد" name="birthCommune" required value={formData.birthCommune} onChange={handleChange} placeholder="اكتب اسم البلدية" />
-                </FormCard>
-
-                {/* 3. الخدمة الوطنية والإقامة */}
-                <FormCard title="3. الخدمة الوطنية والإقامة" icon={<Home />}>
-                  {formData.gender === 'ذكر' && (
-                    <div className="md:col-span-2 lg:col-span-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6 bg-slate-50 border-2 border-dz-green/10 rounded-3xl mt-4">
-                      <div className="md:col-span-2 lg:col-span-3">
-                        <h4 className="font-black text-dz-green mb-4">الوضعية اتجاه الخدمة الوطنية</h4>
-                      </div>
-                      <InputField label="الوضعية" name="nationalServiceStatus" required value={formData.nationalServiceStatus} onChange={handleChange} options={['مؤدى', 'معفى', 'مؤجل', 'في طور الإنجاز']} />
-                      <InputField label="رقم مرجع الوثيقة" name="nsRefNum" required value={formData.nsRefNum} onChange={handleChange} placeholder="مثال: 123/2024" />
-                      <InputField label="تاريخ إصدار الوثيقة" name="nsIssueDate" type="date" required value={formData.nsIssueDate} onChange={handleChange} />
-                      <InputField label="تاريخ انتهاء الوثيقة" name="nsExpiryDate" type="date" value={formData.nsExpiryDate} onChange={handleChange} />
-                      {formData.nationalServiceStatus === 'مؤدى' && (
-                        <>
-                          <InputField label="تاريخ بداية الخدمة" name="nsStartDate" type="date" required value={formData.nsStartDate} onChange={handleChange} />
-                          <InputField label="تاريخ نهاية الخدمة" name="nsEndDate" type="date" required value={formData.nsEndDate} onChange={handleChange} />
-                        </>
-                      )}
-                    </div>
-                  )}
-                  <div className="md:col-span-2 lg:col-span-3 mt-4">
-                    <h4 className="font-black text-slate-800 mb-4">معلومات الإقامة</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <InputField label="ولاية الإقامة" name="residenceWilaya" required value={formData.residenceWilaya} onChange={handleChange} options={WILAYAS} />
-                        <InputField label="بلدية الإقامة" name="residenceCommune" required value={formData.residenceCommune} onChange={handleChange} placeholder="اكتب اسم البلدية" />
-                        <InputField label="رقم الهاتف الشخصي" name="phone" required value={formData.phone} onChange={handleChange} maxLength={10} />
-                        <div className="md:col-span-2 lg:col-span-3">
-                            <InputField label="العنوان الشخصي" name="personalAddress" required value={formData.personalAddress} onChange={handleChange} placeholder="اكتب عنوانك الشخصي بالتفصيل" />
-                        </div>
-                    </div>
-                  </div>
-                </FormCard>
-
-                {/* 4. الشهادات والمؤهلات العلمية */}
-                <FormCard title="4. الشهادات والمؤهلات العلمية" icon={<GraduationCap />}>
-                  <InputField label="تسمية الشهادة" name="degree" required value={formData.degree} onChange={handleChange} options={['ليسانس', 'ماستر', 'دكتوراه', 'مهندس دولة']} />
-                  <InputField label="الشعبة / التخصص" name="degreeSpecialty" required value={formData.degreeSpecialty} onChange={handleChange} />
-                  <InputField label="رقم الشهادة" name="degreeCertNum" required value={formData.degreeCertNum} onChange={handleChange} placeholder="اكتب رقم الشهادة" />
-                  <InputField label="تاريخ التخرج" name="gradDate" type="date" required value={formData.gradDate} onChange={handleChange} />
-                  <InputField label="المؤسسة المسلمة للشهادة" name="issuingInstitution" required value={formData.issuingInstitution} onChange={handleChange} />
-                  
-                  {/* المسار الدراسي */}
-                  <div className="md:col-span-3 p-8 bg-dz-green/5 rounded-[2.5rem] border-2 border-dz-green/10 my-4">
-                    <h3 className="font-black text-dz-green mb-6 text-xl">المسار الدراسي (المعدلات السنوية)</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                      <InputField label="من (سنة البداية)" name="startYear" type="number" value={formData.startYear} onChange={handleChange} placeholder="مثال: 2018" />
-                      <InputField label="الى (سنة التخرج)" name="endYear" type="number" value={formData.endYear} onChange={handleChange} placeholder="مثال: 2021" />
-                    </div>
-                    {academicYearsCount > 0 && Array.from({ length: academicYearsCount }).map((_, idx) => {
-                      const yearKey = `Year${idx + 1}`;
-                      return (
-                        <div key={yearKey} className="year-strip grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-                          <div className="font-black text-dz-green">السنة {idx + 1}</div>
-                          <InputField label="معدل سداسي 1" type="number" step="0.01" value={formData.academicYears[yearKey]?.s1 || ''} onChange={(e) => handleAcademicYearChange(idx + 1, 's1', e.target.value)} />
-                          <InputField label="معدل سداسي 2" type="number" step="0.01" value={formData.academicYears[yearKey]?.s2 || ''} onChange={(e) => handleAcademicYearChange(idx + 1, 's2', e.target.value)} />
-                          <InputField label="المعدل السنوي" type="number" step="0.01" value={formData.academicYears[yearKey]?.ann || ''} onChange={(e) => handleAcademicYearChange(idx + 1, 'ann', e.target.value)} />
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  <InputField label="تقدير الشهادة" name="degreeAppreciation" required value={formData.degreeAppreciation} onChange={handleChange} options={['مقبول', 'قريب من الحسن', 'حسن', 'حسن جدا', 'مشرف', 'مشرف جدا']} />
-                  <InputField label="هل أنت خريج مدرسة وطنية عليا؟" name="isHigherSchoolGraduate" required value={formData.isHigherSchoolGraduate} onChange={handleChange} options={['نعم', 'لا']} />
-                  <div className="md:col-span-2 lg:col-span-3">
-                    <InputField label="هل أنت الأول في الدفعة؟" name="isTopOfClass" required value={formData.isTopOfClass} onChange={handleChange} options={['نعم', 'لا']} />
-                    {formData.isTopOfClass === 'نعم' && (
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6 bg-amber-50 border-2 border-amber-200 rounded-3xl mt-2 mb-4 animate-in slide-in-from-top-4 duration-300">
-                        <InputField label="رقم وثيقة التفوق" name="topOfClassDocNum" required value={formData.topOfClassDocNum} onChange={handleChange} />
-                        <InputField label="تاريخ إصدار وثيقة التفوق" name="topOfClassDocDate" type="date" required value={formData.topOfClassDocDate} onChange={handleChange} />
-                        <InputField label="الجهة المسلمة للوثيقة" name="topOfClassDocIssuer" required value={formData.topOfClassDocIssuer} onChange={handleChange} />
-                      </div>
-                    )}
-                  </div>
-
-                  <InputField label="المعدل العام للمسار الدراسي" name="overallGpa" type="number" step="0.01" required value={formData.overallGpa} onChange={handleChange} placeholder="00.00" />
-                  <InputField label="علامة المذكرة (إن وجدت)" name="thesisGrade" type="number" step="0.01" value={formData.thesisGrade} onChange={handleChange} placeholder="00.00" />
-
-                  {/* شهادات أخرى */}
-                  <div className="md:col-span-3 mt-6">
-                    <InputField label="هل لديك شهادات عليا أخرى (ماجستير، دكتوراة ثانية...)؟" name="hasOtherDegrees" required value={formData.hasOtherDegrees} onChange={handleChange} options={['نعم', 'لا']} />
-                    {formData.hasOtherDegrees === 'نعم' && (
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-8 bg-blue-50/50 rounded-[2.5rem] border-2 border-blue-100 mt-4">
-                        <InputField label="اسم الشهادة" name="otherDegreeName" value={formData.otherDegreeName || ''} onChange={handleChange} />
-                        <InputField label="التخصص" name="otherDegreeSpecialty" value={formData.otherDegreeSpecialty || ''} onChange={handleChange} />
-                        <InputField label="الجهة المسلمة" name="otherDegreeIssuer" value={formData.otherDegreeIssuer || ''} onChange={handleChange} />
-                        <InputField label="عدد السداسيات" name="nmsemester" type="number" value={formData.nmsemester || ''} onChange={handleChange} />
-                        <InputField label="من سنة " name="otherStartYear" type="number" value={formData.otherStartYear || ''} onChange={handleChange} />
-                        <InputField label="إلى سنة" name="otherEndYear" type="number" value={formData.otherEndYear || ''} onChange={handleChange} />
-                      </div>
-                    )}
-                  </div>
-                </FormCard>
-
-                {/* 5. المنشورات والأعمال المهنية */}
-                <FormCard title="5. المنشورات والأعمال المهنية" icon={<BookOpen />}>
-                  <div className="md:col-span-3">
-                    <InputField label="هل لديك منشورات أو أعمال مهنية؟" name="hasPublications" required value={formData.hasPublications} onChange={handleChange} options={['نعم', 'لا']} />
-                    {formData.hasPublications === 'نعم' && (
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-8 bg-dz-green/5 rounded-[2.5rem] border-2 border-dz-green/10 mt-4">
-                        <InputField label="طبيعة العمل" name="pubNature" value={formData.pubNature} onChange={handleChange} placeholder="مقال، كتاب، ملتقى..." />
-                        <InputField label="تاريخ النشر/المشاركة" name="pubDate" type="date" value={formData.pubDate} onChange={handleChange} />
-                        <InputField label="اسم المجلة أو الملتقى" name="pubJournal" value={formData.pubJournal} onChange={handleChange} />
-                        <InputField label="العدد / المجلد" name="pubIssue" value={formData.pubIssue} onChange={handleChange} />
-                        <div className="md:col-span-2 lg:col-span-3"><InputField label="رابط النشر أو مرجع العمل" name="pubLink" value={formData.pubLink} onChange={handleChange} /></div>
-                      </div>
-                    )}
-                  </div>
-                </FormCard>
-
-                {/* 6. الخبرة المهنية المكتسبة */}
-                <FormCard title="6. الخبرة المهنية المكتسبة" icon={<Briefcase />}>
-                  <div className="md:col-span-3">
-                    <InputField label="هل لديك خبرة مهنية سابقة؟" name="hasProfessionalExp" required value={formData.hasProfessionalExp} onChange={handleChange} options={['نعم', 'لا']} />
-                    {formData.hasProfessionalExp === 'نعم' && (
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-8 bg-slate-50 rounded-[2.5rem] border-2 border-slate-200 mt-4">
-                        <div className="md:col-span-3"><InputField label="فئة الخبرة المهنية" name="expType" required value={formData.expType} onChange={handleChange} options={EXP_TYPES} /></div>
-                        
-                        <InputField label="المنصب المشغول" name="expJob" required value={formData.expJob} onChange={handleChange} />
-                        <InputField label="تسمية المؤسسة أو الإدارة" name="expInstitution" required value={formData.expInstitution} onChange={handleChange} />
-                        
-                        <InputField label="تسمية الشهادة المعتمدة" name="expCertType" required value={formData.expCertType} onChange={handleChange} placeholder="مثال: شهادة عمل أو عقد عمل" />
-                        <InputField label="رقم الشهادة/العقد" name="expCertNum" required value={formData.expCertNum} onChange={handleChange} />
-                        <InputField label="تاريخ الشهادة" name="expCertDate" type="date" required value={formData.expCertDate} onChange={handleChange} />
-
-                        <InputField label="تاريخ بداية العمل (من)" name="expStartDate" type="date" required value={formData.expStartDate} onChange={handleChange} />
-                        <InputField label="تاريخ نهاية العمل (إلى)" name="expEndDate" type="date" required value={formData.expEndDate} onChange={handleChange} />
-                        
-                        <div className="md:col-span-2 lg:col-span-3">
-                          <InputField label="سبب إنهاء علاقة العمل" name="expTerminationReason" value={formData.expTerminationReason} onChange={handleChange} placeholder="اكتب سبب التوقف عن العمل" />
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </FormCard>
-
-                {/* 7. الوضعية المهنية الحالية */}
-                <FormCard title="7. الوضعية المهنية الحالية" icon={<Briefcase />}>
-                  <div className="md:col-span-3">
-                    <InputField 
-                      label="هل تشغل وظيفة حالياً في القطاع العام أو الخاص؟" 
-                      name="hasJob" 
-                      required 
-                      value={formData.hasJob} 
-                      onChange={handleChange} 
-                      options={['نعم', 'لا']} 
-                    />
-
-                    {formData.hasJob === 'نعم' && (
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-8 bg-blue-50/30 rounded-[2.5rem] border-2 border-blue-100 mt-6">
-                        <InputField label="الرتبة أو الوظيفة المشغولة" name="currentJobRank" required value={formData.currentJobRank} onChange={handleChange} />
-                        <InputField label="تاريخ أول تعيين" name="firstAppointDate" type="date" required value={formData.firstAppointDate} onChange={handleChange} />
-                        <InputField label="تاريخ التعيين في الرتبة الحالية" name="currentRankDate" type="date" required value={formData.currentRankDate} onChange={handleChange} />
-                        <InputField label="الصنف / الدرجة" name="category" required value={formData.category} onChange={handleChange} placeholder="مثال: 11 / 02" />
-                        <InputField label="رقم المرجع (القرار/القرار الإطاري)" name="jobRefNum" required value={formData.jobRefNum} onChange={handleChange} />
-                        <InputField label="تاريخ المرجع" name="jobRefDate" type="date" required value={formData.jobRefDate} onChange={handleChange} />
-						            <InputField label="صفة السلطة (صاحب الإمضاء)" name="signingAuthority" required value={formData.signingAuthority} onChange={handleChange} placeholder="مثال: مدير التربية، الوزير..." />
-                        <InputField label="رقم هاتف الإدارة" name="adminPhone" required value={formData.adminPhone} onChange={handleChange} maxLength={10} />
-                        
-                        <div className="flex flex-col">
-                          <InputField label="البريد الإلكتروني للإدارة" name="adminEmail" type="email" required value={formData.adminEmail} onChange={handleChange} />
-                          {formData.adminEmail && formData.adminEmail.length > 0 && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.adminEmail) && (
-                            <p className="text-red-500 text-[10px] font-bold mt-1 bg-red-50 p-1 rounded border border-red-100">
-                              ⚠️ يجب كتابة الإيميل بالحروف اللاتينية وصيغة صحيحة
-                            </p>
-                          )}
-                        </div>
-                        
-                        <div className="md:col-span-2 lg:col-span-3">
-                          <InputField label="عنوان الإدارة" name="adminAddress" required value={formData.adminAddress} onChange={handleChange} placeholder="العنوان الكامل للمؤسسة" />
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </FormCard>
-
-                {/* 8. بيانات الاتصال النهائية */}
-                <FormCard title="8. بيانات الاتصال النهائية" icon={<Mail />} className="email-final-section">
-                  <div className="md:col-span-3">
-                    <div className="flex flex-col">
-                      <InputField 
-                        label="البريد الإلكتروني الشخصي للمترشح (إلزامي)" 
-                        name="email" 
-                        type="email" 
-                        required 
-                        value={formData.email} 
-                        onChange={handleChange} 
-                        placeholder="example@mail.com" 
-                      />
-                      {formData.email.length > 0 && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email) && (
-                        <p className="text-red-500 text-[10px] font-bold -mt-3 mb-2 bg-red-50 p-1 rounded border border-red-100">
-                          ⚠️ يرجى إدخال بريد إلكتروني صحيح (يجب أن يحتوي على @ ونقطة)
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </FormCard>
-
-                <div className="flex justify-center mt-10">
-                  <button 
-                    type="submit" 
-                    disabled={isSubmitting}
-                    className={`bg-dz-green hover:bg-dz-green-dark text-white text-4xl font-black py-8 px-32 rounded-[3rem] shadow-2xl transition-all hover:scale-[1.03] flex items-center gap-5 ${isSubmitting ? 'loading-pulse cursor-not-allowed opacity-80' : ''}`}
-                  >
-                    {isSubmitting ? 'جاري الإرسال...' : 'إرسال'}
-                  </button>
+        <!-- ============ STEP 2 : الترشح ============ -->
+        <div class="step-pane" data-pane="2">
+            <div class="section-title">معلومات الترشح</div>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="required">مديرية التربية لولاية:</label><select class="form-select border-success" id="directorateWilaya" data-required="true" data-label="مديرية التربية لولاية"></select>
                 </div>
-              </form>
-            </main>
-
-            {/* Success Modal */}
-            {showSuccessModal && (
-              <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 modal-bg animate-in fade-in duration-300">
-                <div className="bg-white rounded-[3rem] w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl border-4 border-dz-green p-8 md:p-12 relative animate-in zoom-in-95 duration-300">
-                  <div className="flex flex-col items-center text-center mb-8">
-                    <div className="bg-green-100 p-6 rounded-full text-dz-green mb-6">
-                      <CheckCircle size={80} />
-                    </div>
-                    <h2 className="text-3xl font-black text-slate-900 mb-4">تم تسجيلكم بنجاح!</h2>
-                    <p className="text-xl font-bold text-slate-600">
-                      أهلاً بك <span className="text-dz-green">{formData.firstNameAr} {formData.lastNameAr}</span>.
-                      لقد تم إرسال نموذجك الرقمي بنجاح إلى الإدارة.
-                    </p>
-                  </div>
-
-                  <div className="bg-slate-50 rounded-[2rem] p-6 mb-8 border-2 border-slate-100">
-                    <h3 className="text-xl font-black text-dz-green mb-4 border-b-2 border-dz-green/10 pb-2">الملف الورقي المطلوب إيداعه:</h3>
-                    <p className="text-sm font-bold text-red-600 mb-4">يرجى الاتصال بـ د.عبد المجيد وتقديم الوثائق التالية لإتمام عملية التسجيل:</p>
-                    <ul className="space-y-3">
-                      {requiredDocs.map((doc, i) => (
-                        <li key={i} className="flex gap-3 items-start text-right">
-                          <span className="bg-dz-green text-white rounded-full p-1 mt-1 flex-shrink-0"><CheckCircle size={14}/></span>
-                          <span className="font-bold text-slate-700">{doc}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <button 
-                    onClick={closeSuccess}
-                    className="w-full bg-dz-green hover:bg-dz-green-dark text-white text-2xl font-black py-6 rounded-[2rem] shadow-xl transition-all"
-                  >
-                    فهمت، إغلاق
-                  </button>
+                <div class="col-md-6">
+                    <label class="required">الرتبة:</label><select class="form-select" id="rankSelect" onchange="syncRankToCertificate()" data-required="true" data-label="الرتبة">
+                        <option value="">--يرجى الاختيار--</option>
+                        <option>مشرف التربية</option>
+                        <option>مربي متخصص في الدعم التربوي</option>
+                        <option>مستشار محلل للتوجيه والإرشاد المدرسي والمهني</option>
+                        <option>ملحق رئيسي بالمخابر</option>
+                        <option>مستشار التغذية المدرسية</option>
+                        <option>مقتصد</option>
+                        <option>نائب مقتصد</option>
+                    </select>
                 </div>
-              </div>
-            )}
-          </div>
-        );
-      }
+            </div>
+        </div>
 
-      const root = ReactDOM.createRoot(document.getElementById('root'));
-      root.render(<App />);
-    </script>
-  </body>
+        <!-- ============ STEP 3 : الحالة المدنية والعائلية ============ -->
+        <div class="step-pane" data-pane="3">
+            <div class="section-title">المعلومات الشخصية</div>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="required">رقم التعريف الوطني:</label><input type="text" class="form-control" placeholder="رقم التعريف الوطني (18 رقماً)" id="autoField1" inputmode="numeric" maxlength="18" data-required="true" data-label="رقم التعريف الوطني">
+                </div>
+                <div class="col-md-3"><label class="required">اللقب بالعربية:</label><input type="text" class="form-control" id="autoField2" data-required="true" data-label="اللقب بالعربية"></div>
+                <div class="col-md-3"><label class="required">الاسم بالعربية:</label><input type="text" class="form-control" id="autoField3" data-required="true" data-label="الاسم بالعربية"></div>
+                <div class="col-md-3"><label class="required">اللقب باللاتينية:</label><input type="text" class="form-control" id="autoField4" data-required="true" data-label="اللقب باللاتينية"></div>
+                <div class="col-md-3"><label class="required">الاسم باللاتينية:</label><input type="text" class="form-control" id="autoField5" data-required="true" data-label="الاسم باللاتينية"></div>
+
+                <div class="col-md-3"><label class="required">اسم الأب:</label><input type="text" class="form-control" id="autoField6" data-required="true" data-label="اسم الأب"></div>
+                <div class="col-md-3"><label class="required">اسم الأم:</label><input type="text" class="form-control" id="autoField7" data-required="true" data-label="اسم الأم"></div>
+                <div class="col-md-3"><label class="required">لقب الأم:</label><input type="text" class="form-control" id="autoField8" data-required="true" data-label="لقب الأم"></div>
+                <div class="col-md-3">
+                    <label class="required">الجنس:</label><select class="form-select" id="genderSelect" onchange="toggleNationalService()" data-required="true" data-label="الجنس">
+                        <option value="">--يرجى الاختيار--</option>
+                        <option value="male">ذكر</option>
+                        <option value="female">أنثى</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="required">مفترض بحكم؟:</label><select class="form-select" id="assumedSelect" onchange="handleBirthDate()" data-required="true" data-label="مفترض بحكم؟">
+                        <option value="no">لا</option>
+                        <option value="yes">نعم</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="required" id="birthLabel">تاريخ الازدياد:</label>
+                    <div id="birthDateContainer">
+                        <input type="date" class="form-control" id="birthDateInput" data-required="true" data-label="تاريخ الازدياد">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label class="required">ولاية الازدياد:</label><select class="form-select" id="birthWilaya" data-required="true" data-label="ولاية الازدياد"></select>
+                </div>
+                <div class="col-md-3">
+                    <label class="required">بلدية الازدياد:</label><input type="text" class="form-control" placeholder="أدخل اسم البلدية" id="autoField9" data-required="true" data-label="بلدية الازدياد">
+                </div>
+
+                <div class="col-md-3">
+                    <label class="required">رقم شهادة الميلاد:</label><input type="text" class="form-control" placeholder="رقم شهادة الميلاد (5 أرقام)" id="autoField10" inputmode="numeric" maxlength="5" data-required="true" data-label="رقم شهادة الميلاد">
+                </div>
+                <div class="col-md-3">
+                    <label class="required">نوع عقد الميلاد:</label><select class="form-select" id="autoField11" data-required="true" data-label="نوع عقد الميلاد">
+                        <option>عادي</option>
+                        <option>حكمي</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="required">الجنسية:</label><select class="form-select" id="autoField12" data-required="true" data-label="الجنسية"><option selected>جزائرية</option><option>أخرى</option></select>
+                </div>
+                <div class="col-md-3">
+                    <label class="required">الحالة العائلية:</label><select class="form-select" id="familyStatus" onchange="toggleChildren()" data-required="true" data-label="الحالة العائلية">
+                        <option value="single">أعزب/عزباء</option>
+                        <option value="married">متزوج(ة)</option>
+                        <option value="divorced">مطلق(ة)</option>
+                        <option value="widow">أرمل(ة)</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3 hidden-field" id="childrenCountDiv">
+                    <label class="required">عدد الأولاد:</label><input type="number" class="form-control" min="0" value="0" id="autoField13" data-required="true" data-label="عدد الأولاد">
+                </div>
+
+                <div class="col-md-3">
+                    <label class="required">ذوو حقوق الشهيد:</label><select class="form-select" id="autoField14" data-required="true" data-label="ذوو حقوق الشهيد"><option>لا</option><option>نعم</option></select>
+                </div>
+                <div class="col-md-3">
+                    <label class="required">ذوي الاحتياجات الخاصة:</label><select class="form-select" id="disabilitySelect" data-required="true" data-label="ذوي الاحتياجات الخاصة"><option value="no">لا</option><option value="yes">نعم</option></select>
+                </div>
+            </div>
+
+            <div class="section-title">معلومات الإقامة والاتصال</div>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="required">ولاية الإقامة:</label><select class="form-select" id="residenceWilaya" data-required="true" data-label="ولاية الإقامة"></select>
+                </div>
+                <div class="col-md-4">
+                    <label class="required">بلدية الإقامة:</label><input type="text" class="form-control" placeholder="أدخل اسم البلدية" id="autoField15" data-required="true" data-label="بلدية الإقامة">
+                </div>
+                <div class="col-md-4"><label class="required">رقم الهاتف:</label><input type="tel" class="form-control" placeholder="0XXXXXXXXX" id="autoField16" inputmode="numeric" maxlength="10" data-required="true" data-label="رقم الهاتف"></div>
+                <div class="col-md-12"><label class="required">العنوان الشخصي الكامل:</label><input type="text" class="form-control" id="autoField17" data-required="true" data-label="العنوان الشخصي الكامل"></div>
+            </div>
+
+            <!-- الخدمة الوطنية (ذكور فقط) -->
+            <div id="nationalServiceSection" class="hidden-field">
+                <div class="section-title">الوضعية اتجاه الخدمة الوطنية</div>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="required">الوضعية اتجاه الخدمة الوطنية:</label><select class="form-select" id="autoField18" data-required="true" data-label="الوضعية اتجاه الخدمة الوطنية">
+                            <option value="">--يرجى الاختيار--</option>
+                            <option>معفى</option>
+                            <option>مؤجل</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4"><label>مرجع الوثيقة:</label><input type="text" class="form-control"></div>
+                    <div class="col-md-4"><label>تاريخ إصدار الوثيقة:</label><input type="date" class="form-control"></div>
+                    <div class="col-md-4"><label>تاريخ بداية الخدمة:</label><input type="date" class="form-control"></div>
+                    <div class="col-md-4"><label>تاريخ نهاية الخدمة:</label><input type="date" class="form-control"></div>
+                    <div class="col-md-4"><label>تاريخ انتهاء صلاحية الوثيقة:</label><input type="date" class="form-control"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============ STEP 4 : الشهادة والمسار الدراسي ============ -->
+        <div class="step-pane" data-pane="4">
+            <div class="section-title">معلومات الشهادة</div>
+            <div class="alert alert-light border" id="rankRequirementNote">يرجى اختيار الرتبة في خطوة "الترشح" أولاً ليتم تحديد تسمية الشهادة والميدان المطلوبَين تلقائياً.</div>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="required">تسمية الشهادة:</label><select class="form-select" id="certificateSelect" disabled data-required="true" data-label="تسمية الشهادة">
+                        <option value="">--يرجى اختيار الرتبة أولاً--</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="required">الميدان و/أو الشعبة و/أو الفرع:</label><select class="form-select" id="fieldSelect" disabled data-required="true" data-label="الميدان و/أو الشعبة و/أو الفرع">
+                        <option value="">--يرجى اختيار الرتبة أولاً--</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="required">رقم الشهادة:</label><input type="text" class="form-control" placeholder="الرقم" id="autoField19" inputmode="numeric" data-required="true" data-label="رقم الشهادة">
+                </div>
+                <div class="col-md-4">
+                    <label class="required">تاريخ الشهادة (تاريخ المداولات):</label><input type="date" class="form-control" id="autoField20" data-required="true" data-label="تاريخ الشهادة (تاريخ المداولات)">
+                </div>
+                <div class="col-md-4">
+                    <label class="required">اسم الجهة المسلمة:</label><input type="text" class="form-control" placeholder="اسم الجهة المسلمة" id="autoField21" data-required="true" data-label="اسم الجهة المسلمة">
+                </div>
+            </div>
+        </div>
+
+        <!-- ============ STEP 5 : الحالة المهنية ============ -->
+        <div class="step-pane" data-pane="5">
+            <div class="section-title">الحالة المهنية</div>
+            <div class="row g-3">
+                <div class="col-md-12">
+                    <label class="required">هل للمترشح وظيفة حاليا؟:</label><select class="form-select" id="hasJobSelect" onchange="toggleJobFields()" data-required="true" data-label="هل للمترشح وظيفة حاليا؟">
+                        <option value="no" selected>لا</option>
+                        <option value="yes">نعم</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="jobFieldsSection" class="hidden-field">
+                <div class="row g-3 mt-1">
+                    <div class="col-md-4"><label class="required">الوظيفة / الرتبة المشغولة:</label><input type="text" class="form-control" placeholder="الوظيفة / الرتبة المشغولة" id="autoField22" data-required="true" data-label="الوظيفة / الرتبة المشغولة"></div>
+                    <div class="col-md-4"><label class="required">تاريخ أول تعيين:</label><input type="date" class="form-control" id="autoField23" data-required="true" data-label="تاريخ أول تعيين"></div>
+                    <div class="col-md-4"><label class="required">تاريخ التعيين في الرتبة الحالية:</label><input type="date" class="form-control" id="autoField24" data-required="true" data-label="تاريخ التعيين في الرتبة الحالية"></div>
+                    <div class="col-md-6"><label>الصنف:</label><input type="text" class="form-control" placeholder="الصنف" id="autoField30" inputmode="numeric" data-label="الصنف"></div>
+                    <div class="col-md-6"><label>الدرجة:</label><input type="text" class="form-control" placeholder="الدرجة" id="autoField31" inputmode="numeric" data-label="الدرجة"></div>
+                </div>
+
+                <div class="section-title">مرجع موافقة الإدارة المستخدمة للمشاركة في المسابقة</div>
+                <div class="row g-3">
+                    <div class="col-md-4"><label class="required">رقم المرجع:</label><input type="text" class="form-control" placeholder="رقم المرجع" id="autoField25" inputmode="numeric" data-required="true" data-label="رقم المرجع"></div>
+                    <div class="col-md-4"><label class="required">تاريخ المرجع:</label><input type="date" class="form-control" id="autoField26" data-required="true" data-label="تاريخ المرجع"></div>
+                    <div class="col-md-4"><label class="required">صفة السلطة صاحبة الإمضاء:</label><input type="text" class="form-control" placeholder="صفة السلطة صاحبة الإمضاء" id="autoField27" data-required="true" data-label="صفة السلطة صاحبة الإمضاء"></div>
+                    <div class="col-md-6"><label class="required">عنوان الإدارة:</label><input type="text" class="form-control" placeholder="عنوان الإدارة" id="autoField28" data-required="true" data-label="عنوان الإدارة"></div>
+                    <div class="col-md-6"><label class="required">رقم هاتف الإدارة:</label><input type="tel" class="form-control" placeholder="رقم هاتف الإدارة" id="autoField29" inputmode="numeric" data-required="true" data-label="رقم هاتف الإدارة"></div>
+                    <div class="col-md-6"><label>البريد الالكتروني:</label><input type="email" class="form-control" placeholder="البريد الالكتروني"></div>
+                    <div class="col-md-6"><label>رقم فاكس الإدارة:</label><input type="text" class="form-control" placeholder="رقم فاكس الإدارة"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============ STEP 6 : التأكيد ============ -->
+        <div class="step-pane" data-pane="6">
+            <div class="section-title">تأكيد التسجيل</div>
+            <div class="alert alert-success">
+                يرجى مراجعة جميع المعلومات المدخلة في الخطوات السابقة قبل التأكيد النهائي. بعد الضغط على زر "تأكيد وحفظ المعلومات"، لن يكون بالإمكان تعديل الاستمارة إلا خلال المدة المحددة لذلك.
+            </div>
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <label class="required">البريد الإلكتروني:</label><input type="email" class="form-control" id="confirmEmail" placeholder="example@email.com" data-required="true" data-label="البريد الإلكتروني">
+                </div>
+            </div>
+            <div class="alert alert-info" id="credentialsPreview">
+                <strong>معلومات الدخول لمتابعة ملفكم لاحقاً:</strong><br>
+                اسم المستخدم: <span id="previewUsername">—</span><br>
+                كلمة المرور: <span id="previewPassword">—</span>
+                <div class="field-note mt-1">يُحتسب اسم المستخدم تلقائياً من البريد الإلكتروني (الجزء قبل @)، وكلمة المرور هي رقم الهاتف المدخل في الخطوة الثالثة.</div>
+            </div>
+            <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="finalConfirm">
+                <label class="form-check-label" for="finalConfirm">أؤكد صحة جميع المعلومات والوثائق المدرجة في هذه الاستمارة</label>
+            </div>
+            <div id="submitWarning" class="alert alert-danger mt-3 hidden-field"></div>
+            <div class="text-center mt-4">
+                <button type="submit" class="btn btn-success btn-lg px-5" id="submitBtn">تأكيد وحفظ المعلومات</button>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="nav-buttons">
+            <button type="button" class="btn btn-outline-secondary" id="prevBtn" onclick="changeStep(-1)">السابق</button>
+            <button type="button" class="btn btn-success" id="nextBtn" onclick="changeStep(1)">التالي</button>
+        </div>
+    </form>
+</div>
+
+<!-- ============ Success Modal (centered, professional) ============ -->
+<div class="modal-overlay" id="successModalOverlay">
+    <div class="modal-box">
+        <div class="modal-icon">✔</div>
+        <h4 class="modal-title">تم إرسال المعلومات بنجاح</h4>
+        <p class="modal-subtitle">سيتم التواصل معكم عبر البريد الإلكتروني المسجل بخصوص متابعة ملفكم.</p>
+        <div class="modal-docs">
+            <p class="modal-docs-title">يرجى تقديم الوثائق التالية للمسح الضوئي لإتمام الملف:</p>
+            <ul>
+                <li>بطاقة التعريف الوطني</li>
+                <li>الوضعية اتجاه الخدمة الوطنية بالنسبة للذكور</li>
+                <li>الشهادة والمؤهل [الديبلوم]</li>
+                <li>وضعية الحالة المهنية إن وجدت</li>
+            </ul>
+        </div>
+        <button type="button" class="btn btn-success px-5" id="closeModalBtn" onclick="closeSuccessModal()">إغلاق</button>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<script>
+/* ---------------- Wilayas of Algeria (69, updated 2026) ---------------- */
+const wilayas = [
+"أدرار","الشلف","الأغواط","أم البواقي","باتنة","بجاية","بسكرة","بشار","البليدة","البويرة",
+"تمنراست","تبسة","تلمسان","تيارت","تيزي وزو","الجزائر","الجلفة","جيجل","سطيف","سعيدة",
+"سكيكدة","سيدي بلعباس","عنابة","قالمة","قسنطينة","المدية","مستغانم","المسيلة","معسكر","ورقلة",
+"وهران","البيض","إليزي","برج بوعريريج","بومرداس","الطارف","تندوف","تيسمسيلت","الوادي","خنشلة",
+"سوق أهراس","تيبازة","ميلة","عين الدفلى","النعامة","عين تموشنت","غرداية","غليزان"
+];
+
+function fillWilayaSelects(){
+    const directorateSel = document.getElementById('directorateWilaya');
+    directorateSel.innerHTML = '<option value="">--يرجى الاختيار--</option>' +
+        wilayas.map(w=>`<option value="${w}">مديرية التربية لولاية ${w}</option>`).join('');
+
+    ['birthWilaya','residenceWilaya'].forEach(id=>{
+        const sel = document.getElementById(id);
+        sel.innerHTML = '<option value="">--يرجى الاختيار--</option>' +
+            wilayas.map(w=>`<option value="${w}">${w}</option>`).join('');
+    });
+}
+fillWilayaSelects();
+
+/* ---------------- Toggle logic ---------------- */
+function toggleChildren() {
+    const status = document.getElementById('familyStatus').value;
+    const childrenDiv = document.getElementById('childrenCountDiv');
+    childrenDiv.classList.toggle('hidden-field', status !== 'married');
+}
+
+
+function toggleNationalService() {
+    const gender = document.getElementById('genderSelect').value;
+    document.getElementById('nationalServiceSection').classList.toggle('hidden-field', gender !== 'male');
+}
+
+function handleBirthDate() {
+    const isAssumed = document.getElementById('assumedSelect').value;
+    const container = document.getElementById('birthDateContainer');
+    const label = document.getElementById('birthLabel');
+
+    if (isAssumed === 'yes') {
+        label.innerText = "سنة الازدياد (4 أرقام):";
+        container.innerHTML = '<input type="number" class="form-control" id="birthDateInput" placeholder="مثال: 1990" min="1900" max="2024" data-required="true" data-label="سنة الازدياد">';
+    } else {
+        label.innerText = "تاريخ الازدياد:";
+        container.innerHTML = '<input type="date" class="form-control" id="birthDateInput" data-required="true" data-label="تاريخ الازدياد">';
+    }
+}
+
+function toggleJobFields(){
+    const val = document.getElementById('hasJobSelect').value;
+    document.getElementById('jobFieldsSection').classList.toggle('hidden-field', val !== 'yes');
+}
+
+/* Rank -> Certificate & Field mapping (دليل تصنيف الرتب والمؤهلات المطلوبة - وزارة التربية الوطنية) */
+const rankData = {
+"مشرف التربية": {
+    cert: "شهادة سنتين (02) من التعليم العالي",
+    fields: ["علوم التربية","علم النفس","علم الاجتماع"]
+},
+"مربي متخصص في الدعم التربوي": {
+    cert: "شهادة سنتين (02) من التعليم العالي",
+    fields: ["علوم التربية","علم النفس","علم الاجتماع"]
+},
+"مستشار محلل للتوجيه والإرشاد المدرسي والمهني": {
+    cert: "ليسانس",
+    fields: ["علوم التربية","علم النفس","علم الاجتماع"]
+},
+"ملحق رئيسي بالمخابر": {
+    cert: "تقني سامٍ",
+    fields: ["الكيمياء","البيوكيمياء","الإلكترونيك","الالكتروتقني","الميكانيك","الالكتروميكانيك","الكهرباء","مراقبة النوعية تخصص صناعة الأغذية الزراعية"]
+},
+"مستشار التغذية المدرسية": {
+    cert: "ليسانس",
+    fields: ["علوم الغذاء"]
+},
+"مقتصد": {
+    cert: "ليسانس",
+    fields: ["المحاسبة","العلوم التجارية","العلوم الاقتصادية","علوم التسيير","العلوم القانونية والإدارية","الحقوق"]
+},
+"نائب مقتصد": {
+    cert: "شهادة سنتين (02) من التعليم العالي",
+    fields: ["المحاسبة","العلوم التجارية","العلوم الاقتصادية","علوم التسيير","العلوم القانونية والإدارية","الحقوق"]
+}
+};
+
+function syncRankToCertificate(){
+    const rank = document.getElementById('rankSelect').value;
+    const certSel = document.getElementById('certificateSelect');
+    const fieldSel = document.getElementById('fieldSelect');
+    const note = document.getElementById('rankRequirementNote');
+    const data = rankData[rank];
+
+    if(!data){
+        certSel.disabled = true;
+        certSel.innerHTML = '<option value="">--يرجى اختيار الرتبة أولاً--</option>';
+        fieldSel.disabled = true;
+        fieldSel.innerHTML = '<option value="">--يرجى اختيار الرتبة أولاً--</option>';
+        note.classList.remove('hidden-field');
+        return;
+    }
+
+    note.classList.add('hidden-field');
+    certSel.disabled = true; // derived automatically from the rank, not user-editable
+    certSel.innerHTML = `<option value="${data.cert}" selected>${data.cert}</option>`;
+
+    fieldSel.disabled = false;
+    fieldSel.innerHTML = '<option value="">--يرجى الاختيار--</option>' +
+        data.fields.map(f=>`<option value="${f}">${f}</option>`).join('');
+}
+
+/* ---------------- Home / Guide screens ---------------- */
+function showHome(){
+    document.getElementById('homeScreen').classList.remove('hidden-field');
+    document.getElementById('guideScreen').classList.add('hidden-field');
+    document.getElementById('registrationScreen').classList.add('hidden-field');
+    window.scrollTo({top:0, behavior:'smooth'});
+}
+function showGuide(){
+    document.getElementById('homeScreen').classList.add('hidden-field');
+    document.getElementById('guideScreen').classList.remove('hidden-field');
+    document.getElementById('registrationScreen').classList.add('hidden-field');
+    window.scrollTo({top:0, behavior:'smooth'});
+}
+function showRegistration(){
+    document.getElementById('homeScreen').classList.add('hidden-field');
+    document.getElementById('guideScreen').classList.add('hidden-field');
+    document.getElementById('registrationScreen').classList.remove('hidden-field');
+    window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function populateGuideSelect(){
+    const sel = document.getElementById('guideRankSelect');
+    sel.innerHTML = '<option value="">--يرجى الاختيار--</option>' +
+        Object.keys(rankData).map(r=>`<option value="${r}">${r}</option>`).join('');
+}
+
+function renderGuideResult(){
+    const rank = document.getElementById('guideRankSelect').value;
+    const resultDiv = document.getElementById('guideResult');
+    const data = rankData[rank];
+    if(!data){
+        resultDiv.classList.add('hidden-field');
+        return;
+    }
+    document.getElementById('guideCertText').textContent = data.cert;
+    document.getElementById('guideFieldsList').innerHTML =
+        data.fields.map(f=>`<span class="badge bg-light text-dark border me-1 mb-1 p-2">${f}</span>`).join('');
+    resultDiv.classList.remove('hidden-field');
+}
+
+function buildGuideTable(){
+    const body = document.getElementById('guideTableBody');
+    body.innerHTML = Object.entries(rankData).map(([rank, data])=>
+        `<tr><td>${rank}</td><td>${data.cert}</td><td>${data.fields.join('، ')}</td></tr>`
+    ).join('');
+}
+
+populateGuideSelect();
+buildGuideTable();
+
+/* ---------------- Field format rules (Arabic / French / digits) ---------------- */
+const ARABIC_ONLY_IDS = ['autoField2','autoField3','autoField6','autoField7','autoField8','autoField15','autoField17','autoField21','autoField22','autoField27','autoField28'];
+const LATIN_ONLY_IDS = ['autoField4','autoField5'];
+const DIGITS_ONLY_IDS = ['autoField1','autoField10','autoField16','autoField19','autoField25','autoField29','autoField30','autoField31'];
+const EXACT_DIGIT_LENGTH = { autoField1: 18, autoField10: 5, autoField16: 10 };
+
+const ARABIC_STRIP_PATTERN = /[^\u0600-\u06FF0-9\s.,\-\/]/g;
+const LATIN_STRIP_PATTERN = /[^A-Za-zÀ-ÿ\s'\-]/g;
+const DIGITS_STRIP_PATTERN = /[^0-9]/g;
+
+function attachFormatFilters(){
+    ARABIC_ONLY_IDS.forEach(id=>{
+        const el = document.getElementById(id);
+        if(el) el.addEventListener('input', ()=>{ el.value = el.value.replace(ARABIC_STRIP_PATTERN, ''); });
+    });
+    LATIN_ONLY_IDS.forEach(id=>{
+        const el = document.getElementById(id);
+        if(el) el.addEventListener('input', ()=>{ el.value = el.value.replace(LATIN_STRIP_PATTERN, ''); });
+    });
+    DIGITS_ONLY_IDS.forEach(id=>{
+        const el = document.getElementById(id);
+        if(el) el.addEventListener('input', ()=>{
+            el.value = el.value.replace(DIGITS_STRIP_PATTERN, '');
+            if(EXACT_DIGIT_LENGTH[id]) el.value = el.value.slice(0, EXACT_DIGIT_LENGTH[id]);
+        });
+    });
+}
+attachFormatFilters();
+
+function validateFieldFormats(){
+    const errors = [];
+    Object.entries(EXACT_DIGIT_LENGTH).forEach(([id, len])=>{
+        const el = document.getElementById(id);
+        if(el && isFieldVisible(el) && !el.disabled){
+            const val = el.value.trim();
+            if(val && val.length !== len){
+                errors.push(`${el.dataset.label || id} يجب أن يتكون من ${len} أرقام بالضبط (المُدخل حالياً ${val.length})`);
+            }
+        }
+    });
+    return errors;
+}
+
+/* ---------------- Login credentials preview (step 6) ---------------- */
+function updateCredentialsPreview(){
+    const email = document.getElementById('confirmEmail').value.trim();
+    const phone = document.getElementById('autoField16').value.trim();
+    document.getElementById('previewUsername').textContent = email.includes('@') ? email.split('@')[0] : '—';
+    document.getElementById('previewPassword').textContent = phone || '—';
+}
+document.getElementById('confirmEmail').addEventListener('input', updateCredentialsPreview);
+document.getElementById('autoField16').addEventListener('input', updateCredentialsPreview);
+
+/* ---------------- Stepper navigation ---------------- */
+let currentStep = 1;
+const totalSteps = 6;
+
+function renderStepper(){
+    document.querySelectorAll('.step').forEach(stepEl=>{
+        const num = parseInt(stepEl.dataset.step);
+        stepEl.classList.remove('active','completed','upcoming');
+        if(num < currentStep) stepEl.classList.add('completed');
+        else if(num === currentStep) stepEl.classList.add('active');
+        else stepEl.classList.add('upcoming');
+    });
+    document.querySelectorAll('.step-pane').forEach(p=>{
+        p.classList.toggle('active', parseInt(p.dataset.pane) === currentStep);
+    });
+    document.getElementById('prevBtn').style.visibility = currentStep === 1 ? 'hidden' : 'visible';
+    document.getElementById('nextBtn').classList.toggle('hidden-field', currentStep === totalSteps);
+}
+
+function changeStep(dir){
+    const next = currentStep + dir;
+    if(next < 1 || next > totalSteps) return;
+    currentStep = next;
+    renderStepper();
+    window.scrollTo({top:0, behavior:'smooth'});
+}
+
+document.querySelectorAll('.step').forEach(stepEl=>{
+    stepEl.style.cursor = 'pointer';
+    stepEl.addEventListener('click', ()=>{
+        currentStep = parseInt(stepEl.dataset.step);
+        renderStepper();
+    });
+});
+
+document.getElementById('regForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    e.stopPropagation();
+    handleFormSubmit();
+});
+
+// Fallback: also bind directly to the button click, in case the submit event
+// is intercepted or blocked by the surrounding environment.
+document.getElementById('submitBtn').addEventListener('click', function(e){
+    e.preventDefault();
+    handleFormSubmit();
+});
+
+/* ---------------- Firebase ---------------- */
+const firebaseConfig = {
+    apiKey: "AIzaSyBdlRDPTQqY8lZvD4R7nneXAwPgRbxmm14",
+    authDomain: "councour-59e43.firebaseapp.com",
+    databaseURL: "https://councour-59e43-default-rtdb.firebaseio.com",
+    projectId: "councour-59e43",
+    storageBucket: "councour-59e43.firebasestorage.app",
+    messagingSenderId: "492907661374",
+    appId: "1:492907661374:web:31792fc3ab95d0e69ea96f",
+    measurementId: "G-2NLB5H3NQH"
+};
+let fbApp, fbDb;
+try {
+    fbApp = firebase.initializeApp(firebaseConfig);
+    fbDb = firebase.database();
+} catch(err){
+    console.error('Firebase init error:', err);
+}
+
+/* ---------------- Required-field validation ---------------- */
+function isFieldVisible(el){
+    let node = el;
+    while(node && node !== document.body){
+        if(node.classList && node.classList.contains('hidden-field')) return false;
+        node = node.parentElement;
+    }
+    return true;
+}
+
+function isPlaceholderValue(val){
+    return !val || val.trim() === '' || val.includes('يرجى الاختيار') || val.includes('يرجى اختيار الرتبة');
+}
+
+function validateRequiredFields(){
+    const missing = [];
+    document.querySelectorAll('[data-required="true"]').forEach(el=>{
+        if(el.disabled) return;           // not relevant in current state
+        if(!isFieldVisible(el)) return;   // hidden section, not applicable
+
+        let val;
+        if(el.type === 'checkbox') val = el.checked ? 'x' : '';
+        else val = el.value;
+
+        if(isPlaceholderValue(val)){
+            missing.push(el.dataset.label || 'حقل غير معروف');
+        }
+    });
+    return missing;
+}
+
+function collectFormData(){
+    const data = {};
+    document.querySelectorAll('#regForm input, #regForm select').forEach(el=>{
+        if(!el.id) return;
+        if(el.type === 'checkbox') data[el.id] = el.checked;
+        else data[el.id] = el.value;
+    });
+    return data;
+}
+
+function handleFormSubmit(){
+    const warning = document.getElementById('submitWarning');
+    warning.classList.add('hidden-field');
+    warning.innerHTML = '';
+
+    // 1) Terms acceptance (step 1)
+    if(!document.getElementById('acceptTerms').checked){
+        warning.innerHTML = 'يجب الموافقة على شروط المشاركة في الخطوة الأولى ("الشروط") قبل إتمام التسجيل.';
+        warning.classList.remove('hidden-field');
+        currentStep = 1; renderStepper();
+        warning.scrollIntoView({behavior:'smooth'});
+        return;
+    }
+
+    // 2) All required fields across the form
+    const missing = validateRequiredFields();
+
+    // 3) Email format (in addition to being in the required list)
+    const email = document.getElementById('confirmEmail').value.trim();
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if(email && !emailPattern.test(email) && !missing.includes('البريد الإلكتروني')){
+        missing.push('البريد الإلكتروني (صيغة غير صحيحة)');
+    }
+
+    // 3.5) Exact-length digit fields (رقم التعريف الوطني، رقم شهادة الميلاد، رقم الهاتف)
+    validateFieldFormats().forEach(err => missing.push(err));
+
+    // 4) Final confirmation checkbox
+    if(!document.getElementById('finalConfirm').checked){
+        missing.push('الإقرار بصحة المعلومات (خطوة التأكيد)');
+    }
+
+    if(missing.length > 0){
+        warning.innerHTML = 'يتعذر إتمام التسجيل للأسباب التالية:<ul>' +
+            missing.map(m=>`<li>${m}</li>`).join('') + '</ul>';
+        warning.classList.remove('hidden-field');
+        warning.scrollIntoView({behavior:'smooth'});
+        return;
+    }
+
+    // All good — save to Firebase then show the success modal
+    const formData = collectFormData();
+    formData.submittedAt = new Date().toISOString();
+    formData.username = email.includes('@') ? email.split('@')[0] : '';
+    formData.password = document.getElementById('autoField16').value.trim();
+    formData.status = 'pending'; // مسجل | pending (انتظار) | problem (مشكل في تسجيل) — يُحدَّد لاحقاً من لوحة الإدارة
+
+    if(fbDb){
+        fbDb.ref('registrations').push(formData)
+            .then(()=> openSuccessModal())
+            .catch(err=>{
+                console.error('Firebase write error:', err);
+                warning.innerHTML = 'تعذر إرسال البيانات إلى قاعدة البيانات، يرجى المحاولة مرة أخرى.';
+                warning.classList.remove('hidden-field');
+            });
+    } else {
+        openSuccessModal();
+    }
+}
+
+function openSuccessModal(){
+    document.getElementById('successModalOverlay').classList.add('active');
+}
+
+function closeSuccessModal(){
+    document.getElementById('successModalOverlay').classList.remove('active');
+    document.getElementById('regForm').reset();
+    document.getElementById('submitWarning').classList.add('hidden-field');
+    // Reset dynamic/derived UI state
+    document.getElementById('childrenCountDiv').classList.add('hidden-field');
+    document.getElementById('nationalServiceSection').classList.add('hidden-field');
+    document.getElementById('jobFieldsSection').classList.add('hidden-field');
+    fillWilayaSelects();
+    syncRankToCertificate();
+    handleBirthDate();
+    updateCredentialsPreview();
+    currentStep = 1;
+    renderStepper();
+    window.scrollTo({top:0, behavior:'smooth'});
+}
+
+renderStepper();
+</script>
+
+</body>
 </html>
