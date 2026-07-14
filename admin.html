@@ -1,538 +1,459 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة الإدارة الشاملة - د.عبد المجيد</title>
-    
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
-    
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة الإدارة - مراجعة الترشيحات</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+    body { font-family: 'Tajawal', sans-serif; background-color: #f4f7f9; padding: 20px 0 60px; }
+    .hidden-field { display: none !important; }
 
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    /* Login */
+    .login-wrap { min-height: 80vh; display:flex; align-items:center; justify-content:center; }
+    .login-box { background:#fff; padding:40px 34px; border-radius:12px; box-shadow:0 0 20px rgba(0,0,0,0.08); max-width:400px; width:100%; }
+    .login-icon { width:56px; height:56px; border-radius:50%; background:#e9f7ef; color:#28a745; font-size:26px; display:flex; align-items:center; justify-content:center; margin:0 auto 16px; }
 
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            fontFamily: { sans: ['Tajawal', 'sans-serif'] },
-            colors: {
-              'brand': '#008568',
-              'brand-dark': '#006b54',
-              'dark': '#0f172a',
-            }
-          },
-        },
-      }
-    </script>
-    <style>
-      body { background-color: #f1f5f9; height: 100vh; overflow: hidden; }
-      ::-webkit-scrollbar { width: 8px; height: 8px; }
-      ::-webkit-scrollbar-track { background: transparent; }
-      ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-      ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-      
-      .copy-hover { position: relative; transition: all 0.2s; cursor: pointer; }
-      .copy-hover:hover { background-color: #f0fdf4; border-color: #008568; transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-      .sidebar-item.active { background-color: #e2e8f0; border-right: 4px solid #008568; font-weight: bold; }
-      .sidebar-item:hover { background-color: #f8fafc; }
-      
-      .edit-input {
-        width: 100%;
-        background: #f8fafc;
-        border: 1px solid #008568;
-        border-radius: 4px;
-        padding: 4px;
-        font-weight: 900;
-        color: #000;
-      }
-      .filter-btn {
-        font-size: 10px;
-        padding: 4px 8px;
-        border-radius: 6px;
-        border: 1px solid #e2e8f0;
-        background: #fff;
-        color: #64748b;
-        transition: all 0.2s;
-        white-space: nowrap;
-      }
-      .filter-btn.active {
-        background: #008568;
-        color: #fff;
-        border-color: #008568;
-      }
-      .sidebar-transition { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
-      .quick-note {
-        width: 100%;
-        font-size: 11px;
-        padding: 4px;
-        border: 1px solid #e2e8f0;
-        border-radius: 4px;
-        margin-top: 8px;
-        background: #fff;
-        outline-color: #008568;
-      }
-    </style>
+    /* Dashboard */
+    .dash-container { max-width: 1300px; margin: auto; padding: 0 15px; }
+    .dash-header { display:flex; align-items:center; justify-content:space-between; background:#fff; border-radius:10px; padding:16px 22px; margin-bottom:20px; box-shadow:0 0 15px rgba(0,0,0,0.06); }
+    .stat-card { background:#fff; border-radius:10px; padding:18px 20px; box-shadow:0 0 15px rgba(0,0,0,0.06); text-align:center; }
+    .stat-card .num { font-size:26px; font-weight:700; color:#28a745; }
+    .stat-card .lbl { font-size:13px; color:#777; margin-top:2px; }
+    .toolbar { background:#fff; border-radius:10px; padding:14px 18px; margin:20px 0; box-shadow:0 0 15px rgba(0,0,0,0.06); display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
+    .table-wrap { background:#fff; border-radius:10px; padding:10px; box-shadow:0 0 15px rgba(0,0,0,0.06); overflow-x:auto; }
+    table.reg-table { font-size:13.5px; }
+    table.reg-table th { white-space:nowrap; background:#f8f9fa; }
+    table.reg-table td { white-space:nowrap; }
+    .row-clickable { cursor:pointer; }
+    .row-clickable:hover { background:#f4fbf6; }
+
+    /* Detail modal */
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(20,30,25,0.55); z-index:2000; align-items:center; justify-content:center; padding:20px; }
+    .modal-overlay.active { display:flex; }
+    .detail-box { background:#fff; border-radius:14px; max-width:820px; width:100%; max-height:88vh; overflow-y:auto; padding:30px 28px; }
+    .detail-box h5 { font-weight:700; margin-bottom:18px; }
+    .detail-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px 24px; }
+    .detail-item { border-bottom:1px solid #f0f0f0; padding-bottom:8px; }
+    .detail-item .k { font-size:12px; color:#888; margin-bottom:2px; }
+    .detail-item .v { font-size:14px; color:#222; font-weight:500; word-break:break-word; }
+    .empty-state { text-align:center; padding:60px 20px; color:#888; }
+
+    /* Status badges */
+    .status-badge {
+        display:inline-flex; align-items:center; gap:5px; padding:5px 10px; border-radius:20px;
+        font-size:12.5px; font-weight:700; cursor:pointer; border:1px solid transparent; white-space:nowrap;
+    }
+    .status-badge:hover { filter: brightness(0.95); }
+    .status-registered { background:#e9f7ef; color:#1e7e34; }
+    .status-pending { background:#fff8e6; color:#8a6d00; }
+    .status-problem { background:#fdecec; color:#c0392b; }
+
+    /* Status modal */
+    .status-box { background:#fff; border-radius:14px; max-width:420px; width:100%; padding:26px 26px 22px; }
+    .status-box h6 { font-weight:700; margin-bottom:16px; }
+    .status-option { display:flex; align-items:center; gap:8px; padding:10px 12px; border:1px solid #e2e6ea; border-radius:8px; margin-bottom:8px; cursor:pointer; }
+    .status-option.selected { border-color:#28a745; background:#f4fbf6; }
+    .status-option input { margin:0; }
+</style>
 </head>
 <body>
-    <div id="root"></div>
 
-    <script type="text/babel" data-presets="typescript,react">
-        const { useState, useEffect } = React;
+<!-- ============ Login screen ============ -->
+<div class="login-wrap" id="loginScreen">
+    <div class="login-box">
+        <div class="login-icon">🔒</div>
+        <h5 class="text-center mb-1">لوحة الإدارة</h5>
+        <p class="text-center text-muted mb-4" style="font-size:13px;">تسجيل الدخول لمراجعة الترشيحات المرسلة</p>
+        <div class="mb-3">
+            <label class="form-label">البريد الإلكتروني</label>
+            <input type="email" class="form-control" id="loginEmail" placeholder="admin@example.com">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">كلمة المرور</label>
+            <input type="password" class="form-control" id="loginPassword" placeholder="••••••••">
+        </div>
+        <div id="loginError" class="alert alert-danger py-2 hidden-field" style="font-size:13px;"></div>
+        <button class="btn btn-success w-100" id="loginBtn" onclick="doLogin()">تسجيل الدخول</button>
+    </div>
+</div>
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyBdlRDPTQqY8lZvD4R7nneXAwPgRbxmm14",
-            authDomain: "councour-59e43.firebaseapp.com",
-            databaseURL: "https://councour-59e43-default-rtdb.firebaseio.com/", 
-            projectId: "councour-59e43",
-            storageBucket: "councour-59e43.firebasestorage.app",
-            messagingSenderId: "492907661374",
-            appId: "1:492907661374:web:31792fc3ab95d0e69ea96f"
-        };
+<!-- ============ Dashboard ============ -->
+<div class="dash-container hidden-field" id="dashScreen">
+    <div class="dash-header">
+        <div>
+            <h5 class="mb-0">لوحة الإدارة - الترشيحات المسجلة</h5>
+            <div class="text-muted" style="font-size:13px;" id="loggedInAs"></div>
+        </div>
+        <button class="btn btn-outline-danger btn-sm" onclick="doLogout()">تسجيل الخروج</button>
+    </div>
 
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
-        const db = firebase.database();
-        const auth = firebase.auth();
+    <div class="row g-3 mb-2">
+        <div class="col-6 col-md-3"><div class="stat-card"><div class="num" id="statTotal">0</div><div class="lbl">إجمالي الترشيحات</div></div></div>
+        <div class="col-6 col-md-3"><div class="stat-card"><div class="num" id="statRanks">0</div><div class="lbl">عدد الرتب المسجَّلة</div></div></div>
+        <div class="col-6 col-md-3"><div class="stat-card"><div class="num" id="statWilayas">0</div><div class="lbl">عدد الولايات</div></div></div>
+        <div class="col-6 col-md-3"><div class="stat-card"><div class="num" id="statToday">0</div><div class="lbl">وصل اليوم</div></div></div>
+    </div>
 
-        const Icons = {
-            Copy: () => <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>,
-            User: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>,
-            Briefcase: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2-2v16"></path></svg>,
-            Home: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>,
-            GraduationCap: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>,
-            BookOpen: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a4 4 0 0 0-4-4H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a4 4 0 0 1 4-4h6z"></path></svg>,
-            Mail: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>,
-            LogOut: () => <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>,
-            Trash: () => <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>,
-            Edit: () => <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>,
-            Save: () => <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>,
-            ChevronRight: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>,
-            ChevronLeft: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"></polyline></svg>
-        };
+    <div class="toolbar">
+        <input type="text" class="form-control" style="max-width:260px;" id="searchInput" placeholder="بحث بالاسم أو اللقب أو الهاتف..." oninput="renderTable()">
+        <select class="form-select" style="max-width:220px;" id="filterRank" onchange="renderTable()"><option value="">كل الرتب</option></select>
+        <select class="form-select" style="max-width:220px;" id="filterWilaya" onchange="renderTable()"><option value="">كل الولايات</option></select>
+        <button class="btn btn-outline-secondary btn-sm ms-auto" onclick="loadRegistrations()">↻ تحديث</button>
+    </div>
 
-        const Toast = ({ msg, show, type = 'success' }) => (
-            <div className={`fixed bottom-5 left-5 px-6 py-3 rounded-lg shadow-xl transition-all duration-300 transform ${show ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'} ${type === 'error' ? 'bg-red-600' : 'bg-dark'} text-white`} style={{zIndex: 9999}}>
-                <div className="flex items-center gap-2 font-bold">{msg}</div>
-            </div>
-        );
+    <div class="table-wrap">
+        <table class="table table-hover reg-table mb-0" id="regTable">
+            <thead>
+                <tr>
+                    <th>الحالة</th>
+                    <th>اللقب والاسم</th>
+                    <th>الرتبة</th>
+                    <th>مديرية التربية</th>
+                    <th>ولاية الإقامة</th>
+                    <th>الهاتف</th>
+                    <th>البريد الإلكتروني</th>
+                    <th>تاريخ الإرسال</th>
+                </tr>
+            </thead>
+            <tbody id="regTableBody"></tbody>
+        </table>
+        <div class="empty-state hidden-field" id="emptyState">لا توجد ترشيحات مطابقة</div>
+    </div>
+</div>
 
-        const DataField = ({ label, value, name, onCopy, isEditing, onEditChange, type="text" }) => {
-            if (!isEditing && !value && value !== 0) return null;
-            return (
-                <div onClick={() => !isEditing && onCopy(value)} className={`bg-white border border-gray-200 p-3 rounded-lg relative group flex flex-col justify-center ${!isEditing ? 'copy-hover' : ''}`}>
-                    <span className="text-xs text-gray-500 font-bold mb-1">{label}</span>
-                    {isEditing ? (
-                        <input type={type} className="edit-input" value={value || ''} onChange={(e) => onEditChange(name, e.target.value)} />
-                    ) : (
-                        <span className="text-sm font-black text-gray-800 break-words leading-tight">{value}</span>
-                    )}
-                    {!isEditing && (
-                        <div className="absolute top-2 left-2 text-brand opacity-0 group-hover:opacity-100 transition duration-200">
-                            <Icons.Copy />
-                        </div>
-                    )}
-                </div>
-            );
-        };
+<!-- ============ Detail modal ============ -->
+<div class="modal-overlay" id="detailOverlay">
+    <div class="detail-box">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5>تفاصيل الترشح الكاملة</h5>
+            <button class="btn btn-sm btn-outline-secondary" onclick="closeDetail()">إغلاق ✕</button>
+        </div>
+        <div class="detail-grid" id="detailGrid"></div>
+    </div>
+</div>
 
-        const Section = ({ title, icon, children, gridCols = "grid-cols-1 md:grid-cols-2 lg:grid-cols-3" }) => (
-            <div className="mb-8 bg-slate-50/50 p-1 rounded-xl text-right">
-                <div className="flex items-center gap-2 mb-4 border-b-2 border-gray-200 pb-2 text-brand px-2">
-                    {icon}
-                    <h3 className="text-xl font-black">{title}</h3>
-                </div>
-                <div className={`grid ${gridCols} gap-3`}>{children}</div>
-            </div>
-        );
+<!-- ============ Status change modal ============ -->
+<div class="modal-overlay" id="statusOverlay">
+    <div class="status-box">
+        <h6>تحديث حالة الملف</h6>
+        <label class="status-option" id="optRegistered">
+            <input type="radio" name="statusChoice" value="registered" onchange="onStatusChoiceChange()"> ✔ مسجل
+        </label>
+        <label class="status-option" id="optPending">
+            <input type="radio" name="statusChoice" value="pending" onchange="onStatusChoiceChange()"> ⏳ انتظار
+        </label>
+        <label class="status-option" id="optProblem">
+            <input type="radio" name="statusChoice" value="problem" onchange="onStatusChoiceChange()"> ⚠ مشكل في التسجيل
+        </label>
+        <div id="statusReasonWrap" class="hidden-field mt-2 mb-2">
+            <label class="form-label" style="font-size:13px;">سبب المشكل:</label>
+            <textarea class="form-control" id="statusReasonInput" rows="3" placeholder="اكتب سبب المشكل هنا..."></textarea>
+        </div>
+        <div class="d-flex gap-2 justify-content-end mt-3">
+            <button class="btn btn-sm btn-outline-secondary" onclick="closeStatusModal()">إلغاء</button>
+            <button class="btn btn-sm btn-success" onclick="saveStatus()">حفظ</button>
+        </div>
+    </div>
+</div>
 
-        const LoginScreen = () => {
-            const [email, setEmail] = useState('');
-            const [password, setPassword] = useState('');
-            const [error, setError] = useState('');
-            const handleLogin = async (e) => {
-                e.preventDefault();
-                try { await auth.signInWithEmailAndPassword(email, password); } catch (err) { setError('بيانات الدخول غير صحيحة'); }
-            };
-            return (
-                <div className="min-h-screen flex items-center justify-center bg-slate-100 p-4">
-                    <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-sm border-t-4 border-brand">
-                        <h2 className="text-3xl font-black text-center mb-8 text-dark">نظام التوظيف</h2>
-                        <form onSubmit={handleLogin} className="space-y-4 text-right">
-                            <input type="email" value={email} onChange={e=>setEmail(e.target.value)} className="w-full p-3 border rounded-lg font-bold" placeholder="البريد الإلكتروني" required />
-                            <input type="password" value={password} onChange={e=>setPassword(e.target.value)} className="w-full p-3 border rounded-lg font-bold" placeholder="كلمة المرور" required />
-                            {error && <div className="bg-red-50 text-red-600 text-sm font-bold p-3 rounded-lg text-center">{error}</div>}
-                            <button className="w-full bg-brand text-white py-3.5 rounded-lg font-bold">دخول للوحة التحكم</button>
-                        </form>
-                    </div>
-                </div>
-            );
-        };
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
-        const Dashboard = () => {
-            const [submissions, setSubmissions] = useState([]);
-            const [selectedId, setSelectedId] = useState(null);
-            const [search, setSearch] = useState('');
-            const [filterStatus, setFilterStatus] = useState('الكل');
-            const [toast, setToast] = useState({ show: false, msg: '', type: 'success' });
-            const [isEditing, setIsEditing] = useState(false);
-            const [editBuffer, setEditBuffer] = useState({});
-            const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+<script>
+/* ---------------- Firebase (same project as registration_form.html) ---------------- */
+const firebaseConfig = {
+    apiKey: "AIzaSyBdlRDPTQqY8lZvD4R7nneXAwPgRbxmm14",
+    authDomain: "councour-59e43.firebaseapp.com",
+    databaseURL: "https://councour-59e43-default-rtdb.firebaseio.com",
+    projectId: "councour-59e43",
+    storageBucket: "councour-59e43.firebasestorage.app",
+    messagingSenderId: "492907661374",
+    appId: "1:492907661374:web:31792fc3ab95d0e69ea96f",
+    measurementId: "G-2NLB5H3NQH"
+};
+firebase.initializeApp(firebaseConfig);
+const fbAuth = firebase.auth();
+const fbDb = firebase.database();
 
-            // القائمة الجديدة حسب طلبك
-            const statusesList = ['الكل', 'في انتظار ملف', 'ملف ناقص', 'جاري معالجة في منصة', 'مقبول في منصة', 'غير مقبول في منصة'];
+/* ---------------- Field labels (mirrors registration_form.html) ---------------- */
+const FIELD_LABELS = {
+    directorateWilaya: "مديرية التربية لولاية",
+    rankSelect: "الرتبة",
+    autoField1: "رقم التعريف الوطني",
+    autoField2: "اللقب بالعربية",
+    autoField3: "الاسم بالعربية",
+    autoField4: "اللقب باللاتينية",
+    autoField5: "الاسم باللاتينية",
+    autoField6: "اسم الأب",
+    autoField7: "اسم الأم",
+    autoField8: "لقب الأم",
+    genderSelect: "الجنس",
+    assumedSelect: "مفترض بحكم؟",
+    birthDateInput: "تاريخ/سنة الازدياد",
+    birthWilaya: "ولاية الازدياد",
+    autoField9: "بلدية الازدياد",
+    autoField10: "رقم شهادة الميلاد",
+    autoField11: "نوع عقد الميلاد",
+    autoField12: "الجنسية",
+    familyStatus: "الحالة العائلية",
+    autoField13: "عدد الأولاد",
+    autoField14: "ذوو حقوق الشهيد",
+    disabilitySelect: "ذوي الاحتياجات الخاصة",
+    residenceWilaya: "ولاية الإقامة",
+    autoField15: "بلدية الإقامة",
+    autoField16: "رقم الهاتف",
+    autoField17: "العنوان الشخصي الكامل",
+    autoField18: "الوضعية اتجاه الخدمة الوطنية",
+    certificateSelect: "تسمية الشهادة",
+    fieldSelect: "الميدان و/أو الشعبة و/أو الفرع",
+    autoField19: "رقم الشهادة",
+    autoField20: "تاريخ الشهادة (تاريخ المداولات)",
+    autoField21: "اسم الجهة المسلمة",
+    hasJobSelect: "هل للمترشح وظيفة حاليا؟",
+    autoField22: "الوظيفة / الرتبة المشغولة",
+    autoField23: "تاريخ أول تعيين",
+    autoField24: "تاريخ التعيين في الرتبة الحالية",
+    autoField25: "رقم المرجع",
+    autoField26: "تاريخ المرجع",
+    autoField27: "صفة السلطة صاحبة الإمضاء",
+    autoField28: "عنوان الإدارة",
+    autoField29: "رقم هاتف الإدارة",
+    autoField30: "الصنف",
+    autoField31: "الدرجة",
+    confirmEmail: "البريد الإلكتروني",
+    username: "اسم المستخدم",
+    password: "كلمة المرور",
+    submittedAt: "تاريخ الإرسال"
+};
+const FIELD_ORDER = Object.keys(FIELD_LABELS);
 
-            useEffect(() => {
-                const ref = db.ref('submissions');
-                ref.on('value', (snap) => {
-                    const data = snap.val();
-                    if (data) {
-                        const list = Object.keys(data).map(k => ({id: k, ...data[k]}));
-                        list.sort((a, b) => new Date(b.submissionDate) - new Date(a.submissionDate));
-                        setSubmissions(list);
-                        if (!selectedId && list.length > 0) setSelectedId(list[0].id);
-                    }
-                });
-                return () => ref.off();
-            }, []);
+let allRegistrations = []; // [{key, ...data}]
+let statusModalKey = null;
 
-            const showToastMsg = (msg, type='success') => {
-                setToast({ show: true, msg, type });
-                setTimeout(() => setToast({ show: false, msg: '', type: 'success' }), 3000);
-            };
+const STATUS_META = {
+    registered: { label: 'مسجل', icon: '✔', cls: 'status-registered' },
+    pending:    { label: 'انتظار', icon: '⏳', cls: 'status-pending' },
+    problem:    { label: 'مشكل في التسجيل', icon: '⚠', cls: 'status-problem' }
+};
+function statusMeta(status){
+    return STATUS_META[status] || STATUS_META.pending;
+}
 
-            const copyToClipboard = (text) => {
-                if (!text) return;
-                navigator.clipboard.writeText(text);
-                showToastMsg('تم النسخ!');
-            };
+/* ---------------- Auth ---------------- */
+function doLogin(){
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    const errBox = document.getElementById('loginError');
+    errBox.classList.add('hidden-field');
 
-            const updateStatus = (id, status) => {
-                db.ref(`submissions/${id}`).update({status});
-                showToastMsg(`تم التحديث: ${status}`);
-            };
+    if(!email || !password){
+        errBox.textContent = 'يرجى إدخال البريد الإلكتروني وكلمة المرور.';
+        errBox.classList.remove('hidden-field');
+        return;
+    }
 
-            const updateQuickNote = (id, note) => {
-                db.ref(`submissions/${id}`).update({ adminNotes: note });
-            };
+    const btn = document.getElementById('loginBtn');
+    btn.disabled = true; btn.textContent = 'جارٍ التحقق...';
 
-            const handleDelete = (id) => {
-                if(confirm('حذف نهائي؟')) {
-                    db.ref(`submissions/${id}`).remove();
-                    setSelectedId(null);
-                    showToastMsg('تم الحذف', 'error');
-                }
-            };
+    fbAuth.signInWithEmailAndPassword(email, password)
+        .catch(err=>{
+            errBox.textContent = 'تعذر تسجيل الدخول: بيانات الاعتماد غير صحيحة.';
+            errBox.classList.remove('hidden-field');
+        })
+        .finally(()=>{
+            btn.disabled = false; btn.textContent = 'تسجيل الدخول';
+        });
+}
 
-            const handleStartEdit = () => {
-                setEditBuffer({...selected});
-                setIsEditing(true);
-            };
+function doLogout(){
+    fbAuth.signOut();
+}
 
-            const handleEditChange = (name, value) => {
-                setEditBuffer(prev => ({...prev, [name]: value}));
-            };
+fbAuth.onAuthStateChanged(user=>{
+    if(user){
+        document.getElementById('loginScreen').classList.add('hidden-field');
+        document.getElementById('dashScreen').classList.remove('hidden-field');
+        document.getElementById('loggedInAs').textContent = user.email;
+        loadRegistrations();
+    } else {
+        document.getElementById('dashScreen').classList.add('hidden-field');
+        document.getElementById('loginScreen').classList.remove('hidden-field');
+    }
+});
 
-            const handleSaveEdit = async () => {
-                try {
-                    await db.ref(`submissions/${selectedId}`).update(editBuffer);
-                    setIsEditing(false);
-                    showToastMsg('تم حفظ التعديلات بنجاح');
-                } catch (e) {
-                    showToastMsg('فشل الحفظ', 'error');
-                }
-            };
-
-            const selected = submissions.find(s => s.id === selectedId);
-            const displayData = isEditing ? editBuffer : selected;
-
-            // حساب الأعداد لكل فلتر
-            const getCount = (status) => {
-                if (status === 'الكل') return submissions.length;
-                return submissions.filter(s => (s.status || 'في انتظار ملف') === status).length;
-            };
-
-            const filteredList = submissions.filter(s => {
-                const fullName = (s.firstNameAr || '') + ' ' + (s.lastNameAr || '');
-                const matchesSearch = fullName.includes(search) || (s.nin || '').includes(search);
-                const currentStatus = s.status || 'في انتظار ملف';
-                const matchesFilter = filterStatus === 'الكل' || currentStatus === filterStatus;
-                return matchesSearch && matchesFilter;
+/* ---------------- Data loading ---------------- */
+function loadRegistrations(){
+    fbDb.ref('registrations').once('value')
+        .then(snap=>{
+            allRegistrations = [];
+            snap.forEach(child=>{
+                allRegistrations.push({ key: child.key, ...child.val() });
             });
+            // most recent first
+            allRegistrations.sort((a,b)=> (b.submittedAt||'').localeCompare(a.submittedAt||''));
+            populateFilters();
+            renderStats();
+            renderTable();
+        })
+        .catch(err=>{
+            console.error('Firebase read error:', err);
+            document.getElementById('regTableBody').innerHTML = '';
+            document.getElementById('emptyState').textContent = 'تعذر تحميل البيانات من قاعدة البيانات.';
+            document.getElementById('emptyState').classList.remove('hidden-field');
+        });
+}
 
-            return (
-                <div className="flex h-screen font-sans overflow-hidden text-right relative">
-                    
-                    {!isSidebarOpen && (
-                        <button 
-                            onClick={() => setIsSidebarOpen(true)}
-                            className="fixed right-0 top-1/2 -translate-y-1/2 bg-dark text-white p-2 rounded-l-xl shadow-2xl z-50 hover:bg-brand transition-colors"
-                        >
-                            <Icons.ChevronLeft />
-                        </button>
-                    )}
+function populateFilters(){
+    const ranks = [...new Set(allRegistrations.map(r=>r.rankSelect).filter(Boolean))].sort();
+    const wilayas = [...new Set(allRegistrations.map(r=>r.residenceWilaya).filter(Boolean))].sort();
 
-                    <div className={`sidebar-transition h-full bg-white border-l border-gray-200 flex flex-col shadow-xl z-20 ${isSidebarOpen ? 'w-1/3 min-w-[350px] max-w-md' : 'w-0 overflow-hidden'}`}>
-                        <div className="p-4 bg-dark text-white min-w-[350px]">
-                            <div className="flex justify-between items-center mb-4">
-                                <div className="flex items-center gap-3">
-                                    <button onClick={() => setIsSidebarOpen(false)} className="hover:text-brand"><Icons.ChevronRight /></button>
-                                    <h1 className="font-black text-lg">المترشحين ({submissions.length})</h1>
-                                </div>
-                                <button onClick={() => auth.signOut()}><Icons.LogOut/></button>
-                            </div>
-                            <input type="text" placeholder="بحث بالإسم أو NIN..." value={search} onChange={e=>setSearch(e.target.value)} className="w-full p-2.5 rounded-lg text-slate-900 font-bold outline-none text-sm mb-3 text-right" />
-                            <div className="flex flex-wrap gap-1.5 overflow-x-auto pb-1 justify-end">
-                                {statusesList.map(st => (
-                                    <button key={st} onClick={() => setFilterStatus(st)} className={`filter-btn ${filterStatus === st ? 'active' : ''}`}>
-                                        {st} ({getCount(st)})
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-                        <div className="flex-1 overflow-y-auto bg-slate-50 p-2 space-y-2 min-w-[350px]">
-                            {filteredList.map(s => (
-                                <div key={s.id} onClick={() => { setSelectedId(s.id); setIsEditing(false); }} className={`sidebar-item p-4 rounded-xl cursor-pointer border transition-all ${selectedId === s.id ? 'active bg-white shadow-md' : 'bg-white'}`}>
-                                    <div className="flex justify-between items-start">
-                                        <h3 className="font-black text-slate-800 text-sm">{s.firstNameAr} {s.lastNameAr}</h3>
-                                        <span className={`text-[9px] px-2 py-0.5 rounded-full text-white font-bold ${
-                                            s.status === 'مقبول في منصة' ? 'bg-emerald-500' :
-                                            s.status === 'غير مقبول في منصة' ? 'bg-rose-600' :
-                                            s.status === 'جاري معالجة في منصة' ? 'bg-sky-500' :
-                                            s.status === 'ملف ناقص' ? 'bg-red-600' : 'bg-orange-500'
-                                        }`}>{s.status || 'في انتظار ملف'}</span>
-                                    </div>
-                                    <p className="text-xs font-bold text-slate-500 mt-1">{s.rank}</p>
-                                    
-                                    {/* خانة الملاحظات السريعة */}
-                                    <textarea 
-                                        className="quick-note" 
-                                        placeholder="أضف ملاحظة سريعة..."
-                                        value={s.adminNotes || ''}
-                                        onClick={(e) => e.stopPropagation()}
-                                        onChange={(e) => updateQuickNote(s.id, e.target.value)}
-                                    ></textarea>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
+    const rankSel = document.getElementById('filterRank');
+    rankSel.innerHTML = '<option value="">كل الرتب</option>' + ranks.map(r=>`<option value="${r}">${r}</option>`).join('');
 
-                    <div className="flex-1 bg-slate-100/50 overflow-y-auto p-8 relative">
-                        {selected ? (
-                            <div className="max-w-6xl mx-auto pb-24 text-right">
-                                <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 mb-8 flex flex-col md:flex-row justify-between items-center gap-4">
-                                    <div className="flex flex-col gap-1 w-full md:w-auto">
-                                        <h2 className="text-2xl font-black text-dark">{selected.firstNameAr} {selected.lastNameAr}</h2>
-                                        <div className="flex gap-4 mt-2 justify-end">
-                                            <div onClick={() => copyToClipboard(selected.email)} className="bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200 cursor-pointer hover:bg-brand hover:text-white transition-colors flex items-center gap-2">
-                                                <span className="text-[10px] font-bold">الإيميل:</span>
-                                                <span className="text-xs font-black">{selected.email}</span>
-                                                <Icons.Copy />
-                                            </div>
-                                            <div onClick={() => copyToClipboard(selected.phone)} className="bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200 cursor-pointer hover:bg-brand hover:text-white transition-colors flex items-center gap-2">
-                                                <span className="text-[10px] font-bold">الباسورد:</span>
-                                                <span className="text-xs font-black">{selected.phone}</span>
-                                                <Icons.Copy />
-                                            </div>
-                                        </div>
-                                    </div>
+    const wilayaSel = document.getElementById('filterWilaya');
+    wilayaSel.innerHTML = '<option value="">كل الولايات</option>' + wilayas.map(w=>`<option value="${w}">${w}</option>`).join('');
+}
 
-                                    <div className="flex flex-wrap gap-2 justify-center md:justify-end">
-                                        {isEditing ? (
-                                            <button onClick={handleSaveEdit} className="bg-brand text-white px-4 py-2 rounded-lg font-bold flex items-center gap-2 text-xs"><Icons.Save /> حفظ</button>
-                                        ) : (
-                                            <button onClick={handleStartEdit} className="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold flex items-center gap-2 text-xs"><Icons.Edit /> تعديل</button>
-                                        )}
-                                        <button onClick={() => updateStatus(selected.id, 'في انتظار ملف')} className="bg-orange-100 text-orange-700 border border-orange-200 px-3 py-2 rounded-lg font-bold text-xs">في انتظار ملف</button>
-                                        <button onClick={() => updateStatus(selected.id, 'ملف ناقص')} className="bg-red-100 text-red-700 border border-red-200 px-3 py-2 rounded-lg font-bold text-xs">ملف ناقص</button>
-                                        <button onClick={() => updateStatus(selected.id, 'جاري معالجة في منصة')} className="bg-sky-100 text-sky-700 border border-sky-300 px-3 py-2 rounded-lg font-bold text-xs">جاري معالجة في منصة</button>
-                                        <button onClick={() => updateStatus(selected.id, 'مقبول في منصة')} className="bg-emerald-100 text-emerald-700 border border-emerald-300 px-3 py-2 rounded-lg font-bold text-xs">مقبول في منصة</button>
-                                        <button onClick={() => updateStatus(selected.id, 'غير مقبول في منصة')} className="bg-rose-100 text-rose-700 border border-rose-300 px-3 py-2 rounded-lg font-bold text-xs">غير مقبول في منصة</button>
-                                        <button onClick={() => handleDelete(selected.id)} className="text-red-500 p-2 hover:bg-red-50 rounded-full transition-colors"><Icons.Trash /></button>
-                                    </div>
-                                </div>
+function renderStats(){
+    const ranks = new Set(allRegistrations.map(r=>r.rankSelect).filter(Boolean));
+    const wilayas = new Set(allRegistrations.map(r=>r.residenceWilaya).filter(Boolean));
+    const todayStr = new Date().toISOString().slice(0,10);
+    const todayCount = allRegistrations.filter(r=> (r.submittedAt||'').slice(0,10) === todayStr).length;
 
-                                <Section title="1. معلومات التعيين" icon={<Icons.Briefcase />}>
-                                    <DataField label="المديرية" name="wilaya" value={displayData.wilaya} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                    <DataField label="الرتبة المطلوبة" name="rank" value={displayData.rank} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                    <DataField label="مادة التدريس" name="teachingSubject" value={displayData.teachingSubject} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                </Section>
+    document.getElementById('statTotal').textContent = allRegistrations.length;
+    document.getElementById('statRanks').textContent = ranks.size;
+    document.getElementById('statWilayas').textContent = wilayas.size;
+    document.getElementById('statToday').textContent = todayCount;
+}
 
-                                <Section title="2. الهوية والمعلومات الشخصية" icon={<Icons.User />} gridCols="grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
-                                    <DataField label="NIN" name="nin" value={displayData.nin} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                    <DataField label="اللقب" name="lastNameAr" value={displayData.lastNameAr} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                    <DataField label="الاسم" name="firstNameAr" value={displayData.firstNameAr} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                    <DataField label="اللقب باللاتنية" name="lastNameLat" value={displayData.lastNameLat} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                    <DataField label="الاسم باللاتنية" name="firstNameLat" value={displayData.firstNameLat} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                    <DataField label="اسم الأب" name="fatherName" value={displayData.fatherName} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                    <DataField label="اسم الأم" name="motherFirstName" value={displayData.motherFirstName} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                    <DataField label="لقب الأم" name="motherLastName" value={displayData.motherLastName} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                    <DataField label="الجنس" name="gender" value={displayData.gender} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                    <DataField label="تاريخ الازدياد" name="birthDate" value={displayData.birthDate} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} type="date" />
-                                    <DataField label="ولاية الازدياد" name="birthWilaya" value={displayData.birthWilaya} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                    <DataField label="بلدية الازدياد" name="birthCommune" value={displayData.birthCommune} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                    <DataField label="رقم شهادة الميلاد" name="birthCertNum" value={displayData.birthCertNum} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                    <DataField label="الحالة العائلية" name="maritalStatus" value={displayData.maritalStatus} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                    <DataField label="عدد الأولاد" name="childrenCount" value={displayData.childrenCount} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                </Section>
+function renderTable(){
+    const q = document.getElementById('searchInput').value.trim().toLowerCase();
+    const rankFilter = document.getElementById('filterRank').value;
+    const wilayaFilter = document.getElementById('filterWilaya').value;
 
-                                {(selected.maritalStatus && selected.maritalStatus !== 'أعزب(ة)') && (
-                                    <Section title="معلومات الزوج / الزوجة" icon={<Icons.User />} gridCols="grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
-                                        <DataField label="اللقب (عربي)" name="Spouse_Surname_Arabic" value={displayData.Spouse_Surname_Arabic} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                        <DataField label="الاسم (عربي)" name="Spouse_Name_Arabic" value={displayData.Spouse_Name_Arabic} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                        <DataField label="اللقب (لاتيني)" name="Spouse_Surname_Latin" value={displayData.Spouse_Surname_Latin} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                        <DataField label="الاسم (لاتيني)" name="Spouse_Name_Latin" value={displayData.Spouse_Name_Latin} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                        <DataField label="تاريخ الميلاد" name="Spouse_Date_Of_Birth" value={displayData.Spouse_Date_Of_Birth} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} type="date" />
-                                        <DataField label="بلدية الميلاد" name="Spouse_Birth_Baladiya" value={displayData.Spouse_Birth_Baladiya} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                        <DataField label="ولاية الميلاد" name="Spouse_Birth_Wilaya" value={displayData.Spouse_Birth_Wilaya} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                        <DataField label="NIN الزوج" name="Spouse_NIN" value={displayData.Spouse_NIN} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                        <DataField label="اسم الأب (ع)" name="Spouse_Father_Ar" value={displayData.Spouse_Father_Ar} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                        <DataField label="اسم الأم (ع)" name="Spouse_Mother_Name_Ar" value={displayData.Spouse_Mother_Name_Ar} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                        <DataField label="لقب الأم (ع)" name="Spouse_Mother_Surname_Ar" value={displayData.Spouse_Mother_Surname_Ar} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                        <DataField label="المهنة" name="Spouse_Professional_Status" value={displayData.Spouse_Professional_Status} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                        <DataField label="الدخل الشهري" name="Spouse_Monthly_Income" value={displayData.Spouse_Monthly_Income} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                        <DataField label="رقم الضمان" name="Spouse_Social_Security_Number" value={displayData.Spouse_Social_Security_Number} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                    </Section>
-                                )}
+    const filtered = allRegistrations.filter(r=>{
+        if(rankFilter && r.rankSelect !== rankFilter) return false;
+        if(wilayaFilter && r.residenceWilaya !== wilayaFilter) return false;
+        if(q){
+            const hay = [r.autoField2, r.autoField3, r.autoField4, r.autoField5, r.autoField16, r.confirmEmail]
+                .filter(Boolean).join(' ').toLowerCase();
+            if(!hay.includes(q)) return false;
+        }
+        return true;
+    });
 
-                                <Section title="3. مكان الإقامة والخدمة الوطنية" icon={<Icons.Home />}>
-                                    <DataField label="بلدية الإقامة" name="residenceCommune" value={displayData.residenceCommune} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                    <DataField label="العنوان الشخصي" name="personalAddress" value={displayData.personalAddress} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                    <DataField label="الوضعية اتجاه الخدمة الوطنية" name="nationalServiceStatus" value={displayData.nationalServiceStatus} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                    <DataField label="تاريخ بداية الخدمة" name="nsStartDate" value={displayData.nsStartDate} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} type="date" />
-                                    <DataField label="تاريخ نهاية الخدمة" name="nsEndDate" value={displayData.nsEndDate} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} type="date" />
-                                    <DataField label="مرجع الوثيقة" name="nsRefNum" value={displayData.nsRefNum} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                    <DataField label="تاريخ إصدار الوثيقة" name="nsIssueDate" value={displayData.nsIssueDate} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} type="date" />
-                                    <DataField label="تاريخ انتهاء الوثيقة" name="nsExpiryDate" value={displayData.nsExpiryDate} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} type="date" />
-                                    <DataField label="ولاية الإقامة" name="residenceWilaya" value={displayData.residenceWilaya} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                    <DataField label="رقم الهاتف" name="phone" value={displayData.phone} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                </Section>
+    const body = document.getElementById('regTableBody');
+    const empty = document.getElementById('emptyState');
 
-                                <Section title="4. الشهادات والمؤهلات والمسار الدراسي" icon={<Icons.GraduationCap />}>
-                                    <DataField label="الشهادة" name="degree" value={displayData.degree} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                    <DataField label="التخصص" name="degreeSpecialty" value={displayData.degreeSpecialty} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                    <DataField label="رقم الشهادة" name="degreeCertNum" value={displayData.degreeCertNum} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                    <DataField label="تقدير الشهادة" name="degreeAppreciation" value={displayData.degreeAppreciation} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                    <DataField label="تاريخ التخرج" name="gradDate" value={displayData.gradDate} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} type="date" />
-                                    <DataField label="المؤسسة المسلمة" name="issuingInstitution" value={displayData.issuingInstitution} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                    <DataField label="خريج مدرسة عليا؟" name="isHigherSchoolGraduate" value={displayData.isHigherSchoolGraduate} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                    <DataField label="الأول في الدفعة؟" name="isTopOfClass" value={displayData.isTopOfClass} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                    <DataField label="رقم وثيقة التفوق" name="topOfClassDocNum" value={displayData.topOfClassDocNum} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                    <DataField label="تاريخ وثيقة التفوق" name="topOfClassDocDate" value={displayData.topOfClassDocDate} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} type="date" />
-                                    <DataField label="جهة إصدار الوثيقة" name="topOfClassDocIssuer" value={displayData.topOfClassDocIssuer} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                    <DataField label="المعدل العام" name="overallGpa" value={displayData.overallGpa} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                    <DataField label="علامة المذكرة" name="thesisGrade" value={displayData.thesisGrade} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                </Section>
+    if(filtered.length === 0){
+        body.innerHTML = '';
+        empty.textContent = 'لا توجد ترشيحات مطابقة';
+        empty.classList.remove('hidden-field');
+        return;
+    }
+    empty.classList.add('hidden-field');
 
-                                {selected.academicYears && (
-                                    <div className="mb-8 p-5 bg-white border border-gray-200 rounded-2xl shadow-sm text-right">
-                                        <h4 className="font-black text-brand mb-4 text-sm flex items-center gap-2 justify-end"><Icons.BookOpen /> المسار الدراسي السنوي</h4>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                                            {Object.entries(selected.academicYears).map(([k, v]) => (
-                                                <div key={k} className="flex justify-between items-center bg-slate-50 p-3 rounded-xl text-sm border border-slate-100 flex-row-reverse">
-                                                    <span className="font-black text-slate-700">سنة {k.replace('Year', '')}</span>
-                                                    <div className="flex gap-3 text-xs font-bold text-slate-500">
-                                                        <span>س1: {v.s1}</span><span>س2: {v.s2}</span>
-                                                        <span className="text-white bg-brand px-2 py-0.5 rounded-md">المعدل: {v.ann}</span>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
+    body.innerHTML = filtered.map(r=>{
+        const fullNameAr = [r.autoField2, r.autoField3].filter(Boolean).join(' ');
+        const submitted = r.submittedAt ? new Date(r.submittedAt).toLocaleString('ar-DZ') : '—';
+        const meta = statusMeta(r.status);
+        const reasonAttr = (r.status === 'problem' && r.statusReason) ? ` title="${r.statusReason.replace(/"/g,'&quot;')}"` : '';
+        return `<tr>
+            <td><span class="status-badge ${meta.cls}"${reasonAttr} onclick="event.stopPropagation(); openStatusModal('${r.key}')">${meta.icon} ${meta.label}</span></td>
+            <td class="row-clickable" onclick="openDetail('${r.key}')">${fullNameAr || '—'}</td>
+            <td class="row-clickable" onclick="openDetail('${r.key}')">${r.rankSelect || '—'}</td>
+            <td class="row-clickable" onclick="openDetail('${r.key}')">${r.directorateWilaya || '—'}</td>
+            <td class="row-clickable" onclick="openDetail('${r.key}')">${r.residenceWilaya || '—'}</td>
+            <td class="row-clickable" onclick="openDetail('${r.key}')">${r.autoField16 || '—'}</td>
+            <td class="row-clickable" onclick="openDetail('${r.key}')">${r.confirmEmail || '—'}</td>
+            <td class="row-clickable" onclick="openDetail('${r.key}')">${submitted}</td>
+        </tr>`;
+    }).join('');
+}
 
-                                <Section title="5. المنشورات والأعمال المهنية" icon={<Icons.BookOpen />}>
-                                    <DataField label="طبيعة العمل" name="pubNature" value={displayData.pubNature} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                    <DataField label="تاريخ النشر" name="pubDate" value={displayData.pubDate} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} type="date" />
-                                    <DataField label="المجلة / الملتقى" name="pubJournal" value={displayData.pubJournal} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                    <DataField label="العدد / المجلد" name="pubIssue" value={displayData.pubIssue} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                    <DataField label="رابط النشر" name="pubLink" value={displayData.pubLink} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                </Section>
+/* ---------------- Detail modal ---------------- */
+function openDetail(key){
+    const reg = allRegistrations.find(r=>r.key === key);
+    if(!reg) return;
 
-                                <Section title="6. الخبرة المهنية المكتسبة" icon={<Icons.Briefcase />}>
-                                    <DataField label="فئة الخبرة" name="expType" value={displayData.expType} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                    <DataField label="المنصب المشغول" name="expJob" value={displayData.expJob} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                    <DataField label="المؤسسة" name="expInstitution" value={displayData.expInstitution} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                    <DataField label="نوع الشهادة" name="expCertType" value={displayData.expCertType} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                    <DataField label="رقم الشهادة" name="expCertNum" value={displayData.expCertNum} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                    <DataField label="تاريخ الشهادة" name="expCertDate" value={displayData.expCertDate} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} type="date" />
-                                    <DataField label="تاريخ البداية" name="expStartDate" value={displayData.expStartDate} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} type="date" />
-                                    <DataField label="تاريخ النهاية" name="expEndDate" value={displayData.expEndDate} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} type="date" />
-                                    <DataField label="سبب التوقف" name="expTerminationReason" value={displayData.expTerminationReason} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                </Section>
+    const meta = statusMeta(reg.status);
+    let html = `<div class="detail-item" style="grid-column:1 / -1;"><div class="k">حالة الملف</div><div class="v"><span class="status-badge ${meta.cls}">${meta.icon} ${meta.label}</span></div></div>`;
+    if(reg.status === 'problem' && reg.statusReason){
+        html += `<div class="detail-item" style="grid-column:1 / -1;"><div class="k">سبب المشكل</div><div class="v">${reg.statusReason}</div></div>`;
+    }
+    html += FIELD_ORDER.map(fieldId=>{
+        let val = reg[fieldId];
+        if(fieldId === 'submittedAt' && val) val = new Date(val).toLocaleString('ar-DZ');
+        if(val === undefined || val === null || val === '') val = '—';
+        if(val === true) val = 'نعم';
+        if(val === false) val = 'لا';
+        return `<div class="detail-item"><div class="k">${FIELD_LABELS[fieldId]}</div><div class="v">${val}</div></div>`;
+    }).join('');
 
-                                <Section title="7. الوضعية المهنية الحالية" icon={<Icons.Briefcase />}>
-                                    <DataField label="الرتبة الحالية" name="currentJobRank" value={displayData.currentJobRank} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                    <DataField label="تاريخ أول تعيين" name="firstAppointDate" value={displayData.firstAppointDate} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} type="date" />
-                                    <DataField label="تاريخ الرتبة الحالية" name="currentRankDate" value={displayData.currentRankDate} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} type="date" />
-                                    <DataField label="الصنف / الدرجة" name="category" value={displayData.category} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                    <DataField label="المستوى / الدرجة" name="gradeLevel" value={displayData.gradeLevel} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                    <DataField label="رقم المرجع" name="jobRefNum" value={displayData.jobRefNum} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                    <DataField label="تاريخ المرجع" name="jobRefDate" value={displayData.jobRefDate} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} type="date" />
-                                    <DataField label="صفة السلطة" name="signingAuthority" value={displayData.signingAuthority} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                    <DataField label="هاتف الإدارة" name="adminPhone" value={displayData.adminPhone} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                    <DataField label="إيميل الإدارة" name="adminEmail" value={displayData.adminEmail} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                    <DataField label="اسم الإدارة" name="adminName" value={displayData.adminName} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                    <DataField label="عنوان الإدارة" name="adminAddress" value={displayData.adminAddress} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                </Section>
+    document.getElementById('detailGrid').innerHTML = html;
+    document.getElementById('detailOverlay').classList.add('active');
+}
 
-                                <Section title="8. بيانات الاتصال النهائية" icon={<Icons.Mail />}>
-                                    <DataField label="البريد الإلكتروني الشخصي" name="email" value={displayData.email} isEditing={isEditing} onEditChange={handleEditChange} onCopy={copyToClipboard} />
-                                </Section>
+function closeDetail(){
+    document.getElementById('detailOverlay').classList.remove('active');
+}
 
-                                <Section title="9. ملاحظات الإدارة وبيانات الدخول" icon={<Icons.Edit />}>
-                                    <DataField label="اسم المستخدم (للمنصة)" value={selected.email ? selected.email.split('@')[0] : '---'} onCopy={copyToClipboard} />
-                                    <DataField label="كلمة المرور (للمنصة)" value={selected.phone || '---'} onCopy={copyToClipboard} />
-                                    <div className="col-span-full">
-                                        <div className="bg-white border border-gray-200 p-3 rounded-lg flex flex-col h-full text-right">
-                                            <span className="text-xs text-brand font-black mb-1 italic">ملاحظات الإدارة:</span>
-                                            {isEditing ? (
-                                                <textarea 
-                                                    className="w-full bg-slate-50 border border-brand/30 rounded p-2 text-sm font-bold h-24 outline-none focus:border-brand text-right"
-                                                    value={displayData.adminNotes || ''}
-                                                    placeholder="اكتب ملاحظاتك الإدارية هنا..."
-                                                    onChange={(e) => handleEditChange('adminNotes', e.target.value)}
-                                                ></textarea>
-                                            ) : (
-                                                <p className="text-xs font-bold text-slate-600 bg-slate-50 p-2 rounded min-h-[50px] whitespace-pre-wrap text-right">
-                                                    {selected.adminNotes || 'لا توجد ملاحظات'}
-                                                </p>
-                                            )}
-                                        </div>
-                                    </div>
-                                </Section>
-                            </div>
-                        ) : (
-                            <div className="flex flex-col items-center justify-center h-full text-slate-400 select-none opacity-50">
-                                <Icons.Briefcase />
-                                <p className="font-bold text-xl mt-4">اختر مترشحاً من القائمة الجانبية</p>
-                            </div>
-                        )}
-                    </div>
-                    <Toast msg={toast.msg} show={toast.show} type={toast.type} />
-                </div>
-            );
-        };
+/* ---------------- Status modal ---------------- */
+function openStatusModal(key){
+    const reg = allRegistrations.find(r=>r.key === key);
+    if(!reg) return;
+    statusModalKey = key;
 
-        const App = () => {
-            const [user, setUser] = useState(null);
-            const [loading, setLoading] = useState(true);
-            useEffect(() => {
-                const unsub = auth.onAuthStateChanged(u => { setUser(u); setLoading(false); });
-                return () => unsub();
-            }, []);
-            if (loading) return <div className="h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-brand"></div></div>;
-            return user ? <Dashboard /> : <LoginScreen />;
-        };
+    const current = reg.status || 'pending';
+    document.querySelectorAll('input[name="statusChoice"]').forEach(r=>{ r.checked = (r.value === current); });
+    document.getElementById('statusReasonInput').value = reg.statusReason || '';
+    refreshStatusOptionStyles();
+    onStatusChoiceChange();
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
-    </script>
+    document.getElementById('statusOverlay').classList.add('active');
+}
+
+function refreshStatusOptionStyles(){
+    document.querySelectorAll('.status-option').forEach(opt=>{
+        const input = opt.querySelector('input');
+        opt.classList.toggle('selected', input.checked);
+    });
+}
+
+function onStatusChoiceChange(){
+    refreshStatusOptionStyles();
+    const choice = document.querySelector('input[name="statusChoice"]:checked');
+    const wrap = document.getElementById('statusReasonWrap');
+    wrap.classList.toggle('hidden-field', !choice || choice.value !== 'problem');
+}
+
+function closeStatusModal(){
+    document.getElementById('statusOverlay').classList.remove('active');
+    statusModalKey = null;
+}
+
+function saveStatus(){
+    if(!statusModalKey) return;
+    const choice = document.querySelector('input[name="statusChoice"]:checked');
+    const status = choice ? choice.value : 'pending';
+    const statusReason = status === 'problem' ? document.getElementById('statusReasonInput').value.trim() : '';
+
+    fbDb.ref('registrations/' + statusModalKey).update({ status, statusReason })
+        .then(()=>{
+            const reg = allRegistrations.find(r=>r.key === statusModalKey);
+            if(reg){ reg.status = status; reg.statusReason = statusReason; }
+            closeStatusModal();
+            renderTable();
+        })
+        .catch(err=>{
+            console.error('Status update error:', err);
+            alert('تعذر حفظ الحالة، حاول مرة أخرى.');
+        });
+}
+</script>
+
 </body>
 </html>
