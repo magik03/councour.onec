@@ -3,675 +3,152 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>استمارة التسجيل - معلومات المترشح</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
-<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+<title>عارض بيانات مسابقة التوظيف - councour</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-    body { font-family: 'Tajawal', sans-serif; background-color: #f4f7f9; padding: 20px 0 60px; }
-    .form-container { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 0 15px rgba(0,0,0,0.08); max-width: 1150px; margin: auto; }
-    .section-title { background: #f8f9fa; padding: 10px 14px; border-right: 5px solid #28a745; margin-top: 25px; margin-bottom: 20px; font-weight: 700; font-size: 16px; }
-    .required::after { content: " *"; color: #dc3545; }
-    .hidden-field { display: none !important; }
-    label { font-size: 14px; margin-bottom: 5px; color: #333; display:block; }
-    .form-control, .form-select { border-radius: 5px; }
-    .form-control:disabled, .form-select:disabled { background-color: #eceff1; }
-    .upload-box { border: 1px dashed #ced4da; border-radius: 6px; padding: 10px; background:#fafafa; }
-    .upload-note { font-size: 12px; background:#eaf6ff; color:#0d6efd; padding:4px 10px; border-radius: 15px; display:inline-block; margin-bottom:6px; }
-    .btn-upload { background:#6c757d; color:#fff; border:none; }
+    :root{
+        --green:#28a745;
+        --green-dark:#1e7e34;
+        --bg:#f4f7f9;
+        --card:#ffffff;
+        --border:#e2e6ea;
+        --text:#222;
+        --muted:#6b7280;
+        --danger:#dc3545;
+        --warn:#e0a800;
+    }
+    *{box-sizing:border-box;}
+    body{
+        font-family:'Tajawal', sans-serif;
+        background:var(--bg);
+        margin:0;
+        padding:20px;
+        color:var(--text);
+    }
+    .wrap{max-width:1300px; margin:0 auto;}
+    header{
+        display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;
+        margin-bottom:20px;
+    }
+    header h1{font-size:20px; font-weight:900; margin:0;}
+    header .sub{font-size:12px; color:var(--muted); margin-top:2px;}
+    .status{
+        display:flex; align-items:center; gap:8px; font-size:13px; font-weight:500;
+        padding:6px 14px; border-radius:20px; background:var(--card); border:1px solid var(--border);
+    }
+    .dot{width:9px; height:9px; border-radius:50%; background:var(--muted);}
+    .dot.ok{background:var(--green);}
+    .dot.err{background:var(--danger);}
+    .dot.loading{background:var(--warn); animation:pulse 1s infinite;}
+    @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
 
-    /* Stepper */
-    .stepper { display:flex; justify-content:space-between; align-items:center; margin-bottom:35px; position:relative; }
-    .stepper::before { content:""; position:absolute; top:19px; right:5%; left:5%; height:2px; background:#28a745; z-index:0; }
-    .step { position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; flex:1; }
-    .step-circle { width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; background:#fff; border:2px solid #28a745; color:#28a745; }
-    .step.completed .step-circle { background:#28a745; color:#fff; }
-    .step.active .step-circle { border-color:#28a745; color:#28a745; box-shadow:0 0 0 4px rgba(40,167,69,0.15); }
-    .step.upcoming .step-circle { border-color:#ced4da; color:#ced4da; }
-    .step.upcoming ~ .step::before, .step.upcoming .step-circle { background:#fff; }
-    .step-label { font-size: 13px; margin-top:6px; font-weight:600; color:#555; text-align:center; }
-    .step.upcoming .step-label { color:#adb5bd; }
+    .toolbar{
+        display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:18px;
+        background:var(--card); border:1px solid var(--border); border-radius:10px; padding:12px 14px;
+    }
+    .toolbar input, .toolbar select{
+        font-family:inherit; padding:8px 12px; border-radius:6px; border:1px solid var(--border);
+        font-size:13px; background:#fafbfc;
+    }
+    .toolbar input[type=text]{flex:1; min-width:180px;}
+    .btn{
+        font-family:inherit; cursor:pointer; border:none; border-radius:6px; padding:8px 16px;
+        font-size:13px; font-weight:700; background:var(--green); color:#fff; transition:.15s;
+    }
+    .btn:hover{background:var(--green-dark);}
+    .btn.secondary{background:#fff; color:var(--text); border:1px solid var(--border);}
+    .btn.secondary:hover{background:#f0f2f4;}
+    .btn.small{padding:5px 10px; font-size:12px;}
 
-    .step-pane { display:none; }
-    .step-pane.active { display:block; }
-    .nav-buttons { display:flex; justify-content:space-between; margin-top:35px; }
-    .field-note { font-size:12px; color:#888; margin-top:3px; }
+    .tabs{display:flex; gap:6px; margin-bottom:14px; flex-wrap:wrap;}
+    .tab{
+        padding:8px 16px; border-radius:8px 8px 0 0; font-size:13px; font-weight:700; cursor:pointer;
+        background:#e9edf0; color:var(--muted); border:1px solid var(--border); border-bottom:none;
+        position:relative; top:1px;
+    }
+    .tab.active{background:var(--card); color:var(--text); border-bottom:1px solid var(--card);}
+    .tab .count{
+        display:inline-block; margin-inline-start:6px; background:var(--green); color:#fff;
+        border-radius:10px; padding:0 7px; font-size:11px;
+    }
+    .tab.legacy .count{background:var(--warn);}
 
-    /* Success modal */
-    .modal-overlay {
-        display:none; position:fixed; inset:0; background:rgba(20,30,25,0.55);
-        z-index:2000; align-items:center; justify-content:center; padding:20px;
-        backdrop-filter: blur(2px);
-    }
-    .modal-overlay.active { display:flex; }
-    .modal-box {
-        background:#fff; border-radius:16px; max-width:480px; width:100%;
-        padding:36px 32px 28px; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.25);
-        animation: modalPop .25s ease-out;
-    }
-    @keyframes modalPop { from{ transform:scale(.92); opacity:0; } to{ transform:scale(1); opacity:1; } }
-    .modal-icon {
-        width:64px; height:64px; border-radius:50%; background:#28a745; color:#fff;
-        font-size:32px; display:flex; align-items:center; justify-content:center; margin:0 auto 16px;
-    }
-    .modal-title { font-weight:700; margin-bottom:8px; color:#222; }
-    .modal-subtitle { font-size:14px; color:#666; margin-bottom:20px; }
-    .modal-docs { background:#f8f9fa; border-radius:10px; padding:16px 18px; text-align:right; margin-bottom:24px; }
-    .modal-docs-title { font-weight:700; font-size:14px; margin-bottom:10px; color:#333; }
-    .modal-docs ul { margin:0; padding-right:20px; font-size:14px; color:#444; }
-    .modal-docs li { margin-bottom:6px; }
-    #submitWarning ul { margin:6px 0 0; padding-right:20px; text-align:right; }
+    .panel{background:var(--card); border:1px solid var(--border); border-radius:0 10px 10px 10px; padding:16px; margin-bottom:20px;}
+    .panel.hidden{display:none;}
 
-    /* Home screen */
-    .home-cards { margin-top: 10px; }
-    .home-card {
-        background:#fff; border:1px solid #e2e6ea; border-radius:12px; padding:32px 20px;
-        text-align:center; cursor:pointer; height:100%;
-        transition: box-shadow .2s ease, transform .2s ease, border-color .2s ease;
+    .stats-row{display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px;}
+    .stat-box{
+        background:#f8f9fa; border:1px solid var(--border); border-radius:8px; padding:10px 16px; min-width:130px;
     }
-    .home-card:hover { box-shadow:0 8px 24px rgba(40,167,69,0.15); transform:translateY(-3px); border-color:#28a745; }
-    .home-card-icon {
-        width:56px; height:56px; border-radius:50%; background:#e9f7ef; color:#28a745;
-        font-size:26px; display:flex; align-items:center; justify-content:center; margin:0 auto 14px;
+    .stat-box .num{font-size:20px; font-weight:900; color:var(--green-dark);}
+    .stat-box .label{font-size:11px; color:var(--muted);}
+
+    table{width:100%; border-collapse:collapse; font-size:13px;}
+    thead th{
+        background:#f8f9fa; text-align:right; padding:9px 10px; font-weight:700; border-bottom:2px solid var(--border);
+        white-space:nowrap; position:sticky; top:0;
     }
-    .home-card h5 { font-weight:700; margin-bottom:8px; color:#222; }
-    .home-card p { font-size:13px; color:#666; margin-bottom:0; }
+    tbody td{padding:9px 10px; border-bottom:1px solid #eef1f3; vertical-align:middle;}
+    tbody tr:hover{background:#f9fcfa;}
+    .table-scroll{overflow-x:auto; max-height:70vh; overflow-y:auto; border:1px solid var(--border); border-radius:8px;}
+
+    .badge{padding:3px 10px; border-radius:12px; font-size:11px; font-weight:700; white-space:nowrap;}
+    .badge.pending{background:#fff3cd; color:#856404;}
+    .badge.registered, .badge.مسجل{background:#d4edda; color:#155724;}
+    .badge.problem{background:#f8d7da; color:#721c24;}
+    .badge.unknown{background:#e2e3e5; color:#495057;}
+
+    .row-expand-btn{cursor:pointer; color:var(--green-dark); font-weight:700; font-size:12px; background:none; border:none; font-family:inherit;}
+    .row-delete-btn{
+        cursor:pointer; color:var(--danger); font-size:14px; background:none; border:1px solid #f1c2c8;
+        border-radius:6px; padding:2px 7px; margin-inline-start:6px; font-family:inherit; transition:.15s;
+    }
+    .row-delete-btn:hover{background:var(--danger); color:#fff; border-color:var(--danger);}
+    .row-delete-btn:disabled{opacity:.5; cursor:default;}
+    .detail-row td{background:#f8fbf9; padding:0;}
+    .detail-box{padding:14px 18px;}
+    .kv-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(230px,1fr)); gap:6px 20px;}
+    .kv-grid .kv{font-size:12.5px; padding:4px 0; border-bottom:1px dotted #e0e4e7;}
+    .kv-grid .kv b{color:var(--muted); font-weight:500;}
+    .kv-grid .kv span{font-weight:700; color:var(--text); word-break:break-word;}
+
+    .empty-state{text-align:center; padding:50px 20px; color:var(--muted);}
+    .empty-state .icon{font-size:34px; margin-bottom:8px;}
+
+    .json-tree{font-family:'JetBrains Mono', monospace; font-size:12.5px; direction:ltr; text-align:left;
+        background:#0f1720; color:#d7e2ea; border-radius:8px; padding:14px; overflow:auto; max-height:60vh; line-height:1.7;}
+    .json-key{color:#7ec8ff;}
+    .json-str{color:#9be89b;}
+    .json-num{color:#f0c674;}
+    .json-bool{color:#f78fb3;}
+    .json-null{color:#9aa5b1; font-style:italic;}
+
+    .legacy-note{
+        background:#fff8e1; border:1px solid #ffe08a; border-radius:8px; padding:10px 14px; font-size:12.5px;
+        color:#7a5c00; margin-bottom:14px;
+    }
+    footer{text-align:center; font-size:11px; color:var(--muted); margin-top:10px;}
 </style>
 </head>
 <body>
-
-<div class="form-container" id="homeScreen">
-    <h3 class="text-center mb-2">بوابة مسابقة التوظيف</h3>
-    <p class="text-center text-muted mb-4">اطّلع على دليل التخصصات المطلوبة قبل التسجيل، أو انتقل مباشرة إلى استمارة الترشح</p>
-    <div class="row g-4 justify-content-center home-cards">
-        <div class="col-md-5">
-            <div class="home-card" onclick="showGuide()">
-                <div class="home-card-icon">📖</div>
-                <h5>دليل التخصصات</h5>
-                <p>تعرف على تسمية الشهادة والميدان المطلوبين لكل رتبة</p>
-            </div>
+<div class="wrap">
+    <header>
+        <div>
+            <h1>عارض بيانات مسابقة التوظيف</h1>
+            <div class="sub">قراءة مباشرة من قاعدة البيانات — Firebase Realtime Database · councour-59e43</div>
         </div>
-        <div class="col-md-5">
-            <div class="home-card" onclick="showRegistration()">
-                <div class="home-card-icon">📝</div>
-                <h5>التسجيل في المسابقة</h5>
-                <p>املأ استمارة الترشح وأرسل معلوماتك</p>
-            </div>
-        </div>
-    </div>
-</div>
+        <div class="status" id="statusBox"><span class="dot loading" id="statusDot"></span><span id="statusText">جارِ الاتصال...</span></div>
+    </header>
 
-<div class="form-container hidden-field" id="guideScreen">
-    <button type="button" class="btn btn-outline-secondary btn-sm mb-3" onclick="showHome()">→ رجوع للرئيسية</button>
-    <h4 class="text-center mb-4">دليل التخصصات والشهادات المطلوبة</h4>
-    <div class="row g-3 justify-content-center mb-4">
-        <div class="col-md-8 mx-auto">
-            <label class="required">اختر الرتبة:</label>
-            <select class="form-select" id="guideRankSelect" onchange="renderGuideResult()">
-                <option value="">--يرجى الاختيار--</option>
-            </select>
-        </div>
-    </div>
-    <div id="guideResult" class="hidden-field mb-4">
-        <div class="section-title">تسمية الشهادة</div>
-        <p id="guideCertText" class="fs-5 fw-bold text-success mb-3"></p>
-        <div class="section-title">الميدان و/أو الشعبة و/أو الفرع</div>
-        <div id="guideFieldsList" class="mb-2"></div>
-    </div>
-    <hr class="my-4">
-    <h6 class="mb-3 text-muted">جدول كامل لجميع الرتب</h6>
-    <div class="table-responsive">
-        <table class="table table-bordered table-sm align-middle">
-            <thead class="table-light"><tr><th>الرتبة</th><th>تسمية الشهادة</th><th>الميدان و/أو الشعبة و/أو الفرع</th></tr></thead>
-            <tbody id="guideTableBody"></tbody>
-        </table>
-    </div>
-</div>
+    <div class="tabs" id="tabsBar"></div>
+    <div id="panels"></div>
 
-<div class="form-container hidden-field" id="registrationScreen">
-    <button type="button" class="btn btn-outline-secondary btn-sm mb-3" onclick="showHome()">→ رجوع للرئيسية</button>
-    <h3 class="text-center mb-4">استمارة معلومات المترشح</h3>
-
-    <!-- Stepper -->
-    <div class="stepper" id="stepper">
-        <div class="step" data-step="1"><div class="step-circle">1</div><div class="step-label">الشروط</div></div>
-        <div class="step" data-step="2"><div class="step-circle">2</div><div class="step-label">الترشح</div></div>
-        <div class="step" data-step="3"><div class="step-circle">3</div><div class="step-label">الحالة المدنية والعائلية</div></div>
-        <div class="step" data-step="4"><div class="step-circle">4</div><div class="step-label">الشهادة والمسار الدراسي</div></div>
-        <div class="step" data-step="5"><div class="step-circle">5</div><div class="step-label">الحالة المهنية</div></div>
-        <div class="step" data-step="6"><div class="step-circle">6</div><div class="step-label">التأكيد</div></div>
-    </div>
-
-    <form id="regForm" onsubmit="return false;">
-
-        <!-- ============ STEP 1 : الشروط ============ -->
-        <div class="step-pane" data-pane="1">
-            <div class="section-title">شروط المشاركة في المسابقة</div>
-            <div class="alert alert-light border">
-                <p>يُرجى قراءة الشروط التالية بعناية قبل متابعة عملية التسجيل:</p>
-                <ul>
-                    <li>يجب أن تتوفر في المترشح كافة الشروط القانونية والتنظيمية المطلوبة للرتبة المترشح لها.</li>
-                    <li>يتحمل المترشح المسؤولية الكاملة عن صحة المعلومات والوثائق المدرجة في الاستمارة.</li>
-                    <li>كل معلومة أو وثيقة غير صحيحة تؤدي إلى إلغاء الترشح في أي مرحلة من مراحل المسابقة.</li>
-                    <li>يجب إرفاق الوثائق المطلوبة بصيغة PDF واضحة المقروئية وضمن الحجم المسموح به.</li>
-                </ul>
-                <div class="form-check mt-3">
-                    <input class="form-check-input" type="checkbox" id="acceptTerms">
-                    <label class="form-check-label" for="acceptTerms">أقر بأنني اطلعت على الشروط أعلاه وأوافق عليها</label>
-                </div>
-            </div>
-        </div>
-
-        <!-- ============ STEP 2 : الترشح ============ -->
-        <div class="step-pane" data-pane="2">
-            <div class="section-title">معلومات الترشح</div>
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <label class="required">مديرية التربية لولاية:</label><select class="form-select border-success" id="directorateWilaya" data-required="true" data-label="مديرية التربية لولاية"></select>
-                </div>
-                <div class="col-md-6">
-                    <label class="required">الرتبة:</label><select class="form-select" id="rankSelect" onchange="syncRankToCertificate()" data-required="true" data-label="الرتبة">
-                        <option value="">--يرجى الاختيار--</option>
-                        <option>مشرف التربية</option>
-                        <option>مربي متخصص في الدعم التربوي</option>
-                        <option>مستشار محلل للتوجيه والإرشاد المدرسي والمهني</option>
-                        <option>ملحق رئيسي بالمخابر</option>
-                        <option>مستشار التغذية المدرسية</option>
-                        <option>مقتصد</option>
-                        <option>نائب مقتصد</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-
-        <!-- ============ STEP 3 : الحالة المدنية والعائلية ============ -->
-        <div class="step-pane" data-pane="3">
-            <div class="section-title">المعلومات الشخصية</div>
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <label class="required">رقم التعريف الوطني:</label><input type="text" class="form-control" placeholder="رقم التعريف الوطني (18 رقماً)" id="autoField1" inputmode="numeric" maxlength="18" data-required="true" data-label="رقم التعريف الوطني">
-                </div>
-                <div class="col-md-3"><label class="required">اللقب بالعربية:</label><input type="text" class="form-control" id="autoField2" data-required="true" data-label="اللقب بالعربية"></div>
-                <div class="col-md-3"><label class="required">الاسم بالعربية:</label><input type="text" class="form-control" id="autoField3" data-required="true" data-label="الاسم بالعربية"></div>
-                <div class="col-md-3"><label class="required">اللقب باللاتينية:</label><input type="text" class="form-control" id="autoField4" data-required="true" data-label="اللقب باللاتينية"></div>
-                <div class="col-md-3"><label class="required">الاسم باللاتينية:</label><input type="text" class="form-control" id="autoField5" data-required="true" data-label="الاسم باللاتينية"></div>
-
-                <div class="col-md-3"><label class="required">اسم الأب:</label><input type="text" class="form-control" id="autoField6" data-required="true" data-label="اسم الأب"></div>
-                <div class="col-md-3"><label class="required">اسم الأم:</label><input type="text" class="form-control" id="autoField7" data-required="true" data-label="اسم الأم"></div>
-                <div class="col-md-3"><label class="required">لقب الأم:</label><input type="text" class="form-control" id="autoField8" data-required="true" data-label="لقب الأم"></div>
-                <div class="col-md-3">
-                    <label class="required">الجنس:</label><select class="form-select" id="genderSelect" onchange="toggleNationalService()" data-required="true" data-label="الجنس">
-                        <option value="">--يرجى الاختيار--</option>
-                        <option value="male">ذكر</option>
-                        <option value="female">أنثى</option>
-                    </select>
-                </div>
-
-                <div class="col-md-3">
-                    <label class="required">مفترض بحكم؟:</label><select class="form-select" id="assumedSelect" onchange="handleBirthDate()" data-required="true" data-label="مفترض بحكم؟">
-                        <option value="no">لا</option>
-                        <option value="yes">نعم</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="required" id="birthLabel">تاريخ الازدياد:</label>
-                    <div id="birthDateContainer">
-                        <input type="date" class="form-control" id="birthDateInput" data-required="true" data-label="تاريخ الازدياد">
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <label class="required">ولاية الازدياد:</label><select class="form-select" id="birthWilaya" data-required="true" data-label="ولاية الازدياد"></select>
-                </div>
-                <div class="col-md-3">
-                    <label class="required">بلدية الازدياد:</label><input type="text" class="form-control" placeholder="أدخل اسم البلدية" id="autoField9" data-required="true" data-label="بلدية الازدياد">
-                </div>
-
-                <div class="col-md-3">
-                    <label class="required">رقم شهادة الميلاد:</label><input type="text" class="form-control" placeholder="رقم شهادة الميلاد (5 أرقام)" id="autoField10" inputmode="numeric" maxlength="5" data-required="true" data-label="رقم شهادة الميلاد">
-                </div>
-                <div class="col-md-3">
-                    <label class="required">نوع عقد الميلاد:</label><select class="form-select" id="autoField11" data-required="true" data-label="نوع عقد الميلاد">
-                        <option>عادي</option>
-                        <option>حكمي</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="required">الجنسية:</label><select class="form-select" id="autoField12" data-required="true" data-label="الجنسية"><option selected>جزائرية</option><option>أخرى</option></select>
-                </div>
-                <div class="col-md-3">
-                    <label class="required">الحالة العائلية:</label><select class="form-select" id="familyStatus" onchange="toggleChildren()" data-required="true" data-label="الحالة العائلية">
-                        <option value="single">أعزب/عزباء</option>
-                        <option value="married">متزوج(ة)</option>
-                        <option value="divorced">مطلق(ة)</option>
-                        <option value="widow">أرمل(ة)</option>
-                    </select>
-                </div>
-
-                <div class="col-md-3 hidden-field" id="childrenCountDiv">
-                    <label class="required">عدد الأولاد:</label><input type="number" class="form-control" min="0" value="0" id="autoField13" data-required="true" data-label="عدد الأولاد">
-                </div>
-
-                <div class="col-md-3">
-                    <label class="required">ذوو حقوق الشهيد:</label><select class="form-select" id="autoField14" data-required="true" data-label="ذوو حقوق الشهيد"><option>لا</option><option>نعم</option></select>
-                </div>
-                <div class="col-md-3">
-                    <label class="required">ذوي الاحتياجات الخاصة:</label><select class="form-select" id="disabilitySelect" data-required="true" data-label="ذوي الاحتياجات الخاصة"><option value="no">لا</option><option value="yes">نعم</option></select>
-                </div>
-            </div>
-
-            <div class="section-title">معلومات الإقامة والاتصال</div>
-            <div class="row g-3">
-                <div class="col-md-4">
-                    <label class="required">ولاية الإقامة:</label><select class="form-select" id="residenceWilaya" data-required="true" data-label="ولاية الإقامة"></select>
-                </div>
-                <div class="col-md-4">
-                    <label class="required">بلدية الإقامة:</label><input type="text" class="form-control" placeholder="أدخل اسم البلدية" id="autoField15" data-required="true" data-label="بلدية الإقامة">
-                </div>
-                <div class="col-md-4"><label class="required">رقم الهاتف:</label><input type="tel" class="form-control" placeholder="0XXXXXXXXX" id="autoField16" inputmode="numeric" maxlength="10" data-required="true" data-label="رقم الهاتف"></div>
-                <div class="col-md-12"><label class="required">العنوان الشخصي الكامل:</label><input type="text" class="form-control" id="autoField17" data-required="true" data-label="العنوان الشخصي الكامل"></div>
-            </div>
-
-            <!-- الخدمة الوطنية (ذكور فقط) -->
-            <div id="nationalServiceSection" class="hidden-field">
-                <div class="section-title">الوضعية اتجاه الخدمة الوطنية</div>
-                <div class="row g-3">
-                    <div class="col-md-4">
-                        <label class="required">الوضعية اتجاه الخدمة الوطنية:</label><select class="form-select" id="autoField18" data-required="true" data-label="الوضعية اتجاه الخدمة الوطنية">
-                            <option value="">--يرجى الاختيار--</option>
-                            <option>معفى</option>
-                            <option>مؤجل</option>
-                        </select>
-                    </div>
-                    <div class="col-md-4"><label>مرجع الوثيقة:</label><input type="text" class="form-control"></div>
-                    <div class="col-md-4"><label>تاريخ إصدار الوثيقة:</label><input type="date" class="form-control"></div>
-                    <div class="col-md-4"><label>تاريخ بداية الخدمة:</label><input type="date" class="form-control"></div>
-                    <div class="col-md-4"><label>تاريخ نهاية الخدمة:</label><input type="date" class="form-control"></div>
-                    <div class="col-md-4"><label>تاريخ انتهاء صلاحية الوثيقة:</label><input type="date" class="form-control"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- ============ STEP 4 : الشهادة والمسار الدراسي ============ -->
-        <div class="step-pane" data-pane="4">
-            <div class="section-title">معلومات الشهادة</div>
-            <div class="alert alert-light border" id="rankRequirementNote">يرجى اختيار الرتبة في خطوة "الترشح" أولاً ليتم تحديد تسمية الشهادة والميدان المطلوبَين تلقائياً.</div>
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <label class="required">تسمية الشهادة:</label><select class="form-select" id="certificateSelect" disabled data-required="true" data-label="تسمية الشهادة">
-                        <option value="">--يرجى اختيار الرتبة أولاً--</option>
-                    </select>
-                </div>
-                <div class="col-md-6">
-                    <label class="required">الميدان و/أو الشعبة و/أو الفرع:</label><select class="form-select" id="fieldSelect" disabled data-required="true" data-label="الميدان و/أو الشعبة و/أو الفرع">
-                        <option value="">--يرجى اختيار الرتبة أولاً--</option>
-                    </select>
-                </div>
-                <div class="col-md-4">
-                    <label class="required">رقم الشهادة:</label><input type="text" class="form-control" placeholder="الرقم" id="autoField19" inputmode="numeric" data-required="true" data-label="رقم الشهادة">
-                </div>
-                <div class="col-md-4">
-                    <label class="required">تاريخ الشهادة (تاريخ المداولات):</label><input type="date" class="form-control" id="autoField20" data-required="true" data-label="تاريخ الشهادة (تاريخ المداولات)">
-                </div>
-                <div class="col-md-4">
-                    <label class="required">اسم الجهة المسلمة:</label><input type="text" class="form-control" placeholder="اسم الجهة المسلمة" id="autoField21" data-required="true" data-label="اسم الجهة المسلمة">
-                </div>
-            </div>
-        </div>
-
-        <!-- ============ STEP 5 : الحالة المهنية ============ -->
-        <div class="step-pane" data-pane="5">
-            <div class="section-title">الحالة المهنية</div>
-            <div class="row g-3">
-                <div class="col-md-12">
-                    <label class="required">هل للمترشح وظيفة حاليا؟:</label><select class="form-select" id="hasJobSelect" onchange="toggleJobFields()" data-required="true" data-label="هل للمترشح وظيفة حاليا؟">
-                        <option value="no" selected>لا</option>
-                        <option value="yes">نعم</option>
-                    </select>
-                </div>
-            </div>
-
-            <div id="jobFieldsSection" class="hidden-field">
-                <div class="row g-3 mt-1">
-                    <div class="col-md-4"><label class="required">الوظيفة / الرتبة المشغولة:</label><input type="text" class="form-control" placeholder="الوظيفة / الرتبة المشغولة" id="autoField22" data-required="true" data-label="الوظيفة / الرتبة المشغولة"></div>
-                    <div class="col-md-4"><label class="required">تاريخ أول تعيين:</label><input type="date" class="form-control" id="autoField23" data-required="true" data-label="تاريخ أول تعيين"></div>
-                    <div class="col-md-4"><label class="required">تاريخ التعيين في الرتبة الحالية:</label><input type="date" class="form-control" id="autoField24" data-required="true" data-label="تاريخ التعيين في الرتبة الحالية"></div>
-                    <div class="col-md-6"><label>الصنف:</label><input type="text" class="form-control" placeholder="الصنف" id="autoField30" inputmode="numeric" data-label="الصنف"></div>
-                    <div class="col-md-6"><label>الدرجة:</label><input type="text" class="form-control" placeholder="الدرجة" id="autoField31" inputmode="numeric" data-label="الدرجة"></div>
-                </div>
-
-                <div class="section-title">مرجع موافقة الإدارة المستخدمة للمشاركة في المسابقة</div>
-                <div class="row g-3">
-                    <div class="col-md-4"><label class="required">رقم المرجع:</label><input type="text" class="form-control" placeholder="رقم المرجع" id="autoField25" inputmode="numeric" data-required="true" data-label="رقم المرجع"></div>
-                    <div class="col-md-4"><label class="required">تاريخ المرجع:</label><input type="date" class="form-control" id="autoField26" data-required="true" data-label="تاريخ المرجع"></div>
-                    <div class="col-md-4"><label class="required">صفة السلطة صاحبة الإمضاء:</label><input type="text" class="form-control" placeholder="صفة السلطة صاحبة الإمضاء" id="autoField27" data-required="true" data-label="صفة السلطة صاحبة الإمضاء"></div>
-                    <div class="col-md-6"><label class="required">عنوان الإدارة:</label><input type="text" class="form-control" placeholder="عنوان الإدارة" id="autoField28" data-required="true" data-label="عنوان الإدارة"></div>
-                    <div class="col-md-6"><label class="required">رقم هاتف الإدارة:</label><input type="tel" class="form-control" placeholder="رقم هاتف الإدارة" id="autoField29" inputmode="numeric" data-required="true" data-label="رقم هاتف الإدارة"></div>
-                    <div class="col-md-6"><label>البريد الالكتروني:</label><input type="email" class="form-control" placeholder="البريد الالكتروني"></div>
-                    <div class="col-md-6"><label>رقم فاكس الإدارة:</label><input type="text" class="form-control" placeholder="رقم فاكس الإدارة"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- ============ STEP 6 : التأكيد ============ -->
-        <div class="step-pane" data-pane="6">
-            <div class="section-title">تأكيد التسجيل</div>
-            <div class="alert alert-success">
-                يرجى مراجعة جميع المعلومات المدخلة في الخطوات السابقة قبل التأكيد النهائي. بعد الضغط على زر "تأكيد وحفظ المعلومات"، لن يكون بالإمكان تعديل الاستمارة إلا خلال المدة المحددة لذلك.
-            </div>
-            <div class="row g-3 mb-3">
-                <div class="col-md-6">
-                    <label class="required">البريد الإلكتروني:</label><input type="email" class="form-control" id="confirmEmail" placeholder="example@email.com" data-required="true" data-label="البريد الإلكتروني">
-                </div>
-            </div>
-            <div class="alert alert-info" id="credentialsPreview">
-                <strong>معلومات الدخول لمتابعة ملفكم لاحقاً:</strong><br>
-                اسم المستخدم: <span id="previewUsername">—</span><br>
-                كلمة المرور: <span id="previewPassword">—</span>
-                <div class="field-note mt-1">يُحتسب اسم المستخدم تلقائياً من البريد الإلكتروني (الجزء قبل @)، وكلمة المرور هي رقم الهاتف المدخل في الخطوة الثالثة.</div>
-            </div>
-            <div class="form-check mb-3">
-                <input class="form-check-input" type="checkbox" id="finalConfirm">
-                <label class="form-check-label" for="finalConfirm">أؤكد صحة جميع المعلومات والوثائق المدرجة في هذه الاستمارة</label>
-            </div>
-            <div id="submitWarning" class="alert alert-danger mt-3 hidden-field"></div>
-            <div class="text-center mt-4">
-                <button type="submit" class="btn btn-success btn-lg px-5" id="submitBtn">تأكيد وحفظ المعلومات</button>
-            </div>
-        </div>
-
-        <!-- Navigation -->
-        <div class="nav-buttons">
-            <button type="button" class="btn btn-outline-secondary" id="prevBtn" onclick="changeStep(-1)">السابق</button>
-            <button type="button" class="btn btn-success" id="nextBtn" onclick="changeStep(1)">التالي</button>
-        </div>
-    </form>
-</div>
-
-<!-- ============ Success Modal (centered, professional) ============ -->
-<div class="modal-overlay" id="successModalOverlay">
-    <div class="modal-box">
-        <div class="modal-icon">✔</div>
-        <h4 class="modal-title">تم إرسال المعلومات بنجاح</h4>
-        <p class="modal-subtitle">سيتم التواصل معكم عبر البريد الإلكتروني المسجل بخصوص متابعة ملفكم.</p>
-        <div class="modal-docs">
-            <p class="modal-docs-title">يرجى تقديم الوثائق التالية للمسح الضوئي لإتمام الملف:</p>
-            <ul>
-                <li>بطاقة التعريف الوطني</li>
-                <li>الوضعية اتجاه الخدمة الوطنية بالنسبة للذكور</li>
-                <li>الشهادة والمؤهل [الديبلوم]</li>
-                <li>وضعية الحالة المهنية إن وجدت</li>
-            </ul>
-        </div>
-        <button type="button" class="btn btn-success px-5" id="closeModalBtn" onclick="closeSuccessModal()">إغلاق</button>
-    </div>
+    <footer>يعرض هذا الأداة كل العُقد الموجودة فعلياً في قاعدة البيانات، بما في ذلك أي بيانات أو مسارات قديمة غير مستعملة حالياً في الاستمارة.</footer>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
 <script>
-/* ---------------- Wilayas of Algeria (69, updated 2026) ---------------- */
-const wilayas = [
-"أدرار","الشلف","الأغواط","أم البواقي","باتنة","بجاية","بسكرة","بشار","البليدة","البويرة",
-"تمنراست","تبسة","تلمسان","تيارت","تيزي وزو","الجزائر","الجلفة","جيجل","سطيف","سعيدة",
-"سكيكدة","سيدي بلعباس","عنابة","قالمة","قسنطينة","المدية","مستغانم","المسيلة","معسكر","ورقلة",
-"وهران","البيض","إليزي","برج بوعريريج","بومرداس","الطارف","تندوف","تيسمسيلت","الوادي","خنشلة",
-"سوق أهراس","تيبازة","ميلة","عين الدفلى","النعامة","عين تموشنت","غرداية","غليزان"
-];
-
-function fillWilayaSelects(){
-    const directorateSel = document.getElementById('directorateWilaya');
-    directorateSel.innerHTML = '<option value="">--يرجى الاختيار--</option>' +
-        wilayas.map(w=>`<option value="${w}">مديرية التربية لولاية ${w}</option>`).join('');
-
-    ['birthWilaya','residenceWilaya'].forEach(id=>{
-        const sel = document.getElementById(id);
-        sel.innerHTML = '<option value="">--يرجى الاختيار--</option>' +
-            wilayas.map(w=>`<option value="${w}">${w}</option>`).join('');
-    });
-}
-fillWilayaSelects();
-
-/* ---------------- Toggle logic ---------------- */
-function toggleChildren() {
-    const status = document.getElementById('familyStatus').value;
-    const childrenDiv = document.getElementById('childrenCountDiv');
-    childrenDiv.classList.toggle('hidden-field', status !== 'married');
-}
-
-
-function toggleNationalService() {
-    const gender = document.getElementById('genderSelect').value;
-    document.getElementById('nationalServiceSection').classList.toggle('hidden-field', gender !== 'male');
-}
-
-function handleBirthDate() {
-    const isAssumed = document.getElementById('assumedSelect').value;
-    const container = document.getElementById('birthDateContainer');
-    const label = document.getElementById('birthLabel');
-
-    if (isAssumed === 'yes') {
-        label.innerText = "سنة الازدياد (4 أرقام):";
-        container.innerHTML = '<input type="number" class="form-control" id="birthDateInput" placeholder="مثال: 1990" min="1900" max="2024" data-required="true" data-label="سنة الازدياد">';
-    } else {
-        label.innerText = "تاريخ الازدياد:";
-        container.innerHTML = '<input type="date" class="form-control" id="birthDateInput" data-required="true" data-label="تاريخ الازدياد">';
-    }
-}
-
-function toggleJobFields(){
-    const val = document.getElementById('hasJobSelect').value;
-    document.getElementById('jobFieldsSection').classList.toggle('hidden-field', val !== 'yes');
-}
-
-/* Rank -> Certificate & Field mapping (دليل تصنيف الرتب والمؤهلات المطلوبة - وزارة التربية الوطنية) */
-const rankData = {
-"مشرف التربية": {
-    cert: "شهادة سنتين (02) من التعليم العالي",
-    fields: ["علوم التربية","علم النفس","علم الاجتماع"]
-},
-"مربي متخصص في الدعم التربوي": {
-    cert: "شهادة سنتين (02) من التعليم العالي",
-    fields: ["علوم التربية","علم النفس","علم الاجتماع"]
-},
-"مستشار محلل للتوجيه والإرشاد المدرسي والمهني": {
-    cert: "ليسانس",
-    fields: ["علوم التربية","علم النفس","علم الاجتماع"]
-},
-"ملحق رئيسي بالمخابر": {
-    cert: "تقني سامٍ",
-    fields: ["الكيمياء","البيوكيمياء","الإلكترونيك","الالكتروتقني","الميكانيك","الالكتروميكانيك","الكهرباء","مراقبة النوعية تخصص صناعة الأغذية الزراعية"]
-},
-"مستشار التغذية المدرسية": {
-    cert: "ليسانس",
-    fields: ["علوم الغذاء"]
-},
-"مقتصد": {
-    cert: "ليسانس",
-    fields: ["المحاسبة","العلوم التجارية","العلوم الاقتصادية","علوم التسيير","العلوم القانونية والإدارية","الحقوق"]
-},
-"نائب مقتصد": {
-    cert: "شهادة سنتين (02) من التعليم العالي",
-    fields: ["المحاسبة","العلوم التجارية","العلوم الاقتصادية","علوم التسيير","العلوم القانونية والإدارية","الحقوق"]
-}
-};
-
-function syncRankToCertificate(){
-    const rank = document.getElementById('rankSelect').value;
-    const certSel = document.getElementById('certificateSelect');
-    const fieldSel = document.getElementById('fieldSelect');
-    const note = document.getElementById('rankRequirementNote');
-    const data = rankData[rank];
-
-    if(!data){
-        certSel.disabled = true;
-        certSel.innerHTML = '<option value="">--يرجى اختيار الرتبة أولاً--</option>';
-        fieldSel.disabled = true;
-        fieldSel.innerHTML = '<option value="">--يرجى اختيار الرتبة أولاً--</option>';
-        note.classList.remove('hidden-field');
-        return;
-    }
-
-    note.classList.add('hidden-field');
-    certSel.disabled = true; // derived automatically from the rank, not user-editable
-    certSel.innerHTML = `<option value="${data.cert}" selected>${data.cert}</option>`;
-
-    fieldSel.disabled = false;
-    fieldSel.innerHTML = '<option value="">--يرجى الاختيار--</option>' +
-        data.fields.map(f=>`<option value="${f}">${f}</option>`).join('');
-}
-
-/* ---------------- Home / Guide screens ---------------- */
-function showHome(){
-    document.getElementById('homeScreen').classList.remove('hidden-field');
-    document.getElementById('guideScreen').classList.add('hidden-field');
-    document.getElementById('registrationScreen').classList.add('hidden-field');
-    window.scrollTo({top:0, behavior:'smooth'});
-}
-function showGuide(){
-    document.getElementById('homeScreen').classList.add('hidden-field');
-    document.getElementById('guideScreen').classList.remove('hidden-field');
-    document.getElementById('registrationScreen').classList.add('hidden-field');
-    window.scrollTo({top:0, behavior:'smooth'});
-}
-function showRegistration(){
-    document.getElementById('homeScreen').classList.add('hidden-field');
-    document.getElementById('guideScreen').classList.add('hidden-field');
-    document.getElementById('registrationScreen').classList.remove('hidden-field');
-    window.scrollTo({top:0, behavior:'smooth'});
-}
-
-function populateGuideSelect(){
-    const sel = document.getElementById('guideRankSelect');
-    sel.innerHTML = '<option value="">--يرجى الاختيار--</option>' +
-        Object.keys(rankData).map(r=>`<option value="${r}">${r}</option>`).join('');
-}
-
-function renderGuideResult(){
-    const rank = document.getElementById('guideRankSelect').value;
-    const resultDiv = document.getElementById('guideResult');
-    const data = rankData[rank];
-    if(!data){
-        resultDiv.classList.add('hidden-field');
-        return;
-    }
-    document.getElementById('guideCertText').textContent = data.cert;
-    document.getElementById('guideFieldsList').innerHTML =
-        data.fields.map(f=>`<span class="badge bg-light text-dark border me-1 mb-1 p-2">${f}</span>`).join('');
-    resultDiv.classList.remove('hidden-field');
-}
-
-function buildGuideTable(){
-    const body = document.getElementById('guideTableBody');
-    body.innerHTML = Object.entries(rankData).map(([rank, data])=>
-        `<tr><td>${rank}</td><td>${data.cert}</td><td>${data.fields.join('، ')}</td></tr>`
-    ).join('');
-}
-
-populateGuideSelect();
-buildGuideTable();
-
-/* ---------------- Field format rules (Arabic / French / digits) ---------------- */
-const ARABIC_ONLY_IDS = ['autoField2','autoField3','autoField6','autoField7','autoField8','autoField15','autoField17','autoField21','autoField22','autoField27','autoField28'];
-const LATIN_ONLY_IDS = ['autoField4','autoField5'];
-const DIGITS_ONLY_IDS = ['autoField1','autoField10','autoField16','autoField19','autoField25','autoField29','autoField30','autoField31'];
-const EXACT_DIGIT_LENGTH = { autoField1: 18, autoField10: 5, autoField16: 10 };
-
-const ARABIC_STRIP_PATTERN = /[^\u0600-\u06FF0-9\s.,\-\/]/g;
-const LATIN_STRIP_PATTERN = /[^A-Za-zÀ-ÿ\s'\-]/g;
-const DIGITS_STRIP_PATTERN = /[^0-9]/g;
-
-function attachFormatFilters(){
-    ARABIC_ONLY_IDS.forEach(id=>{
-        const el = document.getElementById(id);
-        if(el) el.addEventListener('input', ()=>{ el.value = el.value.replace(ARABIC_STRIP_PATTERN, ''); });
-    });
-    LATIN_ONLY_IDS.forEach(id=>{
-        const el = document.getElementById(id);
-        if(el) el.addEventListener('input', ()=>{ el.value = el.value.replace(LATIN_STRIP_PATTERN, ''); });
-    });
-    DIGITS_ONLY_IDS.forEach(id=>{
-        const el = document.getElementById(id);
-        if(el) el.addEventListener('input', ()=>{
-            el.value = el.value.replace(DIGITS_STRIP_PATTERN, '');
-            if(EXACT_DIGIT_LENGTH[id]) el.value = el.value.slice(0, EXACT_DIGIT_LENGTH[id]);
-        });
-    });
-}
-attachFormatFilters();
-
-function validateFieldFormats(){
-    const errors = [];
-    Object.entries(EXACT_DIGIT_LENGTH).forEach(([id, len])=>{
-        const el = document.getElementById(id);
-        if(el && isFieldVisible(el) && !el.disabled){
-            const val = el.value.trim();
-            if(val && val.length !== len){
-                errors.push(`${el.dataset.label || id} يجب أن يتكون من ${len} أرقام بالضبط (المُدخل حالياً ${val.length})`);
-            }
-        }
-    });
-    return errors;
-}
-
-/* ---------------- Login credentials preview (step 6) ---------------- */
-function updateCredentialsPreview(){
-    const email = document.getElementById('confirmEmail').value.trim();
-    const phone = document.getElementById('autoField16').value.trim();
-    document.getElementById('previewUsername').textContent = email.includes('@') ? email.split('@')[0] : '—';
-    document.getElementById('previewPassword').textContent = phone || '—';
-}
-document.getElementById('confirmEmail').addEventListener('input', updateCredentialsPreview);
-document.getElementById('autoField16').addEventListener('input', updateCredentialsPreview);
-
-/* ---------------- Stepper navigation ---------------- */
-let currentStep = 1;
-const totalSteps = 6;
-
-function renderStepper(){
-    document.querySelectorAll('.step').forEach(stepEl=>{
-        const num = parseInt(stepEl.dataset.step);
-        stepEl.classList.remove('active','completed','upcoming');
-        if(num < currentStep) stepEl.classList.add('completed');
-        else if(num === currentStep) stepEl.classList.add('active');
-        else stepEl.classList.add('upcoming');
-    });
-    document.querySelectorAll('.step-pane').forEach(p=>{
-        p.classList.toggle('active', parseInt(p.dataset.pane) === currentStep);
-    });
-    document.getElementById('prevBtn').style.visibility = currentStep === 1 ? 'hidden' : 'visible';
-    document.getElementById('nextBtn').classList.toggle('hidden-field', currentStep === totalSteps);
-}
-
-function changeStep(dir){
-    const next = currentStep + dir;
-    if(next < 1 || next > totalSteps) return;
-    currentStep = next;
-    renderStepper();
-    window.scrollTo({top:0, behavior:'smooth'});
-}
-
-document.querySelectorAll('.step').forEach(stepEl=>{
-    stepEl.style.cursor = 'pointer';
-    stepEl.addEventListener('click', ()=>{
-        currentStep = parseInt(stepEl.dataset.step);
-        renderStepper();
-    });
-});
-
-document.getElementById('regForm').addEventListener('submit', function(e){
-    e.preventDefault();
-    e.stopPropagation();
-    handleFormSubmit();
-});
-
-// Fallback: also bind directly to the button click, in case the submit event
-// is intercepted or blocked by the surrounding environment.
-document.getElementById('submitBtn').addEventListener('click', function(e){
-    e.preventDefault();
-    handleFormSubmit();
-});
-
-/* ---------------- Firebase ---------------- */
 const firebaseConfig = {
     apiKey: "AIzaSyBdlRDPTQqY8lZvD4R7nneXAwPgRbxmm14",
     authDomain: "councour-59e43.firebaseapp.com",
@@ -682,138 +159,481 @@ const firebaseConfig = {
     appId: "1:492907661374:web:31792fc3ab95d0e69ea96f",
     measurementId: "G-2NLB5H3NQH"
 };
-let fbApp, fbDb;
-try {
-    fbApp = firebase.initializeApp(firebaseConfig);
-    fbDb = firebase.database();
+
+let rootData = null;
+let activeTab = null;
+const KNOWN_NODE = 'registrations'; // the node the current form writes to
+
+const statusDot = document.getElementById('statusDot');
+const statusText = document.getElementById('statusText');
+
+function setStatus(state, msg){
+    statusDot.className = 'dot ' + state;
+    statusText.textContent = msg;
+}
+
+try{
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    setStatus('loading', 'جارِ تحميل جميع البيانات...');
+
+    db.ref('/').once('value')
+        .then(snap => {
+            rootData = snap.val() || {};
+            const nodeCount = Object.keys(rootData).length;
+            if(nodeCount === 0){
+                setStatus('ok', 'متصل — لا توجد بيانات حالياً');
+            } else {
+                setStatus('ok', `متصل — ${nodeCount} عقدة رئيسية في قاعدة البيانات`);
+            }
+            render();
+        })
+        .catch(err => {
+            console.error(err);
+            setStatus('err', 'تعذر الاتصال بقاعدة البيانات: ' + err.message);
+        });
+
+    // Live updates so newly submitted / edited records show up without refresh
+    db.ref('/').on('value', snap => {
+        rootData = snap.val() || {};
+        render();
+    }, err => console.error('live listener error', err));
+
 } catch(err){
-    console.error('Firebase init error:', err);
+    console.error(err);
+    setStatus('err', 'خطأ في تهيئة Firebase: ' + err.message);
 }
 
-/* ---------------- Required-field validation ---------------- */
-function isFieldVisible(el){
-    let node = el;
-    while(node && node !== document.body){
-        if(node.classList && node.classList.contains('hidden-field')) return false;
-        node = node.parentElement;
+/* ---------------- helpers ---------------- */
+function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function fmtDate(iso){
+    if(!iso) return '—';
+    const d = new Date(iso);
+    if(isNaN(d.getTime())) return escapeHtml(iso);
+    return d.toLocaleString('ar-DZ', {year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit'});
+}
+
+function statusBadge(status){
+    const map = {
+        pending: {cls:'pending', label:'قيد الانتظار'},
+        registered: {cls:'registered', label:'مسجل'},
+        'مسجل': {cls:'مسجل', label:'مسجل'},
+        problem: {cls:'problem', label:'مشكل في التسجيل'}
+    };
+    const v = map[status] || {cls:'unknown', label: status || 'غير محدد'};
+    return `<span class="badge ${v.cls}">${escapeHtml(v.label)}</span>`;
+}
+
+/* Renders any arbitrary JS value as a colored, collapsible-ish JSON tree */
+function renderJsonNode(val, depth=0){
+    const pad = '  '.repeat(depth);
+    if(val === null || val === undefined) return `<span class="json-null">null</span>`;
+    if(typeof val === 'string') return `<span class="json-str">"${escapeHtml(val)}"</span>`;
+    if(typeof val === 'number') return `<span class="json-num">${val}</span>`;
+    if(typeof val === 'boolean') return `<span class="json-bool">${val}</span>`;
+    if(Array.isArray(val)){
+        if(val.length === 0) return '[]';
+        const items = val.map(v => pad + '  ' + renderJsonNode(v, depth+1)).join(',\n');
+        return `[\n${items}\n${pad}]`;
     }
-    return true;
+    if(typeof val === 'object'){
+        const keys = Object.keys(val);
+        if(keys.length === 0) return '{}';
+        const items = keys.map(k => `${pad}  <span class="json-key">"${escapeHtml(k)}"</span>: ${renderJsonNode(val[k], depth+1)}`).join(',\n');
+        return `{\n${items}\n${pad}}`;
+    }
+    return escapeHtml(String(val));
 }
 
-function isPlaceholderValue(val){
-    return !val || val.trim() === '' || val.includes('يرجى الاختيار') || val.includes('يرجى اختيار الرتبة');
-}
-
-function validateRequiredFields(){
-    const missing = [];
-    document.querySelectorAll('[data-required="true"]').forEach(el=>{
-        if(el.disabled) return;           // not relevant in current state
-        if(!isFieldVisible(el)) return;   // hidden section, not applicable
-
-        let val;
-        if(el.type === 'checkbox') val = el.checked ? 'x' : '';
-        else val = el.value;
-
-        if(isPlaceholderValue(val)){
-            missing.push(el.dataset.label || 'حقل غير معروف');
-        }
-    });
-    return missing;
-}
-
-function collectFormData(){
-    const data = {};
-    document.querySelectorAll('#regForm input, #regForm select').forEach(el=>{
-        if(!el.id) return;
-        if(el.type === 'checkbox') data[el.id] = el.checked;
-        else data[el.id] = el.value;
-    });
-    return data;
-}
-
-function handleFormSubmit(){
-    const warning = document.getElementById('submitWarning');
-    warning.classList.add('hidden-field');
-    warning.innerHTML = '';
-
-    // 1) Terms acceptance (step 1)
-    if(!document.getElementById('acceptTerms').checked){
-        warning.innerHTML = 'يجب الموافقة على شروط المشاركة في الخطوة الأولى ("الشروط") قبل إتمام التسجيل.';
-        warning.classList.remove('hidden-field');
-        currentStep = 1; renderStepper();
-        warning.scrollIntoView({behavior:'smooth'});
+/* ---------------- tabs / panels ---------------- */
+function render(){
+    const tabsBar = document.getElementById('tabsBar');
+    const panelsWrap = document.getElementById('panels');
+    if(!rootData){
+        tabsBar.innerHTML = '';
+        panelsWrap.innerHTML = `<div class="panel"><div class="empty-state"><div class="icon">⏳</div>جارِ التحميل...</div></div>`;
         return;
     }
 
-    // 2) All required fields across the form
-    const missing = validateRequiredFields();
-
-    // 3) Email format (in addition to being in the required list)
-    const email = document.getElementById('confirmEmail').value.trim();
-    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if(email && !emailPattern.test(email) && !missing.includes('البريد الإلكتروني')){
-        missing.push('البريد الإلكتروني (صيغة غير صحيحة)');
-    }
-
-    // 3.5) Exact-length digit fields (رقم التعريف الوطني، رقم شهادة الميلاد، رقم الهاتف)
-    validateFieldFormats().forEach(err => missing.push(err));
-
-    // 4) Final confirmation checkbox
-    if(!document.getElementById('finalConfirm').checked){
-        missing.push('الإقرار بصحة المعلومات (خطوة التأكيد)');
-    }
-
-    if(missing.length > 0){
-        warning.innerHTML = 'يتعذر إتمام التسجيل للأسباب التالية:<ul>' +
-            missing.map(m=>`<li>${m}</li>`).join('') + '</ul>';
-        warning.classList.remove('hidden-field');
-        warning.scrollIntoView({behavior:'smooth'});
+    const nodeNames = Object.keys(rootData);
+    if(nodeNames.length === 0){
+        tabsBar.innerHTML = '';
+        panelsWrap.innerHTML = `<div class="panel"><div class="empty-state"><div class="icon">🗂️</div>قاعدة البيانات فارغة حالياً — لا توجد تسجيلات ولا بيانات قديمة.</div></div>`;
         return;
     }
 
-    // All good — save to Firebase then show the success modal
-    const formData = collectFormData();
-    formData.submittedAt = new Date().toISOString();
-    formData.username = email.includes('@') ? email.split('@')[0] : '';
-    formData.password = document.getElementById('autoField16').value.trim();
-    formData.status = 'pending'; // مسجل | pending (انتظار) | problem (مشكل في تسجيل) — يُحدَّد لاحقاً من لوحة الإدارة
+    if(!activeTab || !nodeNames.includes(activeTab)) activeTab = nodeNames.includes(KNOWN_NODE) ? KNOWN_NODE : nodeNames[0];
 
-    if(fbDb){
-        fbDb.ref('registrations').push(formData)
-            .then(()=> openSuccessModal())
-            .catch(err=>{
-                console.error('Firebase write error:', err);
-                warning.innerHTML = 'تعذر إرسال البيانات إلى قاعدة البيانات، يرجى المحاولة مرة أخرى.';
-                warning.classList.remove('hidden-field');
-            });
+    tabsBar.innerHTML = nodeNames.map(name => {
+        const count = countEntries(rootData[name]);
+        const isLegacy = name !== KNOWN_NODE;
+        return `<div class="tab ${name===activeTab?'active':''} ${isLegacy?'legacy':''}" data-node="${escapeHtml(name)}">
+            ${escapeHtml(name)}${isLegacy ? ' <span style="font-size:10px;">(قديم/إضافي)</span>' : ''}
+            <span class="count">${count}</span>
+        </div>`;
+    }).join('');
+
+    tabsBar.querySelectorAll('.tab').forEach(el => {
+        el.addEventListener('click', () => { activeTab = el.dataset.node; render(); });
+    });
+
+    panelsWrap.innerHTML = '';
+    const panel = document.createElement('div');
+    panel.className = 'panel';
+    const nodeVal = rootData[activeTab];
+
+    if(activeTab === KNOWN_NODE){
+        panel.innerHTML = renderRegistrationsPanel(nodeVal || {});
+        panelsWrap.appendChild(panel);
+        bindRegistrationsPanel(nodeVal || {});
+    } else if(isCollectionOfRecords(nodeVal)){
+        panel.innerHTML = renderCollectionPanel(activeTab, nodeVal);
+        panelsWrap.appendChild(panel);
+        bindCollectionPanel(activeTab, nodeVal);
     } else {
-        openSuccessModal();
+        panel.innerHTML = renderGenericPanel(activeTab, nodeVal);
+        panelsWrap.appendChild(panel);
     }
 }
 
-function openSuccessModal(){
-    document.getElementById('successModalOverlay').classList.add('active');
+/* A node "looks like" a collection of records when most of its direct
+   children are themselves objects (i.e. { id1: {...}, id2: {...} }) rather
+   than a single flat object or a list of primitives. */
+function isCollectionOfRecords(val){
+    if(!val || typeof val !== 'object' || Array.isArray(val)) return false;
+    const entries = Object.entries(val);
+    if(entries.length === 0) return false;
+    const objectChildren = entries.filter(([,v]) => v && typeof v === 'object' && !Array.isArray(v));
+    return objectChildren.length >= Math.ceil(entries.length * 0.6);
 }
 
-function closeSuccessModal(){
-    document.getElementById('successModalOverlay').classList.remove('active');
-    document.getElementById('regForm').reset();
-    document.getElementById('submitWarning').classList.add('hidden-field');
-    // Reset dynamic/derived UI state
-    document.getElementById('childrenCountDiv').classList.add('hidden-field');
-    document.getElementById('nationalServiceSection').classList.add('hidden-field');
-    document.getElementById('jobFieldsSection').classList.add('hidden-field');
-    fillWilayaSelects();
-    syncRankToCertificate();
-    handleBirthDate();
-    updateCredentialsPreview();
-    currentStep = 1;
-    renderStepper();
-    window.scrollTo({top:0, behavior:'smooth'});
+function countEntries(val){
+    if(val === null || val === undefined) return 0;
+    if(typeof val === 'object') return Object.keys(val).length;
+    return 1;
 }
 
-renderStepper();
+/* ---------------- registrations (main known node) ---------------- */
+function renderRegistrationsPanel(regs){
+    const entries = Object.entries(regs);
+    const statusCounts = {pending:0, registered:0, 'مسجل':0, problem:0, other:0};
+    entries.forEach(([id, r]) => {
+        const s = r && r.status;
+        if(s && statusCounts.hasOwnProperty(s)) statusCounts[s]++;
+        else statusCounts.other++;
+    });
+    const registeredTotal = (statusCounts.registered||0) + (statusCounts['مسجل']||0);
+
+    const statsHtml = `
+        <div class="stats-row">
+            <div class="stat-box"><div class="num">${entries.length}</div><div class="label">إجمالي التسجيلات</div></div>
+            <div class="stat-box"><div class="num">${statusCounts.pending}</div><div class="label">قيد الانتظار</div></div>
+            <div class="stat-box"><div class="num">${registeredTotal}</div><div class="label">مسجل</div></div>
+            <div class="stat-box"><div class="num">${statusCounts.problem}</div><div class="label">مشكل في التسجيل</div></div>
+        </div>`;
+
+    if(entries.length === 0){
+        return statsHtml + `<div class="empty-state"><div class="icon">📭</div>لا توجد أي تسجيلات محفوظة في هذه العقدة بعد.</div>`;
+    }
+
+    const toolbarHtml = `
+        <div class="toolbar">
+            <input type="text" id="searchInput" placeholder="بحث بالاسم، اللقب، البريد، الهاتف، رقم التعريف الوطني...">
+            <select id="rankFilter"><option value="">كل الرتب</option></select>
+            <select id="statusFilter">
+                <option value="">كل الحالات</option>
+                <option value="pending">قيد الانتظار</option>
+                <option value="registered">مسجل</option>
+                <option value="problem">مشكل في التسجيل</option>
+            </select>
+            <button class="btn secondary small" id="exportBtn">تصدير JSON</button>
+        </div>`;
+
+    const tableHtml = `
+        <div class="table-scroll">
+            <table>
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>اللقب والاسم (عربي)</th>
+                        <th>الرتبة</th>
+                        <th>مديرية الترشح</th>
+                        <th>الهاتف</th>
+                        <th>البريد الإلكتروني</th>
+                        <th>الحالة</th>
+                        <th>تاريخ الإرسال</th>
+                    </tr>
+                </thead>
+                <tbody id="regTableBody"></tbody>
+            </table>
+        </div>`;
+
+    return statsHtml + toolbarHtml + tableHtml;
+}
+
+function bindRegistrationsPanel(regs){
+    const entries = Object.entries(regs);
+    const rankFilter = document.getElementById('rankFilter');
+    const ranks = [...new Set(entries.map(([,r]) => r && r.rankSelect).filter(Boolean))].sort();
+    rankFilter.innerHTML = '<option value="">كل الرتب</option>' + ranks.map(r => `<option value="${escapeHtml(r)}">${escapeHtml(r)}</option>`).join('');
+
+    const searchInput = document.getElementById('searchInput');
+    const statusFilter = document.getElementById('statusFilter');
+    const exportBtn = document.getElementById('exportBtn');
+
+    function matchesFilters([id, r]){
+        const q = searchInput.value.trim().toLowerCase();
+        const st = statusFilter.value;
+        const rk = rankFilter.value;
+        if(rk && r.rankSelect !== rk) return false;
+        if(st){
+            if(st === 'registered' && !(r.status === 'registered' || r.status === 'مسجل')) return false;
+            if(st !== 'registered' && r.status !== st) return false;
+        }
+        if(q){
+            const hay = [r.autoField2, r.autoField3, r.autoField4, r.autoField5, r.confirmEmail, r.autoField16, r.autoField1, r.username]
+                .filter(Boolean).join(' ').toLowerCase();
+            if(!hay.includes(q)) return false;
+        }
+        return true;
+    }
+
+    function draw(){
+        const filtered = entries.filter(matchesFilters);
+        const tbody = document.getElementById('regTableBody');
+        if(filtered.length === 0){
+            tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:30px; color:var(--muted);">لا توجد نتائج مطابقة</td></tr>`;
+            return;
+        }
+        tbody.innerHTML = filtered.map(([id, r]) => {
+            const name = `${r.autoField2 || ''} ${r.autoField3 || ''}`.trim() || '—';
+            return `
+            <tr>
+                <td>
+                    <button class="row-expand-btn" data-id="${escapeHtml(id)}">تفاصيل ▾</button>
+                    <button class="row-delete-btn" data-id="${escapeHtml(id)}" data-node="${escapeHtml(KNOWN_NODE)}" data-label="${escapeHtml(name)}" title="حذف هذا التسجيل نهائياً">🗑</button>
+                </td>
+                <td>${escapeHtml(name)}</td>
+                <td>${escapeHtml(r.rankSelect || '—')}</td>
+                <td>${escapeHtml(r.directorateWilaya || '—')}</td>
+                <td style="direction:ltr; text-align:right;">${escapeHtml(r.autoField16 || '—')}</td>
+                <td style="direction:ltr; text-align:right;">${escapeHtml(r.confirmEmail || '—')}</td>
+                <td>${statusBadge(r.status)}</td>
+                <td>${fmtDate(r.submittedAt)}</td>
+            </tr>
+            <tr class="detail-row hidden-detail" data-detail-for="${escapeHtml(id)}" style="display:none;">
+                <td colspan="8">
+                    <div class="detail-box">
+                        <div class="kv-grid">
+                            ${Object.entries(r).map(([k,v]) => `<div class="kv"><b>${escapeHtml(k)}:</b> <span>${escapeHtml(typeof v === 'boolean' ? (v?'نعم':'لا') : (v ?? '—'))}</span></div>`).join('')}
+                        </div>
+                    </div>
+                </td>
+            </tr>`;
+        }).join('');
+
+        tbody.querySelectorAll('.row-expand-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id = btn.dataset.id;
+                const row = tbody.querySelector(`[data-detail-for="${CSS.escape(id)}"]`);
+                if(row){
+                    const showing = row.style.display !== 'none';
+                    row.style.display = showing ? 'none' : 'table-row';
+                    btn.textContent = showing ? 'تفاصيل ▾' : 'إخفاء ▴';
+                }
+            });
+        });
+        bindDeleteButtons(tbody);
+    }
+
+    searchInput.addEventListener('input', draw);
+    statusFilter.addEventListener('change', draw);
+    rankFilter.addEventListener('change', draw);
+    exportBtn.addEventListener('click', () => {
+        const blob = new Blob([JSON.stringify(regs, null, 2)], {type:'application/json'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = 'registrations-export.json';
+        a.click();
+        URL.revokeObjectURL(url);
+    });
+
+    draw();
+}
+
+/* Shared delete handling: removes a single record permanently from the DB. */
+function bindDeleteButtons(scopeEl){
+    scopeEl.querySelectorAll('.row-delete-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const id = btn.dataset.id;
+            const node = btn.dataset.node;
+            const label = btn.dataset.label || id;
+            const sure = confirm(`هل أنت متأكد من حذف "${label}" نهائياً من قاعدة البيانات؟ لا يمكن التراجع عن هذا الإجراء.`);
+            if(!sure) return;
+            btn.disabled = true;
+            btn.textContent = '...';
+            firebase.database().ref(`${node}/${id}`).remove()
+                .then(() => {
+                    // rootData will also update via the live listener, but we
+                    // don't need to do anything here — render() runs again.
+                })
+                .catch(err => {
+                    console.error('delete error', err);
+                    alert('تعذر حذف السجل: ' + err.message);
+                    btn.disabled = false;
+                    btn.textContent = '🗑';
+                });
+        });
+    });
+}
+
+/* ---------------- generic collection (e.g. "submissions" or any other legacy node holding records) ---------------- */
+function inferColumns(entries, maxCols=7){
+    const freq = {};
+    entries.forEach(([, rec]) => {
+        Object.keys(rec).forEach(k => { freq[k] = (freq[k] || 0) + 1; });
+    });
+    // Prefer keys that look like identity/status/date/contact fields, then by frequency.
+    const priorityHints = ['name','nom','status','statut','email','phone','tel','date','id','rank','rtbة'];
+    const keys = Object.keys(freq).sort((a,b) => {
+        const scoreA = priorityHints.some(h => a.toLowerCase().includes(h)) ? 1 : 0;
+        const scoreB = priorityHints.some(h => b.toLowerCase().includes(h)) ? 1 : 0;
+        if(scoreA !== scoreB) return scoreB - scoreA;
+        if(freq[b] !== freq[a]) return freq[b] - freq[a];
+        return a.localeCompare(b);
+    });
+    return keys.slice(0, maxCols);
+}
+
+function cellValue(v){
+    if(v === null || v === undefined || v === '') return '—';
+    if(typeof v === 'boolean') return v ? 'نعم' : 'لا';
+    if(typeof v === 'object') return JSON.stringify(v);
+    // ISO-looking date strings get the readable formatter
+    if(typeof v === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(v)) return fmtDate(v);
+    return String(v);
+}
+
+function renderCollectionPanel(name, obj){
+    const entries = Object.entries(obj);
+    const note = `<div class="legacy-note">
+        هذه العقدة "<b>${escapeHtml(name)}</b>" غير مستعملة من طرف استمارة التسجيل الحالية — قد تكون بيانات قديمة أو من نسخة سابقة من التطبيق. الأعمدة أدناه مستخرجة تلقائياً من الحقول الموجودة فعلياً في البيانات.
+    </div>`;
+    const stats = `<div class="stats-row"><div class="stat-box"><div class="num">${entries.length}</div><div class="label">إجمالي العناصر</div></div></div>`;
+    const toolbar = `
+        <div class="toolbar">
+            <input type="text" id="genSearchInput" placeholder="بحث في جميع الحقول...">
+            <button class="btn secondary small" id="genJsonToggle">عرض JSON الخام</button>
+            <button class="btn secondary small" id="genExportBtn">تصدير JSON</button>
+        </div>`;
+    const cols = inferColumns(entries);
+    const tableHtml = `
+        <div id="genTableWrap">
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th></th>
+                            ${cols.map(c => `<th>${escapeHtml(c)}</th>`).join('')}
+                        </tr>
+                    </thead>
+                    <tbody id="genTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+        <div id="genJsonWrap" style="display:none;"><div class="json-tree">${renderJsonNode(obj)}</div></div>`;
+    return note + stats + toolbar + tableHtml;
+}
+
+function bindCollectionPanel(name, obj){
+    const entries = Object.entries(obj);
+    const cols = inferColumns(entries);
+    const searchInput = document.getElementById('genSearchInput');
+    const jsonToggle = document.getElementById('genJsonToggle');
+    const exportBtn = document.getElementById('genExportBtn');
+    const tableWrap = document.getElementById('genTableWrap');
+    const jsonWrap = document.getElementById('genJsonWrap');
+
+    function draw(){
+        const q = searchInput.value.trim().toLowerCase();
+        const filtered = entries.filter(([id, rec]) => {
+            if(!q) return true;
+            const hay = JSON.stringify(rec).toLowerCase();
+            return hay.includes(q) || id.toLowerCase().includes(q);
+        });
+        const tbody = document.getElementById('genTableBody');
+        if(filtered.length === 0){
+            tbody.innerHTML = `<tr><td colspan="${cols.length+1}" style="text-align:center; padding:30px; color:var(--muted);">لا توجد نتائج مطابقة</td></tr>`;
+            return;
+        }
+        tbody.innerHTML = filtered.map(([id, rec]) => {
+            const label = cols.map(c => rec[c]).find(v => typeof v === 'string' && v.trim()) || id;
+            return `
+            <tr>
+                <td>
+                    <button class="row-expand-btn" data-id="${escapeHtml(id)}">تفاصيل ▾</button>
+                    <button class="row-delete-btn" data-id="${escapeHtml(id)}" data-node="${escapeHtml(name)}" data-label="${escapeHtml(label)}" title="حذف هذا العنصر نهائياً">🗑</button>
+                </td>
+                ${cols.map(c => `<td>${escapeHtml(cellValue(rec[c]))}</td>`).join('')}
+            </tr>
+            <tr class="detail-row" data-detail-for="${escapeHtml(id)}" style="display:none;">
+                <td colspan="${cols.length+1}">
+                    <div class="detail-box">
+                        <div class="kv-grid">
+                            ${Object.entries(rec).map(([k,v]) => `<div class="kv"><b>${escapeHtml(k)}:</b> <span>${escapeHtml(cellValue(v))}</span></div>`).join('')}
+                        </div>
+                    </div>
+                </td>
+            </tr>`;
+        }).join('');
+
+        tbody.querySelectorAll('.row-expand-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id = btn.dataset.id;
+                const row = tbody.querySelector(`[data-detail-for="${CSS.escape(id)}"]`);
+                if(row){
+                    const showing = row.style.display !== 'none';
+                    row.style.display = showing ? 'none' : 'table-row';
+                    btn.textContent = showing ? 'تفاصيل ▾' : 'إخفاء ▴';
+                }
+            });
+        });
+        bindDeleteButtons(tbody);
+    }
+
+    searchInput.addEventListener('input', draw);
+    jsonToggle.addEventListener('click', () => {
+        const showingJson = jsonWrap.style.display !== 'none';
+        jsonWrap.style.display = showingJson ? 'none' : 'block';
+        tableWrap.style.display = showingJson ? 'block' : 'none';
+        jsonToggle.textContent = showingJson ? 'عرض JSON الخام' : 'عرض الجدول';
+    });
+    exportBtn.addEventListener('click', () => {
+        const blob = new Blob([JSON.stringify(obj, null, 2)], {type:'application/json'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = `${name}-export.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+    });
+
+    draw();
+}
+
+/* ---------------- any other / legacy node (not a collection of records) ---------------- */
+function renderGenericPanel(name, val){
+    const note = `<div class="legacy-note">
+        هذه العقدة "<b>${escapeHtml(name)}</b>" غير مستعملة من طرف استمارة التسجيل الحالية — قد تكون بيانات قديمة، تجريبية، أو من نسخة سابقة من التطبيق. يتم عرضها كما هي مباشرة من قاعدة البيانات.
+    </div>`;
+    const count = countEntries(val);
+    const stats = `<div class="stats-row"><div class="stat-box"><div class="num">${count}</div><div class="label">عدد العناصر داخل هذه العقدة</div></div></div>`;
+    const treeHtml = `<div class="json-tree">${renderJsonNode(val)}</div>`;
+    return note + stats + treeHtml;
+}
 </script>
-
 </body>
 </html>
